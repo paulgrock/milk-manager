@@ -13,7 +13,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@nuxt/ui": "^4.12.0",
@@ -30,6 +31,7 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/node": "^24.19.2",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/tsconfig": "^0.9.1",

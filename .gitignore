@@ -27,3 +27,8 @@ dist-ssr
 supabase/.temp
 supabase/.branches
 dev-dist
+
+# Playwright
+test-results
+playwright-report
+blob-report

@@ -38,14 +38,22 @@ const slots = computed(() => {
 })
 
 const fields = reactive<Record<number, { text: string; note: string; error: string }>>({})
-function load() {
+// What each field last showed from saved data, to tell user edits apart.
+const shown: Record<number, { text: string; note: string }> = {}
+
+/**
+ * Fills the fields from saved rows. When `keepEdits` is set, a field the user
+ * has typed in is left alone: saving AM updates the rows, and that must not
+ * wipe a PM weight typed but not yet saved.
+ */
+function load(keepEdits = false) {
   for (const slot of [DAY_TOTAL, AM, PM, 3, 4, 5, 6]) {
     const row = props.rows.find((r) => r.milking === slot)
-    fields[slot] = {
-      text: row ? formatWeightInput(row, props.unit) : '',
-      note: row?.note ?? '',
-      error: '',
-    }
+    const next = { text: row ? formatWeightInput(row, props.unit) : '', note: row?.note ?? '' }
+    const field = fields[slot]
+    const edited = keepEdits && field && shown[slot] && (field.text !== shown[slot].text || field.note !== shown[slot].note)
+    if (!edited) fields[slot] = { ...next, error: field?.error ?? '' }
+    shown[slot] = next
   }
 }
 watch(
@@ -58,7 +66,7 @@ watch(
   },
   { immediate: true },
 )
-watch(() => props.rows, load, { deep: true })
+watch(() => props.rows, () => load(true), { deep: true })
 
 const rowFor = (slot: number) => props.rows.find((r) => r.milking === slot)
 

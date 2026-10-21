@@ -27,9 +27,20 @@ Sign-in emails don't go out locally. They're captured by Mailpit at http://127.0
 |---|---|
 | `npm run build` | Type-check and build to `dist/` |
 | `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | Browser tests (Playwright, `e2e/`), against a production build and the local Supabase |
 | `npm run db:test` | Database permission tests (pgTAP, `supabase/tests`) |
 | `npm run db:reset` | Wipe the local DB and re-run migrations |
 | `npm run db:types` | Regenerate `src/lib/database.types.ts` after a schema change |
+
+## Tests
+
+Every feature ships with three kinds of tests:
+
+- **Unit** (`src/**/*.test.ts`): calculations such as weights, parsing, curve fits and projections.
+- **Database** (`supabase/tests`): permissions and data rules, run as real users.
+- **Browser** (`e2e/`): the user flows, including offline and weak-signal milk entry and a phone-width layout check.
+  Each test creates its own user and herd and deletes them afterwards. The local stack must be running (`npm run db:start`).
+  On first use, install the browser with `npx playwright install chromium`.
 
 ## Herds and permissions
 
