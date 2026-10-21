@@ -129,6 +129,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"lactations": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"dried_off_on": string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id": string,"lactation_number": number,"notes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id"?: string,"lactation_number": number,"notes"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"lactation_number"?: number,"notes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lactations_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 },"linear_appraisals": {
                   Row: {
                     "appraised_on": string,"appraiser": string | null,"body_capacity": string,"created_at": string,"created_by": string | null,"dairy_strength": string,"final_score": number,"general_appearance": string,"goat_id": string,"herd_id": string,"id": string,"mammary_system": string | null,"notes": string | null
@@ -149,10 +169,44 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"milk_weights": {
+                  Row: {
+                    "goat_id": string,"herd_id": string,"id": string,"milked_on": string,"milking": number,"note": string | null,"portions_g": (number)[] | null,"recorded_at": string,"recorded_by": string | null,"weight_g": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "goat_id": string,"herd_id": string,"id"?: string,"milked_on": string,"milking": number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g": number
+                  }
+                  Update: {
+                    "goat_id"?: string,"herd_id"?: string,"id"?: string,"milked_on"?: string,"milking"?: number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "milk_weights_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 }
           }
           Views: {
-            [_ in never]: never
+            "milk_day_totals": {
+                  Row: {
+                    "goat_id": string | null,"has_am": boolean | null,"has_pm": boolean | null,"herd_id": string | null,"is_day_total": boolean | null,"milked_on": string | null,"milkings": number | null,"total_g": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "milk_weights_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "accept_invite":
@@ -170,6 +224,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"clear_milking":
+{ Args: { "p_goat_id": string,"p_milked_on": string,"p_milking": number }; Returns: undefined
+                           },
 "create_herd":
 { Args: { "herd_name": string }; Returns: {
               "created_at": string,
@@ -201,6 +258,25 @@ isOneToOne: false
               "created_at": string,"herd_id": string,"herd_name": string,"id": string,"role": Database["public"]['Enums']["herd_role"]
             }[]
                            },
+"record_milking":
+{ Args: { "p_goat_id": string,"p_milked_on": string,"p_milking": number,"p_note"?: string,"p_portions_g"?: (number)[],"p_weight_g": number }; Returns: {
+              "goat_id": string,
+"herd_id": string,
+"id": string,
+"milked_on": string,
+"milking": number,
+"note": string | null,
+"portions_g": (number)[] | null,
+"recorded_at": string,
+"recorded_by": string | null,
+"weight_g": number
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "milk_weights"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "set_primary_photo":
 { Args: { "photo_id": string }; Returns: undefined
                            },

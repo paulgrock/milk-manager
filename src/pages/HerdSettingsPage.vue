@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { supabase, unwrap } from '@/lib/supabase'
 import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
+import { useHerdMembers } from '@/composables/useHerdMembers'
 
 const router = useRouter()
 const toast = useToast()
@@ -49,13 +50,7 @@ const saveDetails = useMutation({
 
 // --- Members ---------------------------------------------------------------
 
-const membersKey = computed(() => ['herdMembers', herdId.value])
-const members = useQuery({
-  queryKey: membersKey,
-  queryFn: async () =>
-    unwrap(await supabase.from('herd_members').select('*').eq('herd_id', herdId.value).order('created_at')),
-  enabled: computed(() => !!herdId.value),
-})
+const { members, membersKey } = useHerdMembers()
 
 const changeRole = useMutation({
   mutationFn: async ({ userId, role }: { userId: string; role: HerdRole }) =>

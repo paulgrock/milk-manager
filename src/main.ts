@@ -6,6 +6,7 @@ import { VueQueryPlugin } from '@tanstack/vue-query'
 import App from './App.vue'
 import { router } from './router'
 import { queryClient, restoreQueryCache } from './lib/queryClient'
+import './lib/milkSync'
 
 // Mount even if the saved cache can't be read; it just means a cold start.
 restoreQueryCache()

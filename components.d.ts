@@ -15,6 +15,10 @@ declare module 'vue' {
     AppraisalSection: typeof import('./src/components/goats/AppraisalSection.vue')['default']
     GoatAvatar: typeof import('./src/components/goats/GoatAvatar.vue')['default']
     GoatPicker: typeof import('./src/components/goats/GoatPicker.vue')['default']
+    LactationModal: typeof import('./src/components/milk/LactationModal.vue')['default']
+    LactationSection: typeof import('./src/components/milk/LactationSection.vue')['default']
+    MilkDayEditor: typeof import('./src/components/milk/MilkDayEditor.vue')['default']
+    MilkEntryRow: typeof import('./src/components/milk/MilkEntryRow.vue')['default']
     PedigreeChart: typeof import('./src/components/goats/PedigreeChart.vue')['default']
     PendingInvites: typeof import('./src/components/PendingInvites.vue')['default']
     PhotoSection: typeof import('./src/components/goats/PhotoSection.vue')['default']
@@ -27,6 +31,7 @@ declare module 'vue' {
     UBadge: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Badge.vue')['default']
     UButton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']
     UCard: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Card.vue')['default']
+    UDropdownMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/DropdownMenu.vue')['default']
     UFormField: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/FormField.vue')['default']
     UIcon: typeof import('./node_modules/@nuxt/ui/dist/runtime/vue/components/Icon.vue')['default']
     UInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Input.vue')['default']
@@ -37,6 +42,7 @@ declare module 'vue' {
     UPinInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/PinInput.vue')['default']
     USelect: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
     USkeleton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue')['default']
+    UTabs: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Tabs.vue')['default']
     UTextarea: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Textarea.vue')['default']
   }
 }

@@ -26,8 +26,10 @@ export const router = createRouter({
         { path: 'goats/new', component: () => import('@/pages/goats/GoatFormPage.vue') },
         { path: 'goats/:id', component: () => import('@/pages/goats/GoatDetailPage.vue') },
         { path: 'goats/:id/edit', component: () => import('@/pages/goats/GoatFormPage.vue') },
+        { path: 'milk', component: () => import('@/pages/milk/MilkPage.vue') },
+        { path: 'milk/history', component: () => import('@/pages/milk/MilkHistoryPage.vue') },
         {
-          path: ':section(milk|breeding|health|calendar|finances)',
+          path: ':section(breeding|health|calendar|finances)',
           component: () => import('@/pages/ComingSoonPage.vue'),
         },
       ],

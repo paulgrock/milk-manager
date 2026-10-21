@@ -17,6 +17,7 @@ import GoatAvatar from '@/components/goats/GoatAvatar.vue'
 import PedigreeChart from '@/components/goats/PedigreeChart.vue'
 import AppraisalSection from '@/components/goats/AppraisalSection.vue'
 import PhotoSection from '@/components/goats/PhotoSection.vue'
+import LactationSection from '@/components/milk/LactationSection.vue'
 
 const route = useRoute()
 const { goats, appraisals, photos, byId } = useHerdGoats()
@@ -110,6 +111,7 @@ const details = computed(() => {
       </div>
 
       <div class="space-y-4">
+        <LactationSection v-if="goat.sex === 'doe'" :goat="goat" />
         <AppraisalSection :goat="goat" :appraisals="goatAppraisals" />
         <PhotoSection :goat="goat" :photos="goatPhotos" />
 
