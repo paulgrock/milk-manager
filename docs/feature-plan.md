@@ -1,0 +1,90 @@
+# Dairy Goat Herd Tracker — Feature Plan
+
+## Context
+You want a herd tracker for dairy goats with features like herdmanager.app (dairy and breeding only, no meat, fiber or pack). Goat profiles should hold the details shown on birdseyefarm.com/goats. The core is daily milk weights, entered per milking, that roll up into lactation curves. The project folder (`/Users/paulgrock/Code/milk-manager`) is empty, so this is a new build. This document lists features only. We pick the tech stack in the next step.
+
+Phases: **MVP** = what you asked for. **P2** = high value, comes next. **P3** = nice to have later.
+
+---
+
+## 1. Goat Records (MVP)
+Fields are modeled on the Bird's Eye Farm goat listings.
+- **Identity:** registered name, barn name, herd prefix, tattoo (L/R ear), registration # and registry (ADGA, AGS, AMGRA, etc.), a link to the ADGA pedigree, microchip/scrapie tag.
+- **Basics:** sex (doe, buck, wether), breed, % / American / Purebred, birth date (age is calculated), color and markings, horned/disbudded/polled, photos (conformation, head, udder).
+- **Titles and suffixes:** milk stars (e.g. 5\*M), \*B / +B / ++B, \*D, GCH, plus any pending status.
+- **Linear Appraisal:** history of scores by year (e.g. "VVEV 88" with breakdown: General Appearance / Dairy Strength / Body Capacity / Mammary), the age when scored, and the appraiser.
+- **Pedigree:** sire and dam (linked when they're in the herd, free text when not), shown 3 generations deep (S, SS, SD, D, DS, DD) to match Bird's Eye, with more generations later.
+- **Status:** active, dry, in milk, for sale, sold, deceased, reference only (an outside goat kept for its pedigree). Also the date and reason the goat left the herd.
+- **Notes**, and a herd list you can search and filter by status, sex, breed and in-milk.
+
+## 2. Daily Milk Recording (MVP)
+- **Quick herd entry:** one screen for today's milking that lists every doe in milk, so you can tap through and enter weights fast.
+- **Split by milking:** each day's total is the sum of its milkings. AM and PM are the defaults, and you can add an extra milking on a given day. Enter the parts and the app adds up the daily total. You can also enter just a total and add the breakdown later. The app flags a day where a milking is missing.
+- **Units:** lbs or kg, with an optional conversion from volume.
+- Edit and backfill past dates, and attach a note to a single milking (e.g. "kicked bucket").
+- A flag for milk that can't be sold, tied to the treatment withdrawal periods in section 5.
+
+## 3. Lactation Tracking and Curves (MVP)
+- **Lactations:** each one starts at a freshening (kidding) date and ends on its dry-off date. Track lactation number and days in milk (DIM).
+- **Lactation curve chart:** daily weights plotted against DIM, with a smoothed line. You can overlay the doe's previous lactations, or other does, to compare.
+- **Totals:** lactation to date, a projected 305-day total (Wood's curve fit), peak yield and the DIM it came on, plus averages.
+- **Herd view:** today's herd total, a trend over time, and a top-producer ranking.
+
+## 4. Breeding and Kidding (MVP)
+- **Heat log:** observed heats, with the next one predicted (~21-day cycle).
+- **Breeding records:** date, buck (from your herd or an outside stud), method (hand breeding, pen breeding, AI), and service fee.
+- **Due dates:** calculated automatically at ~150 days, with a "due soon" list and status (open, bred, confirmed pregnant, kidded).
+- **Pregnancy checks:** date, method (blood test, ultrasound), result.
+- **Kidding records:** date, number of kids, sex and weight of each, presentation, difficulty, notes. Each kid can be turned into a new goat record with its sire and dam already linked, and the record starts a new lactation for the dam.
+- **Dry-off planning:** a suggested dry-off date about 60 days before the due date.
+
+## 5. Health and Routine Care (MVP)
+- **Routine care log, with a "last done / next due" date for each goat:** hoof trims, Replamin Gel Plus, copper bolus (with dose in grams), and vaccinations (CDT, etc.). You set the interval for each care type (e.g. hoof trim every 6–8 weeks, copper every 6 months). You can log one item for many goats at once ("trimmed 8 does today").
+- You can add your own care types, such as deworming or selenium/BoSe.
+- Treatments and medications with dose, route and lot #. **Milk withdrawal periods**, with a banner for "milk withheld until X" that also flags the milk records from section 2.
+- FAMACHA scores, body condition score (BCS), body weight, and disease testing (CAE, CL, Johne's, with dates and results).
+
+## 6. Milk Quality / DHIA (MVP)
+- Official DHIA test days, which carry their own weights and also show on the curve.
+- Somatic cell count (SCC), butterfat %, protein %. Butterfat and protein pounds are calculated from the milk weights.
+- Progress toward milk stars and ADGA milk-star qualification.
+
+## 7. Calendar and Reminders (MVP)
+- One calendar for expected heats, due dates, dry-offs, hoof trims, Replamin/copper due dates, vaccinations, withdrawal end dates and test days.
+- A "today" dashboard showing what needs doing (overdue / due this week) and today's milk total.
+- Notifications are optional (push or email). We decide which during tech planning.
+
+## 8. Genetics (P3)
+- Inbreeding coefficient (COI) for a planned breeding.
+- A pairing planner to check a doe × buck match before breeding.
+- ADGA pedigree import.
+
+## 9. Data and Reports (MVP basics, more later)
+- **MVP:** export to CSV, and import a herd list from CSV.
+- **MVP finances:** income (milk, kid and goat sales, stud fees) and expenses (feed, vet, minerals, registration) by category. Each entry can be tied to a goat, and there's a yearly summary.
+- **Later:** PDF goat summary sheets (a sales packet with pedigree, LA and milk), lactation reports, and Schedule F tax categories.
+
+## 10. Users and Access (MVP)
+- One shared herd with several logins (you plus family and helpers), so the app needs cloud sync.
+- Each entry records who made it ("milked by", "trimmed by").
+- Roles: owner (everything) and helper (enter milk and care records, no deleting goats or editing finances).
+
+## Explicitly out of scope
+Meat, fiber and pack features. A marketplace or public farm page (could be added later).
+
+---
+
+## Suggested additions (my picks)
+- **Per-milking breakdown** that adds up to the total, as you asked. It's built into section 2.
+- **Withdrawal-aware milk flags:** this is the most important safety feature for selling milk.
+- **Kid → goat promotion:** pedigrees fill in over time as kids are born into the herd.
+- **Fast phone-friendly entry, possibly working offline:** milking happens in a barn, often with bad signal.
+- **Reference goats for outside sires and dams,** so pedigrees can link to them.
+
+## Next step
+Choose the tech stack (web, mobile or PWA; how offline entry syncs; how logins work; hosting), then break the MVP into build milestones: goats → milk → lactation → breeding → care/health → DHIA → calendar → finances.
+
+## Verification (once built)
+- Enter a week of AM/PM weights for 3 does and check that the daily totals match the sum of the milkings.
+- Record a kidding → check that a lactation starts and that DIM is correct → check that the curve shows and gives a 305-day projection.
+- Record a breeding → check that the due date is the breeding date + 150 days and that it appears in "due soon".
