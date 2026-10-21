@@ -9,7 +9,7 @@ import { formatWeight } from '@/lib/milk'
 
 const { herd } = useHerd()
 const { byId } = useHerdGoats()
-const totals = useHerdDayTotals(60)
+const totals = useHerdDayTotals(shiftDate(todayISO(), -60))
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 
 const DAYS = 30

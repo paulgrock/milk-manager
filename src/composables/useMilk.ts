@@ -1,6 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { supabase, unwrap } from '@/lib/supabase'
+import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { toISODate, parseDate } from '@/lib/dates'
 import type { DayTotal, Lactation, MilkRow } from '@/lib/milk'
 import { CLEAR_MILKING, RECORD_MILKING, milkKeys, type ClearVars, type RecordVars } from '@/lib/milkSync'
@@ -21,24 +21,23 @@ export function useMilkDay(date: MaybeRefOrGetter<string>) {
   })
 }
 
-/** Per-doe day totals for the herd over the last `days` days. */
-export function useHerdDayTotals(days = 60) {
+/** Per-doe day totals for the herd from a date on, newest first. */
+export function useHerdDayTotals(since: MaybeRefOrGetter<string>) {
   const { herdId } = useHerd()
   return useQuery({
-    queryKey: computed(() => milkKeys.totals(herdId.value)),
-    queryFn: async (): Promise<DayTotal[]> => {
-      const since = new Date()
-      since.setDate(since.getDate() - days)
-      return unwrap(
-        await supabase
+    queryKey: computed(() => [...milkKeys.totals(herdId.value), toValue(since)] as const),
+    queryFn: (): Promise<DayTotal[]> =>
+      fetchAll((from, to) =>
+        supabase
           .from('milk_day_totals')
           .select('*')
           .eq('herd_id', herdId.value)
-          .gte('milked_on', toISODate(since))
-          .order('milked_on', { ascending: false }),
-      )
-    },
-    enabled: computed(() => !!herdId.value),
+          .gte('milked_on', toValue(since))
+          .order('milked_on', { ascending: false })
+          .order('goat_id')
+          .range(from, to),
+      ),
+    enabled: computed(() => !!herdId.value && !!toValue(since)),
   })
 }
 
@@ -46,9 +45,9 @@ export function useHerdDayTotals(days = 60) {
 export function useGoatDayTotals(goatId: MaybeRefOrGetter<string>) {
   return useQuery({
     queryKey: computed(() => milkKeys.goat(toValue(goatId))),
-    queryFn: async (): Promise<DayTotal[]> =>
-      unwrap(
-        await supabase.from('milk_day_totals').select('*').eq('goat_id', toValue(goatId)).order('milked_on'),
+    queryFn: (): Promise<DayTotal[]> =>
+      fetchAll((from, to) =>
+        supabase.from('milk_day_totals').select('*').eq('goat_id', toValue(goatId)).order('milked_on').range(from, to),
       ),
     enabled: computed(() => !!toValue(goatId)),
   })

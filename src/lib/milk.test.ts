@@ -41,6 +41,16 @@ describe('units', () => {
     expect(formatWeight(1542, 'kg', true)).toBe('1.54 kg')
   })
 
+  it('uses fewer decimals for bigger numbers', () => {
+    expect(formatWeight(toGrams(12.63, 'lb'), 'lb')).toBe('12.6')
+    expect(formatWeight(toGrams(856.88, 'lb'), 'lb', true)).toBe('857 lb')
+    expect(formatWeight(toGrams(1280.19, 'lb'), 'lb')).toBe('1,280')
+  })
+
+  it('keeps two decimals in input boxes even for big milkings', () => {
+    expect(formatWeightInput({ weight_g: toGrams(10.25, 'lb'), portions_g: null }, 'lb')).toBe('10.25')
+  })
+
   it('labels milkings', () => {
     expect([0, 1, 2, 3, 4].map(milkingLabel)).toEqual(['Day total', 'AM', 'PM', 'Extra', 'Extra 2'])
   })

@@ -4,7 +4,8 @@ import { useGoatDayTotals, useLactations } from '@/composables/useMilk'
 import { useHerd } from '@/composables/useHerd'
 import { formatDate, todayISO } from '@/lib/dates'
 import type { Goat } from '@/lib/goats'
-import { daysInMilk, formatWeight, type Lactation } from '@/lib/milk'
+import { formatWeight, type Lactation } from '@/lib/milk'
+import { STANDARD_DAYS, summarizeLactation } from '@/lib/lactation'
 import LactationModal from './LactationModal.vue'
 
 const props = defineProps<{ goat: Goat }>()
@@ -18,19 +19,11 @@ const today = todayISO()
 const rows = computed(() =>
   (lactations.data.value ?? [])
     .filter((l) => l.goat_id === props.goat.id)
-    .map((l) => {
-      const end = l.dried_off_on ?? today
-      const days = (dayTotals.data.value ?? []).filter((d) => d.milked_on! >= l.freshened_on && d.milked_on! <= end)
-      const totalG = days.reduce((s, d) => s + (d.total_g ?? 0), 0)
-      return {
-        lactation: l,
-        inMilk: !l.dried_off_on || l.dried_off_on >= today,
-        dim: daysInMilk(l.freshened_on, end),
-        totalG,
-        daysRecorded: days.length,
-        avgG: days.length ? Math.round(totalG / days.length) : 0,
-      }
-    }),
+    .map((l) => ({
+      lactation: l,
+      inMilk: !l.dried_off_on || l.dried_off_on >= today,
+      summary: summarizeLactation(l, dayTotals.data.value ?? [], today),
+    })),
 )
 const current = computed(() => rows.value.find((r) => r.inMilk)?.lactation)
 
@@ -73,11 +66,19 @@ const modal = ref<{ open: boolean; mode: 'start' | 'edit' | 'dryOff'; lactation?
               {{ r.inMilk ? 'in milk' : formatDate(r.lactation.dried_off_on) }}
             </span>
             <span class="block text-xs text-muted">
-              {{ r.inMilk ? `DIM ${r.dim}` : `${r.dim + 1} days` }}
-              <template v-if="r.daysRecorded"> · {{ r.daysRecorded }} {{ r.daysRecorded === 1 ? 'day' : 'days' }} weighed · avg {{ formatWeight(r.avgG, unit, true) }}/day</template>
+              {{ r.inMilk ? `DIM ${r.summary.currentDim}` : `${r.summary.currentDim + 1} days` }}
+              <template v-if="r.summary.daysRecorded">
+                · {{ r.summary.daysRecorded }} {{ r.summary.daysRecorded === 1 ? 'day' : 'days' }} weighed · avg
+                {{ formatWeight(r.summary.avgG, unit, true) }}/day
+              </template>
             </span>
           </span>
-          <span class="font-medium tabular-nums">{{ formatWeight(r.totalG, unit, true) }}</span>
+          <span class="text-end">
+            <span class="block font-medium tabular-nums">{{ formatWeight(r.summary.totalG, unit, true) }}</span>
+            <span v-if="r.summary.projected305G !== null" class="block text-xs text-muted tabular-nums">
+              {{ r.inMilk && r.summary.currentDim < STANDARD_DAYS ? 'proj.' : '' }} 305d {{ formatWeight(r.summary.projected305G, unit) }}
+            </span>
+          </span>
         </button>
       </li>
     </ul>

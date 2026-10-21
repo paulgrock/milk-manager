@@ -21,12 +21,22 @@ export function fromGrams(grams: number, unit: WeightUnit): number {
   return grams / GRAMS_PER[unit]
 }
 
-/** "3.4" or "3.4 lb": at most two decimals, no trailing zeros. */
+/**
+ * "3.4", "12.6" or "1,281 lb": no trailing zeros, and fewer decimals as the
+ * number grows (two under 10, one under 100, none above) so totals stay
+ * readable.
+ */
 export function formatWeight(grams: number | null | undefined, unit: WeightUnit, withUnit = false): string {
   if (grams === null || grams === undefined) return ''
-  const n = Math.round(fromGrams(grams, unit) * 100) / 100
-  const text = n.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  const value = fromGrams(grams, unit)
+  const decimals = Math.abs(value) >= 100 ? 0 : Math.abs(value) >= 10 ? 1 : 2
+  const text = value.toLocaleString(undefined, { maximumFractionDigits: decimals })
   return withUnit ? `${text} ${unit}` : text
+}
+
+/** A weight as typed into a box: always up to two decimals, so editing never loses precision. */
+function formatInputWeight(grams: number, unit: WeightUnit): string {
+  return String(Math.round(fromGrams(grams, unit) * 100) / 100)
 }
 
 export function milkingLabel(milking: number): string {
@@ -64,7 +74,9 @@ export function parseWeightInput(text: string, unit: WeightUnit): ParsedWeight {
 
 /** What to show in a weight box for a saved milking. */
 export function formatWeightInput(row: Pick<MilkRow, 'weight_g' | 'portions_g'>, unit: WeightUnit): string {
-  return row.portions_g?.length ? row.portions_g.map((g) => formatWeight(g, unit)).join(' + ') : formatWeight(row.weight_g, unit)
+  return row.portions_g?.length
+    ? row.portions_g.map((g) => formatInputWeight(g, unit)).join(' + ')
+    : formatInputWeight(row.weight_g, unit)
 }
 
 export interface RecordInput {

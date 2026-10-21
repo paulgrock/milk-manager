@@ -151,6 +151,7 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
   <div class="space-y-4 pb-28">
     <div class="flex flex-wrap items-center gap-2">
       <h1 class="text-2xl font-semibold flex-1">Milk</h1>
+      <UButton to="/milk/production" color="neutral" variant="ghost" icon="i-lucide-chart-line">Production</UButton>
       <UButton to="/milk/history" color="neutral" variant="ghost" icon="i-lucide-history">History</UButton>
     </div>
 

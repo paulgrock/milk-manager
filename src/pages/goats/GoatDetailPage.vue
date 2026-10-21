@@ -18,6 +18,7 @@ import PedigreeChart from '@/components/goats/PedigreeChart.vue'
 import AppraisalSection from '@/components/goats/AppraisalSection.vue'
 import PhotoSection from '@/components/goats/PhotoSection.vue'
 import LactationSection from '@/components/milk/LactationSection.vue'
+import LactationCurveCard from '@/components/milk/LactationCurveCard.vue'
 
 const route = useRoute()
 const { goats, appraisals, photos, byId } = useHerdGoats()
@@ -75,6 +76,8 @@ const details = computed(() => {
         <span class="hidden sm:inline">Edit</span>
       </UButton>
     </div>
+
+    <LactationCurveCard v-if="goat.sex === 'doe'" :goat="goat" />
 
     <div class="grid lg:grid-cols-2 gap-4 items-start">
       <div class="space-y-4">

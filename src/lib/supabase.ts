@@ -15,3 +15,21 @@ export function unwrap<T>(result: { data: T | null; error: { message: string } |
   if (result.error) throw new Error(result.error.message)
   return result.data as T
 }
+
+const PAGE_SIZE = 1000
+
+/**
+ * Fetches every row of a query, a page at a time. Supabase caps a single
+ * response at 1000 rows, which a doe's milk history passes in a few years.
+ * The query must have a stable order.
+ */
+export async function fetchAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const rows: T[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const batch = unwrap(await page(from, from + PAGE_SIZE - 1))
+    rows.push(...batch)
+    if (batch.length < PAGE_SIZE) return rows
+  }
+}
