@@ -23,7 +23,59 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "herd_invites": {
+            "goat_photos": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"goat_id": string,"herd_id": string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path": string,"taken_on"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path"?: string,"taken_on"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "goat_photos_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"goats": {
+                  Row: {
+                    "barn_name": string | null,"birth_date": string | null,"breed": string | null,"breed_category": string | null,"color_markings": string | null,"created_at": string,"created_by": string | null,"dam_id": string | null,"herd_id": string,"horn_status": Database["public"]['Enums']["horn_status"],"id": string,"left_herd_on": string | null,"left_herd_reason": string | null,"microchip": string | null,"notes": string | null,"pedigree_url": string | null,"registered_name": string | null,"registration_number": string | null,"registry": string | null,"scrapie_tag": string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id": string | null,"status": Database["public"]['Enums']["goat_status"],"tattoo_left": string | null,"tattoo_right": string | null,"title_prefix": string | null,"title_suffix": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"herd_id": string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"herd_id"?: string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex"?: Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "goats_dam_fk"
+      columns: ["dam_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "goats_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "goats_sire_fk"
+      columns: ["sire_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"herd_invites": {
                   Row: {
                     "created_at": string,"email": string,"herd_id": string,"id": string,"invited_by": string | null,"role": Database["public"]['Enums']["herd_role"]
                   }
@@ -77,6 +129,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"linear_appraisals": {
+                  Row: {
+                    "appraised_on": string,"appraiser": string | null,"body_capacity": string,"created_at": string,"created_by": string | null,"dairy_strength": string,"final_score": number,"general_appearance": string,"goat_id": string,"herd_id": string,"id": string,"mammary_system": string | null,"notes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "appraised_on": string,"appraiser"?: string | null,"body_capacity": string,"created_at"?: string,"created_by"?: string | null,"dairy_strength": string,"final_score": number,"general_appearance": string,"goat_id": string,"herd_id": string,"id"?: string,"mammary_system"?: string | null,"notes"?: string | null
+                  }
+                  Update: {
+                    "appraised_on"?: string,"appraiser"?: string | null,"body_capacity"?: string,"created_at"?: string,"created_by"?: string | null,"dairy_strength"?: string,"final_score"?: number,"general_appearance"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"mammary_system"?: string | null,"notes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "linear_appraisals_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -128,10 +200,16 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "created_at": string,"herd_id": string,"herd_name": string,"id": string,"role": Database["public"]['Enums']["herd_role"]
             }[]
+                           },
+"set_primary_photo":
+{ Args: { "photo_id": string }; Returns: undefined
+                           },
+"storage_path_herd":
+{ Args: { "path": string }; Returns: string
                            }
           }
           Enums: {
-            "herd_role": "owner"|"helper","weight_unit": "lb"|"kg"
+            "goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -251,7 +329,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "herd_role": ["owner", "helper"],"weight_unit": ["lb", "kg"]
+            "goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const
