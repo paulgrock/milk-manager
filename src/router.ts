@@ -29,8 +29,10 @@ export const router = createRouter({
         { path: 'milk', component: () => import('@/pages/milk/MilkPage.vue') },
         { path: 'milk/history', component: () => import('@/pages/milk/MilkHistoryPage.vue') },
         { path: 'milk/production', component: () => import('@/pages/milk/ProductionPage.vue') },
+        { path: 'breeding', component: () => import('@/pages/breeding/BreedingPage.vue') },
+        { path: 'breeding/kidding', component: () => import('@/pages/breeding/KiddingPage.vue') },
         {
-          path: ':section(breeding|health|calendar|finances)',
+          path: ':section(health|calendar|finances)',
           component: () => import('@/pages/ComingSoonPage.vue'),
         },
       ],

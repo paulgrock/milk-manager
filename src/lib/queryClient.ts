@@ -84,6 +84,10 @@ export async function restoreQueryCache(): Promise<void> {
     dehydrateOptions,
   })
   await restored
+  // Restored data shows straight away but always gets refreshed: whether a
+  // query was out of date isn't saved with it, so a change made just before
+  // a reload (e.g. a kidding starting a lactation) could otherwise look current.
+  void queryClient.invalidateQueries({ refetchType: 'none' })
   // Also save when the app goes to the background or is closed.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') void saveCacheNow()

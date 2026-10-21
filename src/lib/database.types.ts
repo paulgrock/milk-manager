@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "goat_photos": {
+            "breedings": {
+                  Row: {
+                    "bred_on": string,"buck_id": string | null,"created_at": string,"created_by": string | null,"doe_id": string,"exposure_end": string | null,"herd_id": string,"id": string,"method": Database["public"]['Enums']["breeding_method"],"notes": string | null,"service_fee_cents": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bred_on": string,"buck_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"doe_id": string,"exposure_end"?: string | null,"herd_id": string,"id"?: string,"method"?: Database["public"]['Enums']["breeding_method"],"notes"?: string | null,"service_fee_cents"?: number | null
+                  }
+                  Update: {
+                    "bred_on"?: string,"buck_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"doe_id"?: string,"exposure_end"?: string | null,"herd_id"?: string,"id"?: string,"method"?: Database["public"]['Enums']["breeding_method"],"notes"?: string | null,"service_fee_cents"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "breedings_buck_id_herd_id_fkey"
+      columns: ["buck_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "breedings_doe_id_herd_id_fkey"
+      columns: ["doe_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"goat_photos": {
                   Row: {
                     "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null
                   }
@@ -70,6 +96,26 @@ isOneToOne: false
     },{
       foreignKeyName: "goats_sire_fk"
       columns: ["sire_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"heats": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"observed_on": string,"signs": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"goat_id": string,"herd_id": string,"id"?: string,"observed_on": string,"signs"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"observed_on"?: string,"signs"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "heats_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
 isOneToOne: false
       referencedRelation: "goats"
       referencedColumns: ["id","herd_id"]
@@ -129,6 +175,58 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"kiddings": {
+                  Row: {
+                    "breeding_id": string | null,"created_at": string,"created_by": string | null,"difficulty": Database["public"]['Enums']["kidding_difficulty"],"doe_id": string,"herd_id": string,"id": string,"kidded_on": string,"notes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "breeding_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"difficulty"?: Database["public"]['Enums']["kidding_difficulty"],"doe_id": string,"herd_id": string,"id"?: string,"kidded_on": string,"notes"?: string | null
+                  }
+                  Update: {
+                    "breeding_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"difficulty"?: Database["public"]['Enums']["kidding_difficulty"],"doe_id"?: string,"herd_id"?: string,"id"?: string,"kidded_on"?: string,"notes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "kiddings_breeding_id_herd_id_fkey"
+      columns: ["breeding_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "breedings"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "kiddings_doe_id_herd_id_fkey"
+      columns: ["doe_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"kids": {
+                  Row: {
+                    "birth_weight_g": number | null,"goat_id": string | null,"herd_id": string,"id": string,"kidding_id": string,"notes": string | null,"outcome": Database["public"]['Enums']["kid_outcome"],"sex": Database["public"]['Enums']["goat_sex"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "birth_weight_g"?: number | null,"goat_id"?: string | null,"herd_id": string,"id"?: string,"kidding_id": string,"notes"?: string | null,"outcome"?: Database["public"]['Enums']["kid_outcome"],"sex": Database["public"]['Enums']["goat_sex"]
+                  }
+                  Update: {
+                    "birth_weight_g"?: number | null,"goat_id"?: string | null,"herd_id"?: string,"id"?: string,"kidding_id"?: string,"notes"?: string | null,"outcome"?: Database["public"]['Enums']["kid_outcome"],"sex"?: Database["public"]['Enums']["goat_sex"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "kids_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "kids_kidding_id_herd_id_fkey"
+      columns: ["kidding_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "kiddings"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 },"lactations": {
                   Row: {
                     "created_at": string,"created_by": string | null,"dried_off_on": string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id": string,"lactation_number": number,"notes": string | null
@@ -186,6 +284,26 @@ isOneToOne: false
       columns: ["goat_id","herd_id"]
 isOneToOne: false
       referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"pregnancy_checks": {
+                  Row: {
+                    "breeding_id": string,"checked_on": string,"created_at": string,"created_by": string | null,"herd_id": string,"id": string,"method": Database["public"]['Enums']["pregnancy_check_method"],"notes": string | null,"result": Database["public"]['Enums']["pregnancy_result"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "breeding_id": string,"checked_on": string,"created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"method": Database["public"]['Enums']["pregnancy_check_method"],"notes"?: string | null,"result": Database["public"]['Enums']["pregnancy_result"]
+                  }
+                  Update: {
+                    "breeding_id"?: string,"checked_on"?: string,"created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"method"?: Database["public"]['Enums']["pregnancy_check_method"],"notes"?: string | null,"result"?: Database["public"]['Enums']["pregnancy_result"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pregnancy_checks_breeding_id_herd_id_fkey"
+      columns: ["breeding_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "breedings"
       referencedColumns: ["id","herd_id"]
     }
                   ]
@@ -258,6 +376,24 @@ isOneToOne: false
               "created_at": string,"herd_id": string,"herd_name": string,"id": string,"role": Database["public"]['Enums']["herd_role"]
             }[]
                            },
+"record_kidding":
+{ Args: { "p_breeding_id"?: string,"p_difficulty"?: Database["public"]['Enums']["kidding_difficulty"],"p_doe_id": string,"p_kidded_on": string,"p_kids"?: Json,"p_notes"?: string,"p_start_lactation"?: boolean }; Returns: {
+              "breeding_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"difficulty": Database["public"]['Enums']["kidding_difficulty"],
+"doe_id": string,
+"herd_id": string,
+"id": string,
+"kidded_on": string,
+"notes": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "kiddings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "record_milking":
 { Args: { "p_goat_id": string,"p_milked_on": string,"p_milking": number,"p_note"?: string,"p_portions_g"?: (number)[],"p_weight_g": number }; Returns: {
               "goat_id": string,
@@ -285,7 +421,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","weight_unit": "lb"|"kg"
+            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -405,7 +541,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"weight_unit": ["lb", "kg"]
+            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const

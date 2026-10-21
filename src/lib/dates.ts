@@ -30,3 +30,22 @@ export function monthsAndDaysBetween(from: string, to: string): { months: number
   const days = Math.round((b.getTime() - anchor.getTime()) / 86_400_000)
   return { months, days }
 }
+
+/** "today", "in 3 days", "5 days ago". */
+export function relativeDays(days: number): string {
+  if (days === 0) return 'today'
+  if (days === 1) return 'tomorrow'
+  if (days === -1) return 'yesterday'
+  return days > 0 ? `in ${days} days` : `${-days} days ago`
+}
+
+/** 'YYYY-MM-DD' shifted by whole months (clamped to the month's last day). */
+export function addMonths(iso: string, months: number): string {
+  const d = parseDate(iso)
+  const day = d.getDate()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + months)
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  d.setDate(Math.min(day, last))
+  return toISODate(d)
+}

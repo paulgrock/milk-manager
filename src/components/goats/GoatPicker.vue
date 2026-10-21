@@ -35,7 +35,10 @@ function onCreated(goat: Goat) {
 
 <template>
   <div class="flex gap-1">
+    <!-- Wait for the herd: given an id it has no item for yet, the menu shows the raw id. -->
+    <USkeleton v-if="goats.isPending.value" class="h-8 flex-1" />
     <UInputMenu
+      v-else
       :model-value="model ?? undefined"
       :items="items"
       value-key="value"
