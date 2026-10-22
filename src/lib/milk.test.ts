@@ -79,6 +79,11 @@ describe('parseWeightInput', () => {
     expect(parseWeightInput('60', 'lb').kind).toBe('invalid')
   })
 
+  it('takes a different limit for other weights', () => {
+    expect(parseWeightInput('62', 'lb', { grams: 200_000, message: 'too heavy' })).toEqual({ kind: 'ok', grams: toGrams(62, 'lb'), portions: null })
+    expect(parseWeightInput('30', 'lb', { grams: 10_000, message: 'too heavy' })).toEqual({ kind: 'invalid', message: 'too heavy' })
+  })
+
   it('shows saved parts back the way they were typed', () => {
     expect(formatWeightInput({ weight_g: 1543, portions_g: [953, 590] }, 'lb')).toBe('2.1 + 1.3')
     expect(formatWeightInput({ weight_g: 1542, portions_g: null }, 'lb')).toBe('3.4')

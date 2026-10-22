@@ -20,6 +20,10 @@ import PhotoSection from '@/components/goats/PhotoSection.vue'
 import LactationSection from '@/components/milk/LactationSection.vue'
 import LactationCurveCard from '@/components/milk/LactationCurveCard.vue'
 import BreedingCard from '@/components/breeding/BreedingCard.vue'
+import HealthCard from '@/components/health/HealthCard.vue'
+import { useHealthData } from '@/composables/useHealth'
+import { todayISO } from '@/lib/dates'
+import { withdrawalOn } from '@/lib/health'
 
 const route = useRoute()
 const { goats, appraisals, photos, byId } = useHerdGoats()
@@ -30,6 +34,8 @@ const goatAppraisals = computed(() => (appraisals.data.value ?? []).filter((a) =
 const goatPhotos = computed(() => (photos.data.value ?? []).filter((p) => p.goat_id === goat.value?.id))
 const primary = computed(() => goatPhotos.value.find((p) => p.is_primary))
 const primaryUrl = usePhotoUrls(() => (primary.value ? [primary.value.storage_path] : []))
+const health = useHealthData()
+const withdrawal = computed(() => (goat.value ? withdrawalOn(goat.value.id, health.data.value.treatments, todayISO()) : null))
 const kids = computed(() => (goat.value ? offspringOf(goat.value.id, goats.data.value ?? []) : []))
 
 const details = computed(() => {
@@ -78,6 +84,15 @@ const details = computed(() => {
       </UButton>
     </div>
 
+    <UAlert
+      v-if="withdrawal"
+      color="warning"
+      variant="subtle"
+      icon="i-lucide-milk-off"
+      :title="`Milk withheld through ${formatDate(withdrawal.through)}`"
+      :description="withdrawal.treatments.map((t) => t.medication).join(', ')"
+    />
+
     <LactationCurveCard v-if="goat.sex === 'doe'" :goat="goat" />
 
     <div class="grid lg:grid-cols-2 gap-4 items-start">
@@ -115,6 +130,7 @@ const details = computed(() => {
       </div>
 
       <div class="space-y-4">
+        <HealthCard :goat="goat" />
         <BreedingCard v-if="goat.sex === 'doe'" :goat="goat" />
         <LactationSection v-if="goat.sex === 'doe'" :goat="goat" />
         <AppraisalSection :goat="goat" :appraisals="goatAppraisals" />

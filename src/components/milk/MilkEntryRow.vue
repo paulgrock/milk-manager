@@ -12,6 +12,7 @@ import {
   type WeightUnit,
 } from '@/lib/milk'
 import GoatAvatar from '@/components/goats/GoatAvatar.vue'
+import { formatDate } from '@/lib/dates'
 
 const props = defineProps<{
   goat: Goat
@@ -21,6 +22,8 @@ const props = defineProps<{
   dim: number
   photoUrl?: string
   isToday: boolean
+  /** Set when her milk must be withheld on this day (treatment withdrawal). */
+  withheldThrough?: string
   saving: boolean
   waitingForSignal: boolean
   error?: string
@@ -102,6 +105,9 @@ const menu = computed<DropdownMenuItem[]>(() => [
         <template v-if="summary">{{ summary }}</template>
         <template v-if="rows.length > 1 || (rows.length && !current)"> · Day {{ formatWeight(status.totalG, unit) }}</template>
       </p>
+      <UBadge v-if="withheldThrough" color="warning" variant="subtle" size="sm" icon="i-lucide-milk-off" class="me-1">
+        Withhold · through {{ formatDate(withheldThrough) }}
+      </UBadge>
       <p v-if="error" class="text-xs text-error">{{ error }}</p>
       <UBadge v-else-if="status.missing && !(isToday && status.missing === 'PM')" color="warning" variant="subtle" size="sm">{{ status.missing }} missing</UBadge>
     </div>

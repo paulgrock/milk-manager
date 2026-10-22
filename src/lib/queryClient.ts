@@ -30,6 +30,9 @@ export const queryClient = new QueryClient({
 
 const CACHE_KEY = 'milk-manager-cache'
 
+/** Mutation key prefixes for saves that work offline. */
+const OFFLINE_SAVES = ['milk', 'care']
+
 // Unfinished saves are stored as "paused" so they resume after the app
 // restarts. Without this, a save that was retrying on a weak connection
 // (the phone thinks it's online, but requests fail) would be lost.
@@ -47,9 +50,10 @@ const dehydrateOptions = {
   // Keep the last data we had even if the latest refresh failed (no
   // signal), or the app would open empty in the barn.
   shouldDehydrateQuery: (q: { state: { data: unknown } }) => q.state.data !== undefined,
-  // Only milk saves have mutation defaults (milkSync.ts), so only they can be replayed later.
+  // Only milk saves and care logs have mutation defaults (milkSync.ts,
+  // healthSync.ts), so only they can be replayed later.
   shouldDehydrateMutation: (m: { state: { status: string }; options: { mutationKey?: readonly unknown[] } }) =>
-    m.state.status === 'pending' && m.options.mutationKey?.[0] === 'milk',
+    m.state.status === 'pending' && OFFLINE_SAVES.includes(m.options.mutationKey?.[0] as string),
 }
 
 const persister = createAsyncStoragePersister({

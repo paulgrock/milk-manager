@@ -31,8 +31,9 @@ export const router = createRouter({
         { path: 'milk/production', component: () => import('@/pages/milk/ProductionPage.vue') },
         { path: 'breeding', component: () => import('@/pages/breeding/BreedingPage.vue') },
         { path: 'breeding/kidding', component: () => import('@/pages/breeding/KiddingPage.vue') },
+        { path: 'health', component: () => import('@/pages/health/HealthPage.vue') },
         {
-          path: ':section(health|calendar|finances)',
+          path: ':section(calendar|finances)',
           component: () => import('@/pages/ComingSoonPage.vue'),
         },
       ],

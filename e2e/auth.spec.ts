@@ -64,7 +64,7 @@ test('owner renames the herd and switches milk units', async ({ page, herd }) =>
   await page.getByRole('combobox', { name: 'Milk weight unit' }).click()
   await page.getByRole('option', { name: 'Kilograms (kg)' }).click()
   await page.getByRole('button', { name: 'Save' }).click()
-  await expect(page.getByText('Herd saved')).toBeVisible()
+  await expect(page.getByText('Herd saved').first()).toBeVisible()
   await expect(page.getByRole('banner').getByText(`${herd.name} Renamed`)).toBeVisible()
 
   const saved = await admin.from('herds').select('name, weight_unit').eq('id', herd.id).single()

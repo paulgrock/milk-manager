@@ -3,12 +3,14 @@ import { computed } from 'vue'
 import { useHerdGoats } from '@/composables/useGoats'
 import { CURRENT_STATUSES, goatFullName } from '@/lib/goats'
 
+/** Picks a goat in the current herd: does by default, or any sex. */
+const props = withDefaults(defineProps<{ sex?: 'doe' | 'any'; placeholder?: string }>(), { sex: 'doe', placeholder: undefined })
 const model = defineModel<string | null>({ required: true })
 const { goats } = useHerdGoats()
 
 const items = computed(() =>
   (goats.data.value ?? [])
-    .filter((g) => g.sex === 'doe' && CURRENT_STATUSES.includes(g.status))
+    .filter((g) => (props.sex === 'any' || g.sex === props.sex) && CURRENT_STATUSES.includes(g.status))
     .map((g) => ({ label: g.barn_name ? `${g.barn_name} (${goatFullName(g)})` : goatFullName(g), value: g.id }))
     .sort((a, b) => a.label.localeCompare(b.label)),
 )
@@ -22,7 +24,7 @@ const items = computed(() =>
     :model-value="model ?? undefined"
     :items="items"
     value-key="value"
-    placeholder="Search does…"
+    :placeholder="placeholder ?? (sex === 'doe' ? 'Search does…' : 'Search goats…')"
     class="w-full"
     @update:model-value="(v: unknown) => (model = (v as string) ?? null)"
   />

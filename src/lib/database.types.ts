@@ -49,6 +49,72 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"care_events": {
+                  Row: {
+                    "care_type_id": string,"created_at": string,"created_by": string | null,"done_on": string,"dose": number | null,"goat_id": string,"herd_id": string,"id": string,"notes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "care_type_id": string,"created_at"?: string,"created_by"?: string | null,"done_on": string,"dose"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"notes"?: string | null
+                  }
+                  Update: {
+                    "care_type_id"?: string,"created_at"?: string,"created_by"?: string | null,"done_on"?: string,"dose"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"notes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "care_events_care_type_id_herd_id_fkey"
+      columns: ["care_type_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "care_types"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "care_events_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"care_types": {
+                  Row: {
+                    "archived": boolean,"created_at": string,"dose_unit": string | null,"herd_id": string,"id": string,"interval_days": number | null,"name": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived"?: boolean,"created_at"?: string,"dose_unit"?: string | null,"herd_id": string,"id"?: string,"interval_days"?: number | null,"name": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "archived"?: boolean,"created_at"?: string,"dose_unit"?: string | null,"herd_id"?: string,"id"?: string,"interval_days"?: number | null,"name"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "care_types_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"disease_tests": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"disease": string,"goat_id": string,"herd_id": string,"id": string,"lab": string | null,"notes": string | null,"result": Database["public"]['Enums']["test_result"],"tested_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"disease": string,"goat_id": string,"herd_id": string,"id"?: string,"lab"?: string | null,"notes"?: string | null,"result"?: Database["public"]['Enums']["test_result"],"tested_on": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"disease"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"lab"?: string | null,"notes"?: string | null,"result"?: Database["public"]['Enums']["test_result"],"tested_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "disease_tests_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 },"goat_photos": {
                   Row: {
                     "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null
@@ -96,6 +162,26 @@ isOneToOne: false
     },{
       foreignKeyName: "goats_sire_fk"
       columns: ["sire_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"health_observations": {
+                  Row: {
+                    "body_condition": number | null,"created_at": string,"created_by": string | null,"famacha": number | null,"goat_id": string,"herd_id": string,"id": string,"notes": string | null,"observed_on": string,"weight_g": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_condition"?: number | null,"created_at"?: string,"created_by"?: string | null,"famacha"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"notes"?: string | null,"observed_on": string,"weight_g"?: number | null
+                  }
+                  Update: {
+                    "body_condition"?: number | null,"created_at"?: string,"created_by"?: string | null,"famacha"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"notes"?: string | null,"observed_on"?: string,"weight_g"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "health_observations_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
 isOneToOne: false
       referencedRelation: "goats"
       referencedColumns: ["id","herd_id"]
@@ -307,6 +393,26 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"treatments": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"dose": string | null,"ended_on": string | null,"goat_id": string,"herd_id": string,"id": string,"lot_number": string | null,"medication": string,"milk_withdrawal_days": number,"notes": string | null,"reason": string | null,"route": Database["public"]['Enums']["treatment_route"] | null,"started_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"dose"?: string | null,"ended_on"?: string | null,"goat_id": string,"herd_id": string,"id"?: string,"lot_number"?: string | null,"medication": string,"milk_withdrawal_days"?: number,"notes"?: string | null,"reason"?: string | null,"route"?: Database["public"]['Enums']["treatment_route"] | null,"started_on": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"dose"?: string | null,"ended_on"?: string | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"lot_number"?: string | null,"medication"?: string,"milk_withdrawal_days"?: number,"notes"?: string | null,"reason"?: string | null,"route"?: Database["public"]['Enums']["treatment_route"] | null,"started_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "treatments_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -421,7 +527,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","weight_unit": "lb"|"kg"
+            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","test_result": "negative"|"positive"|"inconclusive"|"pending","treatment_route": "oral"|"subq"|"im"|"iv"|"topical"|"intramammary"|"other","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -541,7 +647,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"weight_unit": ["lb", "kg"]
+            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"test_result": ["negative", "positive", "inconclusive", "pending"],"treatment_route": ["oral", "subq", "im", "iv", "topical", "intramammary", "other"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const

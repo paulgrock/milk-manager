@@ -4,7 +4,7 @@ import { useToast } from '@nuxt/ui/composables'
 import { useBreedingMutations } from '@/composables/useBreeding'
 import { formatDate, todayISO } from '@/lib/dates'
 import { METHOD_LABELS, dueWindow, type Breeding, type BreedingMethod } from '@/lib/breeding'
-import DoePicker from './DoePicker.vue'
+import DoePicker from '@/components/HerdGoatPicker.vue'
 import GoatPicker from '@/components/goats/GoatPicker.vue'
 
 const props = defineProps<{ goatId?: string; breeding?: Breeding; date?: string }>()

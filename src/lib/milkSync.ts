@@ -3,6 +3,7 @@
 import { queryClient, saveCacheNow } from './queryClient'
 import { supabase, unwrap } from './supabase'
 import { applyRecord, type MilkRow, type RecordInput } from './milk'
+import { retry, retryDelay } from './offlineRetry'
 
 export const milkKeys = {
   all: ['milk'] as const,
@@ -32,16 +33,6 @@ function refreshAfter(herdId: string, goatId: string) {
 // One queue for all milk saves: they reach the server in the order they
 // were made, so a correction never lands before the weight it corrects.
 const scope = { id: 'milk' }
-
-/** fetch failed outright (no or bad signal), as opposed to the server saying no. */
-export function isNetworkError(error: unknown): boolean {
-  return /failed to fetch|load failed|networkerror|network request failed|fetch failed/i.test(String((error as Error)?.message ?? error))
-}
-
-// Keep retrying while it's the network, up to 30s apart; give up quickly on
-// real errors so they're shown.
-const retry = (failureCount: number, error: unknown) => isNetworkError(error) || failureCount < 2
-const retryDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, 30_000)
 
 queryClient.setMutationDefaults<MilkRow[], Error, RecordVars>(RECORD_MILKING, {
   scope,

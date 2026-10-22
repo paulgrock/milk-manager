@@ -4,7 +4,7 @@ import { useToast } from '@nuxt/ui/composables'
 import { useBreedingMutations } from '@/composables/useBreeding'
 import { todayISO } from '@/lib/dates'
 import type { Heat } from '@/lib/breeding'
-import DoePicker from './DoePicker.vue'
+import DoePicker from '@/components/HerdGoatPicker.vue'
 
 const props = defineProps<{ goatId?: string; heat?: Heat }>()
 const open = defineModel<boolean>('open', { required: true })

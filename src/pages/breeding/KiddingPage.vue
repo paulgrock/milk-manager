@@ -9,7 +9,7 @@ import { formatDate, todayISO } from '@/lib/dates'
 import { breedingStatus, dueWindow, type Breeding } from '@/lib/breeding'
 import { goatFullName, goatName } from '@/lib/goats'
 import { parseWeightInput } from '@/lib/milk'
-import DoePicker from '@/components/breeding/DoePicker.vue'
+import DoePicker from '@/components/HerdGoatPicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,9 +76,9 @@ async function submit() {
   let ok = true
   const kidInputs: KidInput[] = kids.map((k) => {
     k.error = ''
-    const parsed = parseWeightInput(k.weight, unit.value)
+    const parsed = parseWeightInput(k.weight, unit.value, { grams: 10_000, message: 'That is heavier than a newborn kid' })
     if (parsed.kind === 'invalid' || (parsed.kind === 'ok' && parsed.portions)) {
-      k.error = 'Birth weight should be one number, like 2.4'
+      k.error = parsed.kind === 'invalid' ? parsed.message : 'Birth weight should be one number, like 2.4'
       ok = false
     }
     return {

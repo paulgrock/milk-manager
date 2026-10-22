@@ -51,13 +51,19 @@ export type ParsedWeight =
   | { kind: 'invalid'; message: string }
   | { kind: 'ok'; grams: number; portions: number[] | null }
 
-const MAX_GRAMS = 20000
+/** Most a goat gives in one milking. */
+export const MAX_MILKING_GRAMS = 20000
 
 /**
  * Reads what was typed into a weight box. "3.4" is one weight; "2.1 + 1.3"
- * is a milking weighed in parts, which are kept and added up.
+ * is a milking weighed in parts, which are kept and added up. `max` is the
+ * largest sensible weight for what's being weighed.
  */
-export function parseWeightInput(text: string, unit: WeightUnit): ParsedWeight {
+export function parseWeightInput(
+  text: string,
+  unit: WeightUnit,
+  max: { grams: number; message: string } = { grams: MAX_MILKING_GRAMS, message: 'That is more than a goat gives in one milking' },
+): ParsedWeight {
   const trimmed = text.trim()
   if (!trimmed) return { kind: 'empty' }
   const parts = trimmed.split('+').map((p) => p.trim().replace(',', '.'))
@@ -68,7 +74,7 @@ export function parseWeightInput(text: string, unit: WeightUnit): ParsedWeight {
   // Round each part first so the stored parts always add up to the total exactly.
   const grams = parts.map((p) => toGrams(Number(p), unit))
   const total = grams.reduce((a, b) => a + b, 0)
-  if (total > MAX_GRAMS) return { kind: 'invalid', message: 'That is more than a goat gives in one milking' }
+  if (total > max.grams) return { kind: 'invalid', message: max.message }
   return { kind: 'ok', grams: total, portions: grams.length > 1 ? grams : null }
 }
 

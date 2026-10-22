@@ -25,6 +25,8 @@ import {
 import MilkEntryRow from '@/components/milk/MilkEntryRow.vue'
 import MilkDayEditor from '@/components/milk/MilkDayEditor.vue'
 import LactationModal from '@/components/milk/LactationModal.vue'
+import { useHealthData } from '@/composables/useHealth'
+import { withdrawalOn } from '@/lib/health'
 
 const route = useRoute()
 const router = useRouter()
@@ -79,6 +81,20 @@ const totals = computed(() => {
     dayG: rows.reduce((s, r) => s + r.weight_g, 0),
   }
 })
+
+// Does whose milk can't be sold today (treatment withdrawal).
+const health = useHealthData()
+const withheld = computed(() => {
+  const map = new Map<string, string>()
+  for (const { goat } of line.value) {
+    const w = withdrawalOn(goat.id, health.data.value.treatments, date.value)
+    if (w) map.set(goat.id, w.through)
+  }
+  return map
+})
+const withheldG = computed(() =>
+  (day.data.value ?? []).filter((r) => withheld.value.has(r.goat_id)).reduce((s, r) => s + r.weight_g, 0),
+)
 
 const primaryPhotos = computed(
   () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, p.storage_path])),
@@ -216,6 +232,7 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
           :dim="daysInMilk(lactation.freshened_on, date)"
           :photo-url="photoUrls[primaryPhotos.get(goat.id) ?? '']"
           :is-today="date === today"
+          :withheld-through="withheld.get(goat.id)"
           :saving="pendingFor(goat.id, date).length > 0"
           :waiting-for-signal="pendingFor(goat.id, date).some((p) => p.paused)"
           :error="errors[goat.id]"
@@ -236,6 +253,10 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
         <div>
           <p class="text-xs text-muted">{{ milkingLabel(milking) }} · {{ totals.milkingCount }}/{{ line.length }} does</p>
           <p class="text-lg font-semibold tabular-nums">{{ formatWeight(totals.milkingG, unit, true) }}</p>
+        </div>
+        <div v-if="withheldG" class="text-end">
+          <p class="text-xs text-warning">Withheld</p>
+          <p class="text-lg font-semibold tabular-nums">{{ formatWeight(withheldG, unit, true) }}</p>
         </div>
         <div class="ms-auto text-end">
           <p class="text-xs text-muted">Day total</p>
