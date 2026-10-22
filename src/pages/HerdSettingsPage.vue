@@ -7,6 +7,7 @@ import { supabase, unwrap } from '@/lib/supabase'
 import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
 import { useHerdMembers } from '@/composables/useHerdMembers'
+import PasskeysCard from '@/components/PasskeysCard.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -196,6 +197,8 @@ async function onSignOut() {
         </li>
       </ul>
     </UCard>
+
+    <PasskeysCard />
 
     <UButton color="neutral" variant="outline" icon="i-lucide-log-out" @click="onSignOut">Sign out</UButton>
   </div>

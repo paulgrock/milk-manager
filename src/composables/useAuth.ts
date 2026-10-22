@@ -31,11 +31,18 @@ export function useAuth() {
     session.value = data.session
   }
 
+  /** Opens the device's passkey prompt (Face ID, fingerprint…) and signs in. */
+  async function signInWithPasskey() {
+    const { data, error } = await supabase.auth.signInWithPasskey()
+    if (error) throw error
+    session.value = data.session
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     session.value = null
     await clearQueryCache()
   }
 
-  return { session, user, sendCode, verifyCode, signOut }
+  return { session, user, sendCode, verifyCode, signInWithPasskey, signOut }
 }

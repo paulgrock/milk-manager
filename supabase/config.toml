@@ -217,6 +217,20 @@ web3 = 30
 # provider = "hcaptcha"
 # secret = ""
 
+# Passkeys (Face ID, Touch ID, fingerprint, security keys). Experimental in Supabase.
+# A passkey only works for the rp_id it was made on: here that's localhost, so
+# local passkeys never work on the deployed site. The hosted project sets its
+# own rp_id (the site's domain) in the dashboard; keep it stable once people
+# have registered passkeys.
+[auth.passkey]
+enabled = true
+
+[auth.webauthn]
+rp_id = "localhost"
+rp_display_name = "Milk Manager"
+# Dev server, preview build, and the Playwright test server.
+rp_origins = ["http://localhost:5173", "http://localhost:4173", "http://localhost:4174"]
+
 [auth.email]
 # Allow/disallow new user signups via email to your project.
 enable_signup = true

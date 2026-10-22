@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
-import { localMailInbox } from '@/lib/supabase'
+import { localMailInbox, passkeysSupported } from '@/lib/supabase'
+import { passkeyErrorMessage } from '@/lib/passkeys'
 
-const { sendCode, verifyCode } = useAuth()
+const { sendCode, verifyCode, signInWithPasskey } = useAuth()
 const router = useRouter()
 const route = useRoute()
 
@@ -23,6 +24,20 @@ async function submitEmail() {
     step.value = 'code'
   } catch (e) {
     error.value = (e as Error).message
+  } finally {
+    busy.value = false
+  }
+}
+
+async function usePasskey() {
+  error.value = ''
+  busy.value = true
+  try {
+    await signInWithPasskey()
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    await router.replace(redirect)
+  } catch (e) {
+    error.value = passkeyErrorMessage(e)
   } finally {
     busy.value = false
   }
@@ -62,6 +77,12 @@ async function submitCode() {
           <UInput v-model="email" type="email" autocomplete="email" required autofocus class="w-full" size="xl" />
         </UFormField>
         <UButton type="submit" block size="xl" :loading="busy">Email me a code</UButton>
+        <template v-if="passkeysSupported">
+          <USeparator label="or" />
+          <UButton block size="xl" color="neutral" variant="outline" icon="i-lucide-fingerprint" :loading="busy" @click="usePasskey">
+            Sign in with a passkey
+          </UButton>
+        </template>
       </form>
 
       <form v-else class="space-y-4" @submit.prevent="submitCode">

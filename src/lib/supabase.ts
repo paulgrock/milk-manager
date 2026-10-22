@@ -8,7 +8,13 @@ if (!url || !key) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY. Copy .env.example to .env.local.')
 }
 
-export const supabase = createClient<Database>(url, key)
+export const supabase = createClient<Database>(url, key, {
+  // Passkeys are experimental in Supabase Auth and must be switched on here.
+  auth: { experimental: { passkey: true } },
+})
+
+/** Whether this browser can use passkeys at all. */
+export const passkeysSupported = typeof window !== 'undefined' && 'PublicKeyCredential' in window
 
 /**
  * Where sign-in emails end up when running against the local Supabase stack:

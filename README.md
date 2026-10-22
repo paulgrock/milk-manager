@@ -58,3 +58,7 @@ Every feature ships with three kinds of tests:
 4. On Netlify, import the GitHub repo. `netlify.toml` sets the build, the single-page-app routing and cache headers.
    Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under Site configuration → Environment variables, then deploy.
 5. In Supabase, set Auth → URL Configuration → Site URL to the Netlify address.
+6. Passkeys: in the Supabase dashboard, turn on passkeys and set the WebAuthn relying party ID to the site's domain
+   (e.g. `milk-manager.netlify.app`, no https://), the display name to "Milk Manager", and the allowed origin to the
+   full site address. Passkeys only work on the domain they were made for, so pick the final domain first: changing it
+   later means everyone re-adds their passkey. Locally this is already set in `supabase/config.toml` for `localhost`.
