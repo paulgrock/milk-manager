@@ -5,10 +5,12 @@ import { useHerdGoats } from '@/composables/useGoats'
 import { shiftDate, useHerdDayTotals, useLactations } from '@/composables/useMilk'
 import { useChartTheme } from '@/composables/useChartTheme'
 import { todayISO } from '@/lib/dates'
-import { goatName } from '@/lib/goats'
+import { goatName, inHerdOn } from '@/lib/goats'
 import { CONFIDENCE_LABELS, STANDARD_DAYS, summarizeLactation } from '@/lib/lactation'
 import { formatWeight, lactationOn } from '@/lib/milk'
 import HerdTrendChart from '@/components/charts/HerdTrendChart.vue'
+import { useMilkTests } from '@/composables/useMilkTests'
+import { officialFigures, withTestDays } from '@/lib/dhia'
 
 const TREND_DAYS = 90
 const today = todayISO()
@@ -17,9 +19,11 @@ const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 const { goats } = useHerdGoats()
 const lactations = useLactations()
 const theme = useChartTheme()
+const milkTests = useMilkTests()
 
 const active = computed(() =>
   (goats.data.value ?? [])
+    .filter((g) => inHerdOn(g, today))
     .map((g) => ({ goat: g, lactation: lactationOn(lactations.data.value ?? [], g.id, today) }))
     .filter((x) => !!x.lactation),
 )
@@ -59,7 +63,12 @@ const weekChange = computed(() =>
 const producers = computed(() =>
   active.value
     .map(({ goat, lactation }) => {
-      const summary = summarizeLactation(lactation!, totals.data.value ?? [], today)
+      const summary = summarizeLactation(
+        lactation!,
+        withTestDays(totals.data.value ?? [], goat.id, milkTests.data.value.tests, milkTests.data.value.results),
+        today,
+        officialFigures(lactation!, milkTests.data.value.tests, milkTests.data.value.results),
+      )
       const recent = summary.points.filter((p) => p.dim > summary.currentDim - 7)
       return {
         goat,

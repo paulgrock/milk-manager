@@ -10,6 +10,8 @@
 import type { Database } from './database.types'
 import { addMonths, monthsAndDaysBetween } from './dates'
 import { daysBetween } from './breeding'
+import { daysInMilk, type Lactation } from './milk'
+import type { OfficialFigures } from './lactation'
 
 type Tables = Database['public']['Tables']
 export type MilkTest = Tables['milk_tests']['Row']
@@ -190,4 +192,71 @@ export function withTestDays<T extends { goat_id: string | null; milked_on: stri
     ([date, grams]) => ({ goat_id: goatId, milked_on: date, total_g: grams, is_day_total: true, has_am: false, has_pm: false }) as unknown as T,
   )
   return [...kept, ...added]
+}
+
+/**
+ * A lactation's figures as printed on DHI reports: its latest test with
+ * lactation-to-date numbers, and the record once it's finished.
+ */
+export function officialFigures(lactation: Lactation, tests: MilkTest[], results: MilkTestResult[]): OfficialFigures {
+  const out: OfficialFigures = {}
+  if (lactation.official_milk_g !== null) {
+    out.complete = {
+      days: lactation.official_days,
+      milkG: lactation.official_milk_g,
+      fatG: lactation.official_fat_g,
+      proteinG: lactation.official_protein_g,
+      r305MilkG: lactation.official_305_milk_g,
+      r305FatG: lactation.official_305_fat_g,
+      r305ProteinG: lactation.official_305_protein_g,
+    }
+  }
+  const dates = new Map(tests.map((t) => [t.id, t.tested_on]))
+  const end = lactation.dried_off_on ?? '9999-12-31'
+  const latest = results
+    .filter((r) => r.goat_id === lactation.goat_id && r.ltd_milk_g !== null)
+    .map((r) => ({ r, date: dates.get(r.test_id) }))
+    .filter((x): x is { r: MilkTestResult; date: string } => !!x.date && x.date >= lactation.freshened_on && x.date <= end)
+    .sort((a, b) => b.date.localeCompare(a.date))[0]
+  if (latest) {
+    const r = latest.r
+    out.test = {
+      // From the dates, not the printed day: DHI counts kidding day as day 1, the app as day 0.
+      dim: daysInMilk(lactation.freshened_on, latest.date),
+      ltdMilkG: r.ltd_milk_g!,
+      ltdFatG: r.ltd_fat_g,
+      ltdProteinG: r.ltd_protein_g,
+      proj305MilkG: r.proj305_milk_g,
+      proj305FatG: r.proj305_fat_g,
+      proj305ProteinG: r.proj305_protein_g,
+    }
+  }
+  return out
+}
+
+const lbOrNull = (g: number | null) => (g === null ? null : Math.round((g / GRAMS_PER_LB) * 10) / 10)
+
+/**
+ * The report's own production figures for the DHIR star: what she's given in
+ * her first 305 days, and DHI's projection while she's still in milk.
+ */
+export function officialProduction(official: OfficialFigures, dried: boolean): { toDate: Production; projected: Production | null } | null {
+  if (dried && official.complete) {
+    const c = official.complete
+    const within = (c.days ?? Infinity) <= 305
+    const milk = c.r305MilkG ?? (within ? c.milkG : null)
+    if (milk === null) return null
+    return {
+      toDate: { milkLb: lbOrNull(milk)!, butterfatLb: lbOrNull(c.r305FatG ?? (within ? c.fatG : null)), proteinLb: lbOrNull(c.r305ProteinG ?? (within ? c.proteinG : null)) },
+      projected: null,
+    }
+  }
+  if (official.test) {
+    const t = official.test
+    return {
+      toDate: { milkLb: lbOrNull(t.ltdMilkG)!, butterfatLb: lbOrNull(t.ltdFatG), proteinLb: lbOrNull(t.ltdProteinG) },
+      projected: t.proj305MilkG === null ? null : { milkLb: lbOrNull(t.proj305MilkG)!, butterfatLb: lbOrNull(t.proj305FatG), proteinLb: lbOrNull(t.proj305ProteinG) },
+    }
+  }
+  return null
 }

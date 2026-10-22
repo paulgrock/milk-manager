@@ -42,9 +42,15 @@ const breedingOptions = computed(() => [
   { label: 'No breeding on record', value: 'none' },
 ])
 const breedingId = ref<string>((route.query.breeding as string) ?? 'none')
-watch(breedings, (list) => {
-  if (!list.some((b) => b.id === breedingId.value)) breedingId.value = list[0]?.id ?? 'none'
-})
+// Default to her latest breeding. Immediate: the breeding list may already be
+// loaded when the form opens (e.g. the link was tapped before it carried one).
+watch(
+  breedings,
+  (list) => {
+    if (!list.some((b) => b.id === breedingId.value)) breedingId.value = list[0]?.id ?? 'none'
+  },
+  { immediate: true },
+)
 
 const sire = computed(() => {
   const b = data.value.breedings.find((x) => x.id === breedingId.value)

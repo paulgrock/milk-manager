@@ -131,6 +131,13 @@ describe('lactations', () => {
     notes: null,
     created_by: null,
     created_at: '',
+    official_days: null,
+    official_milk_g: null,
+    official_fat_g: null,
+    official_protein_g: null,
+    official_305_milk_g: null,
+    official_305_fat_g: null,
+    official_305_protein_g: null,
   })
   const all = [lact(1, '2025-03-01', '2025-12-31'), lact(2, '2026-03-01', null)]
 

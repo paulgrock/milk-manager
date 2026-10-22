@@ -347,14 +347,14 @@ isOneToOne: false
                   ]
                 },"lactations": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"dried_off_on": string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id": string,"lactation_number": number,"notes": string | null
+                    "created_at": string,"created_by": string | null,"dried_off_on": string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id": string,"lactation_number": number,"notes": string | null,"official_305_fat_g": number | null,"official_305_milk_g": number | null,"official_305_protein_g": number | null,"official_days": number | null,"official_fat_g": number | null,"official_milk_g": number | null,"official_protein_g": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id"?: string,"lactation_number": number,"notes"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on": string,"goat_id": string,"herd_id": string,"id"?: string,"lactation_number": number,"notes"?: string | null,"official_305_fat_g"?: number | null,"official_305_milk_g"?: number | null,"official_305_protein_g"?: number | null,"official_days"?: number | null,"official_fat_g"?: number | null,"official_milk_g"?: number | null,"official_protein_g"?: number | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"lactation_number"?: number,"notes"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"dried_off_on"?: string | null,"freshened_on"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"lactation_number"?: number,"notes"?: string | null,"official_305_fat_g"?: number | null,"official_305_milk_g"?: number | null,"official_305_protein_g"?: number | null,"official_days"?: number | null,"official_fat_g"?: number | null,"official_milk_g"?: number | null,"official_protein_g"?: number | null
                   }
                   Relationships: [
                     {
@@ -387,14 +387,14 @@ isOneToOne: false
                   ]
                 },"milk_test_results": {
                   Row: {
-                    "butterfat_pct": number | null,"goat_id": string,"herd_id": string,"id": string,"milk_g": number | null,"notes": string | null,"protein_pct": number | null,"scc": number | null,"test_id": string
+                    "butterfat_pct": number | null,"dim": number | null,"goat_id": string,"herd_id": string,"id": string,"ltd_fat_g": number | null,"ltd_milk_g": number | null,"ltd_protein_g": number | null,"milk_g": number | null,"notes": string | null,"proj305_fat_g": number | null,"proj305_milk_g": number | null,"proj305_protein_g": number | null,"protein_pct": number | null,"scc": number | null,"test_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "butterfat_pct"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"milk_g"?: number | null,"notes"?: string | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id": string
+                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id": string
                   }
                   Update: {
-                    "butterfat_pct"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"milk_g"?: number | null,"notes"?: string | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id"?: string
+                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id"?: string
                   }
                   Relationships: [
                     {

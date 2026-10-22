@@ -109,3 +109,38 @@ test('edits and deletes a test', async ({ page, owner, herd }) => {
   await expect(page).toHaveURL(/\/milk\/tests$/)
   await expect(page.getByText('No milk tests yet.')).toBeVisible()
 })
+
+test("a DHI report's lactation-to-date and projected 305 figures are shown as printed", async ({ page, owner, herd }) => {
+  const elena = await doe(owner, herd.id, 'Elena', { ageYears: 2.5, daysAgo: 150 })
+  const tests = [
+    { day: -95, milk: 3.2, fat: 6.01, ltd: 175, proj: 897 },
+    { day: -56, milk: 2.8, fat: 5.83, ltd: 290, proj: 821 },
+    { day: -5, milk: 2.5, fat: 6.02, ltd: 423, proj: 771 },
+  ]
+  for (const t of tests) {
+    const { data } = await admin.from('milk_tests').insert({ herd_id: herd.id, tested_on: isoDate(t.day), kind: 'dhir' }).select().single()
+    await admin.from('milk_test_results').insert({
+      herd_id: herd.id,
+      test_id: data!.id,
+      goat_id: elena.id,
+      milk_g: lbToGrams(t.milk),
+      butterfat_pct: t.fat,
+      ltd_milk_g: lbToGrams(t.ltd),
+      ltd_fat_g: lbToGrams(26),
+      proj305_milk_g: lbToGrams(t.proj),
+      proj305_fat_g: lbToGrams(48),
+    })
+  }
+
+  await page.goto(`/goats/${elena.id}`)
+  // So far is DHI's 423 lb, not the 8.5 lb of three test days added up.
+  await expect(page.getByText('423 lb').first()).toBeVisible()
+  await expect(page.getByText(/DHI report · to day 145/)).toBeVisible()
+  await expect(page.getByText('771 lb').first()).toBeVisible()
+  await expect(page.getByText('DHI report', { exact: true })).toBeVisible()
+  await expect(page.getByText("From your DHI report's lactation-to-date and projected 305-day figures.")).toBeVisible()
+  // Only test days, so no weekly average.
+  await expect(page.getByText('Last 7 days', { exact: true })).toHaveCount(0)
+  // The Lactations list agrees.
+  await expect(page.getByRole('button', { name: /#1.*423 lb/ })).toBeVisible()
+})

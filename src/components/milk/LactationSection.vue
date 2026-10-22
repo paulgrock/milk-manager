@@ -7,6 +7,8 @@ import type { Goat } from '@/lib/goats'
 import { formatWeight, type Lactation } from '@/lib/milk'
 import { STANDARD_DAYS, summarizeLactation } from '@/lib/lactation'
 import LactationModal from './LactationModal.vue'
+import { useMilkTests } from '@/composables/useMilkTests'
+import { officialFigures, withTestDays } from '@/lib/dhia'
 
 const props = defineProps<{ goat: Goat }>()
 
@@ -14,6 +16,7 @@ const { herd } = useHerd()
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 const lactations = useLactations()
 const dayTotals = useGoatDayTotals(() => props.goat.id)
+const milkTests = useMilkTests()
 const today = todayISO()
 
 const rows = computed(() =>
@@ -22,7 +25,12 @@ const rows = computed(() =>
     .map((l) => ({
       lactation: l,
       inMilk: !l.dried_off_on || l.dried_off_on >= today,
-      summary: summarizeLactation(l, dayTotals.data.value ?? [], today),
+      summary: summarizeLactation(
+        l,
+        withTestDays(dayTotals.data.value ?? [], props.goat.id, milkTests.data.value.tests, milkTests.data.value.results),
+        today,
+        officialFigures(l, milkTests.data.value.tests, milkTests.data.value.results),
+      ),
     })),
 )
 const current = computed(() => rows.value.find((r) => r.inMilk)?.lactation)
@@ -66,10 +74,9 @@ const modal = ref<{ open: boolean; mode: 'start' | 'edit' | 'dryOff'; lactation?
               {{ r.inMilk ? 'in milk' : formatDate(r.lactation.dried_off_on) }}
             </span>
             <span class="block text-xs text-muted">
-              {{ r.inMilk ? `DIM ${r.summary.currentDim}` : `${r.summary.currentDim + 1} days` }}
+              {{ r.inMilk ? `DIM ${r.summary.currentDim}` : `${r.summary.currentDim} days` }}
               <template v-if="r.summary.daysRecorded">
-                · {{ r.summary.daysRecorded }} {{ r.summary.daysRecorded === 1 ? 'day' : 'days' }} weighed · avg
-                {{ formatWeight(r.summary.avgG, unit, true) }}/day
+                · {{ r.summary.daysRecorded }} {{ r.summary.daysRecorded === 1 ? 'day' : 'days' }} weighed
               </template>
             </span>
           </span>

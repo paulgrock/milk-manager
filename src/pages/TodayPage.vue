@@ -4,6 +4,8 @@ import { useHerd } from '@/composables/useHerd'
 import { useAuth } from '@/composables/useAuth'
 import { useLactations, useMilkDay } from '@/composables/useMilk'
 import { useCalendarEvents } from '@/composables/useCalendar'
+import { useHerdGoats } from '@/composables/useGoats'
+import { inHerdOn } from '@/lib/goats'
 import { formatDate, todayISO } from '@/lib/dates'
 import { addDays } from '@/lib/breeding'
 import { needsAttention } from '@/lib/calendar'
@@ -21,10 +23,10 @@ const day = useMilkDay(today)
 const lactations = useLactations()
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 
-const inMilk = computed(() => {
-  const ids = new Set((lactations.data.value ?? []).map((l) => l.goat_id))
-  return [...ids].filter((id) => lactationOn(lactations.data.value ?? [], id, today)).length
-})
+const { goats } = useHerdGoats()
+const inMilk = computed(
+  () => (goats.data.value ?? []).filter((g) => inHerdOn(g, today) && lactationOn(lactations.data.value ?? [], g.id, today)).length,
+)
 const milk = computed(() => {
   const rows = day.data.value ?? []
   const sum = (m: number) => rows.filter((r) => r.milking === m).reduce((s, r) => s + r.weight_g, 0)

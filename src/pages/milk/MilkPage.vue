@@ -7,7 +7,7 @@ import { useHerd } from '@/composables/useHerd'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
 import { shiftDate, useLactations, useMilkDay, useMilkSaves } from '@/composables/useMilk'
 import { formatDate, todayISO } from '@/lib/dates'
-import { goatName, type Goat } from '@/lib/goats'
+import { goatName, inHerdOn, type Goat } from '@/lib/goats'
 import {
   AM,
   DAY_TOTAL,
@@ -59,6 +59,7 @@ const day = useMilkDay(date)
 // The milk line: does in milk on this date, by barn name.
 const line = computed(() =>
   (goats.data.value ?? [])
+    .filter((goat) => inHerdOn(goat, date.value))
     .map((goat) => ({ goat, lactation: lactationOn(lactations.data.value ?? [], goat.id, date.value) }))
     .filter((x): x is { goat: Goat; lactation: Lactation } => !!x.lactation)
     .sort((a, b) => (a.goat.barn_name || goatName(a.goat)).localeCompare(b.goat.barn_name || goatName(b.goat))),

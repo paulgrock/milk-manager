@@ -18,7 +18,7 @@ const base: CalendarInput = {
 const breeding = (doe_id: string, bred_on: string) =>
   ({ id: `b-${doe_id}`, herd_id: 'h', doe_id, buck_id: 'Rex', method: 'hand', bred_on, exposure_end: null, service_fee_cents: null, notes: null, created_by: null, created_at: '' }) as const
 const lactation = (goat_id: string, freshened_on: string) =>
-  ({ id: `l-${goat_id}`, herd_id: 'h', goat_id, lactation_number: 1, freshened_on, dried_off_on: null, notes: null, created_by: null, created_at: '' })
+  ({ id: `l-${goat_id}`, herd_id: 'h', goat_id, lactation_number: 1, freshened_on, dried_off_on: null, notes: null, created_by: null, created_at: '', official_days: null, official_milk_g: null, official_fat_g: null, official_protein_g: null, official_305_milk_g: null, official_305_fat_g: null, official_305_protein_g: null })
 
 const summary = (events: ReturnType<typeof buildEvents>) => events.map((e) => `${e.date} ${e.kind} ${e.title}${e.overdue ? ' (overdue)' : ''}`)
 

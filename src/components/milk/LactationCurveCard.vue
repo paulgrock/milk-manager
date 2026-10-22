@@ -6,9 +6,9 @@ import { useGoatDayTotals, useHerdDayTotals, useLactations } from '@/composables
 import { MAX_SERIES } from '@/composables/useChartTheme'
 import { todayISO } from '@/lib/dates'
 import { goatName, type Goat } from '@/lib/goats'
-import { CONFIDENCE_LABELS, STANDARD_DAYS, summarizeLactation, woodAt } from '@/lib/lactation'
+import { CONFIDENCE_LABELS, STANDARD_DAYS, dailySeries, summarizeLactation, woodAt } from '@/lib/lactation'
 import { useMilkTests } from '@/composables/useMilkTests'
-import { dhirRequirement, productionOver, starOutlook, withTestDays, type TestPoint } from '@/lib/dhia'
+import { dhirRequirement, officialFigures, officialProduction, productionOver, starOutlook, withTestDays, type TestPoint } from '@/lib/dhia'
 import { daysInMilk } from '@/lib/milk'
 import { formatWeight, type Lactation } from '@/lib/milk'
 import LactationChart, { type CurveSeries } from '@/components/charts/LactationChart.vue'
@@ -83,7 +83,10 @@ const otherSince = computed(
 )
 const otherTotals = useHerdDayTotals(otherSince)
 
-const summary = computed(() => (selected.value ? summarizeLactation(selected.value, ownTotals.data.value ?? [], today) : null))
+const officialFor = (l: Lactation) => officialFigures(l, milkTests.data.value.tests, milkTests.data.value.results)
+const summary = computed(() =>
+  selected.value ? summarizeLactation(selected.value, ownTotals.data.value ?? [], today, officialFor(selected.value)) : null,
+)
 
 const series = computed<CurveSeries[]>(() => {
   if (!selected.value || !summary.value) return []
@@ -99,13 +102,32 @@ const series = computed<CurveSeries[]>(() => {
     ...compared.value.map((l) => ({
       id: l.id,
       label: lactationLabel(l),
-      summary: summarizeLactation(l, l.goat_id === props.goat.id ? (ownTotals.data.value ?? []) : (otherTotals.data.value ?? []), today),
+      summary: summarizeLactation(
+        l,
+        withTestDays(
+          l.goat_id === props.goat.id ? (ownTotals.data.value ?? []) : (otherTotals.data.value ?? []),
+          l.goat_id,
+          milkTests.data.value.tests,
+          milkTests.data.value.results,
+        ),
+        today,
+        officialFor(l),
+      ),
       showProjection: false,
     })),
   ]
 })
 
 const inMilk = computed(() => !!selected.value && (!selected.value.dried_off_on || selected.value.dried_off_on >= today))
+
+// Average of her own weigh-ins over the last week; only shown once she's
+// being weighed most days, since a test day or two isn't a weekly average.
+const lastWeek = computed(() => {
+  const s = summary.value
+  if (!inMilk.value || !s) return null
+  const recent = s.points.filter((p) => p.dim > s.currentDim - 7)
+  return recent.length >= 3 ? { avgG: recent.reduce((t, p) => t + p.grams, 0) / recent.length, days: recent.length } : null
+})
 
 // Her test days in this lactation.
 const testPoints = computed<(TestPoint & { grams: number | null })[]>(() => {
@@ -132,15 +154,21 @@ const star = computed(() => {
   if (!l || !s) return null
   const requirement = dhirRequirement({ breed: props.goat.breed, birthDate: props.goat.birth_date, freshenedOn: l.freshened_on })
   if (!requirement) return { requirement: null }
-  const recorded = s.points.filter((p) => p.dim >= 1 && p.dim <= STANDARD_DAYS)
-  const toDate = productionOver(recorded, testPoints.value)
+  // The report's own figures when there are any; otherwise estimate from her
+  // weights, filling the days between them the way DHI does.
+  const official = officialProduction(officialFor(l), !inMilk.value)
+  if (official) {
+    return { requirement, ...official, source: 'official' as const, outlook: starOutlook(requirement, official.toDate, official.projected) }
+  }
+  const days = dailySeries(s.points, Math.min(s.currentDim, STANDARD_DAYS), { lactationNumber: l.lactation_number, carryToEnd: !inMilk.value })
+  const toDate = productionOver(days, testPoints.value)
   let projected = null
   if (inMilk.value && s.fit && s.currentDim < STANDARD_DAYS) {
-    const have = new Map(recorded.map((p) => [p.dim, p.grams]))
-    const days = Array.from({ length: STANDARD_DAYS }, (_, i) => ({ dim: i + 1, grams: have.get(i + 1) ?? woodAt(s.fit!, i + 1) }))
-    projected = productionOver(days, testPoints.value)
+    const lastDim = days.at(-1)?.dim ?? 0
+    const rest = Array.from({ length: STANDARD_DAYS - lastDim }, (_, i) => ({ dim: lastDim + i + 1, grams: woodAt(s.fit!, lastDim + i + 1) }))
+    projected = productionOver([...days, ...rest], testPoints.value)
   }
-  return { requirement, toDate, projected, outlook: starOutlook(requirement, toDate, projected) }
+  return { requirement, toDate, projected, source: 'estimated' as const, outlook: starOutlook(requirement, toDate, projected) }
 })
 const OUTLOOK = {
   earned: { label: 'Star earned', color: 'success', icon: 'i-lucide-star' },
@@ -166,17 +194,22 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
     </div>
 
     <template v-else-if="summary">
-      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <dl class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         <div>
           <dt class="text-xs text-muted">{{ inMilk ? 'So far' : 'Total' }}</dt>
           <dd class="text-xl font-semibold">{{ formatWeight(summary.totalG, unit, true) }}</dd>
-          <dd class="text-xs text-muted">{{ summary.daysRecorded }} days weighed · DIM {{ summary.currentDim }}</dd>
+          <dd class="text-xs text-muted">
+            {{ summary.totalSource === 'official' ? 'DHI report' : 'Estimated' }} · to day {{ summary.totalAsOfDim }}<template v-if="inMilk"> · DIM {{ summary.currentDim }}</template>
+          </dd>
         </div>
         <div>
           <dt class="text-xs text-muted">{{ inMilk && summary.currentDim < STANDARD_DAYS ? 'Projected 305-day' : '305-day' }}</dt>
           <template v-if="summary.projected305G !== null">
             <dd class="text-xl font-semibold">{{ formatWeight(summary.projected305G, unit, true) }}</dd>
-            <dd v-if="inMilk && summary.confidence && summary.currentDim < STANDARD_DAYS">
+            <dd v-if="summary.projectedSource === 'official'">
+              <UBadge color="neutral" variant="subtle" size="sm" icon="i-lucide-file-check">DHI report</UBadge>
+            </dd>
+            <dd v-else-if="inMilk && summary.confidence && summary.currentDim < STANDARD_DAYS">
               <UBadge
                 :color="confidenceColor[summary.confidence]"
                 variant="subtle"
@@ -192,17 +225,10 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
             <dd class="text-xs text-muted">{{ summary.projectionNote }}</dd>
           </template>
         </div>
-        <div>
-          <dt class="text-xs text-muted">Peak (7-day avg)</dt>
-          <template v-if="summary.peak">
-            <dd class="text-xl font-semibold">{{ formatWeight(summary.peak.grams, unit, true) }}</dd>
-            <dd class="text-xs text-muted">on day {{ summary.peak.dim }}</dd>
-          </template>
-          <dd v-else class="text-xl font-semibold text-muted">—</dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">Average day</dt>
-          <dd class="text-xl font-semibold">{{ summary.daysRecorded ? formatWeight(summary.avgG, unit, true) : '—' }}</dd>
+        <div v-if="lastWeek">
+          <dt class="text-xs text-muted">Last 7 days</dt>
+          <dd class="text-xl font-semibold">{{ formatWeight(lastWeek.avgG, unit, true) }}<span class="text-sm font-normal text-muted">/day</span></dd>
+          <dd class="text-xs text-muted">{{ lastWeek.days }} days weighed</dd>
         </div>
       </dl>
 
@@ -249,8 +275,11 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
               </tbody>
             </table>
             <p class="text-xs text-muted">
-              Estimated from your weights<template v-if="testPoints.length"> and {{ testPoints.length }} test {{ testPoints.length === 1 ? 'day' : 'days' }}</template>.
-              Your DHI processing center's lactation record is the official one.
+              <template v-if="star.source === 'official'">From your DHI report's lactation-to-date and projected 305-day figures.</template>
+              <template v-else>
+                Estimated from your weights<template v-if="testPoints.length"> and {{ testPoints.length }} test {{ testPoints.length === 1 ? 'day' : 'days' }}</template>.
+                Your DHI processing center's lactation record is the official one.
+              </template>
             </p>
           </template>
         </div>

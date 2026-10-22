@@ -79,10 +79,6 @@ const details = computed(() => {
     { label: 'Tattoo', value: tattoo },
     { label: 'Scrapie tag', value: g.scrapie_tag },
     { label: 'Microchip', value: g.microchip },
-    {
-      label: g.status === 'sold' ? 'Sold' : 'Died',
-      value: g.status === 'sold' || g.status === 'deceased' ? [formatDate(g.left_herd_on), g.left_herd_reason].filter(Boolean).join(' · ') : '',
-    },
   ].filter((d) => d.value)
 })
 </script>
@@ -111,6 +107,15 @@ const details = computed(() => {
         <span class="hidden sm:inline">Edit</span>
       </UButton>
     </div>
+
+    <UAlert
+      v-if="goat.status === 'deceased' || goat.status === 'sold'"
+      color="neutral"
+      variant="subtle"
+      :icon="goat.status === 'deceased' ? 'i-lucide-flower-2' : 'i-lucide-hand-coins'"
+      :title="`${goat.status === 'deceased' ? 'Died' : 'Sold'}${goat.left_herd_on ? ` ${formatDate(goat.left_herd_on)}` : ''}`"
+      :description="goat.left_herd_reason ?? undefined"
+    />
 
     <UAlert
       v-if="withdrawal"

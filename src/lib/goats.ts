@@ -146,3 +146,13 @@ export function offspringOf(goatId: string, goats: Goat[]): Goat[] {
     .filter((g) => g.sire_id === goatId || g.dam_id === goatId)
     .sort((a, b) => (b.birth_date ?? '').localeCompare(a.birth_date ?? ''))
 }
+
+/**
+ * Whether a goat was part of the herd on a date: in the herd or for sale, or
+ * sold/died on or after that date (so past milk days still show her).
+ */
+export function inHerdOn(goat: Pick<Goat, 'status' | 'left_herd_on'>, date: string): boolean {
+  if (CURRENT_STATUSES.includes(goat.status)) return true
+  if (goat.status === 'sold' || goat.status === 'deceased') return !!goat.left_herd_on && date <= goat.left_herd_on
+  return false
+}

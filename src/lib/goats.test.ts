@@ -7,6 +7,7 @@ import {
   formatAge,
   goatFullName,
   goatName,
+  inHerdOn,
   latestAppraisals,
   offspringOf,
   type Appraisal,
@@ -160,5 +161,20 @@ describe('filterGoats', () => {
   it('searches names and tattoos, ignoring case and extra spaces', () => {
     expect(filterGoats(goats, { ...none, search: 's12' }).map(goatName)).toEqual(['Zinnia'])
     expect(filterGoats(goats, { ...none, search: ' old   sally ' }).map(goatName)).toEqual(['Old Sally'])
+  })
+})
+
+describe('inHerdOn', () => {
+  it('keeps a goat on days up to and including the day she left', () => {
+    const chimi = goat({ status: 'deceased', left_herd_on: '2025-05-01' })
+    expect(inHerdOn(chimi, '2025-04-30')).toBe(true)
+    expect(inHerdOn(chimi, '2025-05-01')).toBe(true)
+    expect(inHerdOn(chimi, '2025-05-02')).toBe(false)
+  })
+
+  it('treats a goat sold with no date as gone, and outside goats as never in the herd', () => {
+    expect(inHerdOn(goat({ status: 'sold' }), '2020-01-01')).toBe(false)
+    expect(inHerdOn(goat({ status: 'reference' }), '2026-01-01')).toBe(false)
+    expect(inHerdOn(goat({ status: 'for_sale' }), '2026-01-01')).toBe(true)
   })
 })

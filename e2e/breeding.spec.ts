@@ -151,3 +151,17 @@ test('a kidding saved with no signal waits, says so, and goes through once back 
   const kiddings = await admin.from('kiddings').select('id').eq('doe_id', ina.id)
   expect(kiddings.data).toHaveLength(1)
 })
+
+test('the kidding form picks her breeding even when opened without one', async ({ page, owner, herd }) => {
+  const rex = await addGoat(owner, herd.id, { barn_name: 'Rex', registered_name: 'Rex Ridge Rocket', sex: 'buck' })
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
+  await admin.from('breedings').insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate(-150) })
+  // Load her breeding first, then open the form without ?breeding= (a quick tap on the link).
+  await page.goto(`/goats/${ina.id}`)
+  await expect(page.getByText('to Rex Ridge Rocket').first()).toBeVisible()
+  await page.evaluate((id) => {
+    history.pushState({}, '', `/breeding/kidding?doe=${id}`)
+    dispatchEvent(new PopStateEvent('popstate'))
+  }, ina.id)
+  await expect(page.getByText('Sire: Rex Ridge Rocket')).toBeVisible()
+})

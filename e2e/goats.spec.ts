@@ -113,3 +113,38 @@ test('the In milk view lists only does milking today', async ({ page, owner, her
   await expect(rows).toHaveCount(1)
   await expect(rows.first()).toContainText('Clover')
 })
+
+test('a doe who dies leaves the milk line and care lists but keeps her page and pedigree', async ({ page, owner, herd }) => {
+  const { goat: chimi } = await addDoeInMilk(owner, herd.id, 'Chimi', 100)
+  await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe', dam_id: chimi.id })
+
+  await page.goto(`/goats/${chimi.id}/edit`)
+  await page.getByRole('combobox', { name: 'Status' }).click()
+  await page.getByRole('option', { name: 'Deceased' }).click()
+  await page.getByLabel('Date died').fill(isoDate(-10))
+  await page.getByLabel('Cause').fill('Bloat')
+  await page.getByRole('button', { name: 'Save changes' }).click()
+
+  // Her page says so; her open lactation ended that day.
+  await expect(page.getByText(/^Died /)).toBeVisible()
+  await expect(page.getByText('Bloat')).toBeVisible()
+  const lactation = await admin.from('lactations').select('dried_off_on').eq('goat_id', chimi.id).single()
+  expect(lactation.data?.dried_off_on).toBe(isoDate(-10))
+
+  // Not on today's milk line, but still on a day before she died.
+  await page.goto('/milk')
+  await expect(page.getByLabel(/^Chimi /)).toHaveCount(0)
+  await page.goto(`/milk?date=${isoDate(-11)}`)
+  await expect(page.getByLabel(/^Chimi /)).toBeVisible()
+
+  // Not due for care.
+  await page.goto('/health')
+  await expect(page.getByText(/Chimi/)).toHaveCount(0)
+
+  // Off the default goats list, on the Deceased one.
+  await page.goto('/goats')
+  await expect(page.getByRole('main').getByRole('listitem').filter({ hasText: 'Chimi' })).toHaveCount(0)
+  await page.getByRole('combobox').filter({ hasText: 'Current herd' }).click()
+  await page.getByRole('option', { name: 'Deceased' }).click()
+  await expect(page.getByRole('main').getByRole('listitem').filter({ hasText: 'Chimi' })).toHaveCount(1)
+})

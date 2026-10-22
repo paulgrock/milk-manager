@@ -18,7 +18,10 @@ test('a doe page shows her lactation curve, a projected 305-day total and compar
   const projected = page.locator('div').filter({ has: page.getByText('Projected 305-day', { exact: true }) }).last()
   await expect(projected).toContainText(/\d[\d,]* lb/)
   await expect(projected.getByText('Medium confidence')).toBeVisible()
-  await expect(page.getByText('119 days weighed · DIM 120')).toBeVisible()
+  await expect(page.getByText('Estimated · to day 119 · DIM 120')).toBeVisible()
+  // Weighed daily, so the last week's average shows.
+  await expect(page.getByText('Last 7 days', { exact: true })).toBeVisible()
+  await expect(page.getByText('6 days weighed')).toBeVisible()
 
   await page.getByText('Earlier lactations or other does').click()
   await page.getByRole('option', { name: /Clover · L1/ }).click()
