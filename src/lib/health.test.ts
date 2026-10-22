@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { careStatus, famachaConcern, latestMeasures, withdrawalOn, withholdThrough, type CareEvent, type CareType, type HealthObservation, type Treatment } from './health'
+import { careStatus, withdrawalOn, withholdThrough, type CareEvent, type CareType, type Treatment } from './health'
 
 const type = (over: Partial<CareType> = {}): CareType => ({
   id: 'hoof',
@@ -88,35 +88,5 @@ describe('milk withdrawal', () => {
     const w = withdrawalOn('ina', treatments, '2026-10-15')!
     expect(w.through).toBe('2026-11-11')
     expect(w.treatments).toHaveLength(2)
-  })
-})
-
-describe('health checks', () => {
-  const obs = (observed_on: string, over: Partial<HealthObservation>): HealthObservation => ({
-    id: observed_on,
-    herd_id: 'h',
-    goat_id: 'ina',
-    observed_on,
-    famacha: null,
-    body_condition: null,
-    weight_g: null,
-    notes: null,
-    created_by: null,
-    created_at: '',
-    ...over,
-  })
-
-  it('finds the latest value of each measure separately', () => {
-    const m = latestMeasures('ina', [
-      obs('2026-09-01', { famacha: 2, body_condition: 3, weight_g: 30000 }),
-      obs('2026-10-01', { famacha: 4 }),
-    ])
-    expect(m.famacha).toEqual({ value: 4, on: '2026-10-01' })
-    expect(m.bodyCondition).toEqual({ value: 3, on: '2026-09-01' })
-    expect(m.weightG).toEqual({ value: 30000, on: '2026-09-01' })
-  })
-
-  it('flags anemic FAMACHA scores', () => {
-    expect([1, 2, 3, 4, 5].map(famachaConcern)).toEqual(['ok', 'ok', 'watch', 'treat', 'treat'])
   })
 })

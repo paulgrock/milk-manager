@@ -10,9 +10,9 @@ import { useAuth } from './useAuth'
 
 type Tables = Database['public']['Tables']
 type Insert<T extends keyof Tables> = Omit<Tables[T]['Insert'], 'herd_id'>
-type HealthTable = 'care_types' | 'care_events' | 'treatments' | 'health_observations' | 'disease_tests'
+type HealthTable = 'care_types' | 'care_events' | 'treatments'
 
-const empty: HealthData = { careTypes: [], careEvents: [], treatments: [], observations: [], tests: [] }
+const empty: HealthData = { careTypes: [], careEvents: [], treatments: [] }
 
 export function useHealthData() {
   const { herdId } = useHerd()
@@ -22,15 +22,13 @@ export function useHealthData() {
       const all = <T>(table: HealthTable) =>
         // Same shape for each table; typed per call by T.
         fetchAll<T>((from, to) => supabase.from(table as 'treatments').select('*').eq('herd_id', herdId.value).order('id').range(from, to) as never)
-      const [careTypes, careEvents, treatments, observations, tests] = await Promise.all([
+      const [careTypes, careEvents, treatments] = await Promise.all([
         all<HealthData['careTypes'][number]>('care_types'),
         all<HealthData['careEvents'][number]>('care_events'),
         all<HealthData['treatments'][number]>('treatments'),
-        all<HealthData['observations'][number]>('health_observations'),
-        all<HealthData['tests'][number]>('disease_tests'),
       ])
       careTypes.sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
-      return { careTypes, careEvents, treatments, observations, tests }
+      return { careTypes, careEvents, treatments }
     },
     enabled: computed(() => !!herdId.value),
   })
@@ -70,7 +68,7 @@ export function useCareLog() {
   }
 }
 
-/** Treatments, health checks, tests and the care routine: saved online. */
+/** Treatments and the care routine: saved online. */
 export function useHealthMutations() {
   const { herdId } = useHerd()
   const refresh = () => refreshQueries(healthKey(herdId.value))
@@ -95,11 +93,7 @@ export function useHealthMutations() {
   return {
     saveCareType: saver('care_types'),
     saveTreatment: saver('treatments'),
-    saveObservation: saver('health_observations'),
-    saveTest: saver('disease_tests'),
     removeCareType: remover('care_types'),
     removeTreatment: remover('treatments'),
-    removeObservation: remover('health_observations'),
-    removeTest: remover('disease_tests'),
   }
 }

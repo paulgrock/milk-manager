@@ -6,8 +6,6 @@ type Tables = Database['public']['Tables']
 export type CareType = Tables['care_types']['Row']
 export type CareEvent = Tables['care_events']['Row']
 export type Treatment = Tables['treatments']['Row']
-export type HealthObservation = Tables['health_observations']['Row']
-export type DiseaseTest = Tables['disease_tests']['Row']
 export type TreatmentRoute = Database['public']['Enums']['treatment_route']
 
 /** Care coming up within this many days counts as "due". */
@@ -65,24 +63,4 @@ export function withdrawalOn(goatId: string, treatments: Treatment[], date: stri
   if (!active.length) return null
   const through = active.map((t) => withholdThrough(t)!).sort().at(-1)!
   return { through, treatments: active }
-}
-
-export interface LatestMeasures {
-  famacha?: { value: number; on: string }
-  bodyCondition?: { value: number; on: string }
-  weightG?: { value: number; on: string }
-}
-
-export function latestMeasures(goatId: string, observations: HealthObservation[]): LatestMeasures {
-  const mine = observations.filter((o) => o.goat_id === goatId).sort((a, b) => b.observed_on.localeCompare(a.observed_on))
-  const first = <K extends 'famacha' | 'body_condition' | 'weight_g'>(key: K) => {
-    const o = mine.find((x) => x[key] !== null)
-    return o ? { value: Number(o[key]), on: o.observed_on } : undefined
-  }
-  return { famacha: first('famacha'), bodyCondition: first('body_condition'), weightG: first('weight_g') }
-}
-
-/** FAMACHA 4–5 means anemic enough to deworm; 3 is borderline. */
-export function famachaConcern(score: number): 'ok' | 'watch' | 'treat' {
-  return score >= 4 ? 'treat' : score === 3 ? 'watch' : 'ok'
 }

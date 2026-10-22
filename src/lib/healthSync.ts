@@ -3,7 +3,7 @@
 // with no signal is kept on the device and sent later.
 import { queryClient, saveCacheNow, refreshQueries } from './queryClient'
 import { supabase, unwrap } from './supabase'
-import type { CareEvent, CareType, DiseaseTest, HealthObservation, Treatment } from './health'
+import type { CareEvent, CareType, Treatment } from './health'
 import { retry, retryDelay } from './offlineRetry'
 
 export const healthKey = (herdId: string) => ['health', herdId] as const
@@ -15,8 +15,6 @@ export type HealthData = {
   careTypes: CareType[]
   careEvents: CareEvent[]
   treatments: Treatment[]
-  observations: HealthObservation[]
-  tests: DiseaseTest[]
 }
 
 export type LogCareVars = { herdId: string; events: CareEvent[] }

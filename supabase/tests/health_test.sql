@@ -1,5 +1,5 @@
 begin;
-select plan(13);
+select plan(10);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'owner@example.com'),
@@ -19,7 +19,7 @@ select '10000000-0000-0000-0000-000000000001', id, 'Ina', 'doe' from herds;
 
 select results_eq(
   $$ select name, interval_days, dose_unit from care_types order by sort_order $$,
-  $$ values ('Hoof trim', 56, null::text), ('Replamin Gel Plus', 30, null), ('Copper bolus', 180, 'g'), ('CDT vaccine', 365, null) $$,
+  $$ values ('Hoof trim', 56, null::text), ('Replamin Gel Plus', 30, null), ('Copper bolus', 180, 'g'), ('CDT vaccine', 365, null), ('CAE, CL, OPP & Johne''s test', 365, null) $$,
   'a new herd starts with the usual care routine'
 );
 
@@ -60,21 +60,6 @@ select lives_ok($$
   insert into treatments (herd_id, goat_id, started_on, ended_on, medication, dose, route, lot_number, milk_withdrawal_days)
   select herd_id, '10000000-0000-0000-0000-000000000001', '2026-10-10', '2026-10-14', 'Penicillin', '5 ml', 'subq', 'LOT123', 10 from goats
 $$, 'helper can record a treatment with milk withdrawal');
-
-select throws_ok($$
-  insert into health_observations (herd_id, goat_id, observed_on, body_condition)
-  select herd_id, '10000000-0000-0000-0000-000000000001', '2026-10-10', 3.3 from goats
-$$, '23514', null, 'body condition is in halves');
-
-select throws_ok($$
-  insert into health_observations (herd_id, goat_id, observed_on)
-  select herd_id, '10000000-0000-0000-0000-000000000001', '2026-10-10' from goats
-$$, '23514', null, 'a health check records at least one measure');
-
-select lives_ok($$
-  insert into disease_tests (herd_id, goat_id, tested_on, disease, result, lab)
-  select herd_id, '10000000-0000-0000-0000-000000000001', '2026-09-01', 'CAE', 'negative', 'WADDL' from goats
-$$, 'record a CAE test');
 
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000c', 'stranger@example.com');
 select is_empty($$ select 1 from treatments union all select 1 from care_events union all select 1 from care_types $$,

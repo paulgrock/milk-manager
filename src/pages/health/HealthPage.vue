@@ -6,11 +6,9 @@ import { useHerdGoats } from '@/composables/useGoats'
 import { useCareLog, useHealthData, useHealthMutations } from '@/composables/useHealth'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
 import { CURRENT_STATUSES, goatName, type Goat } from '@/lib/goats'
-import { careStatus, famachaConcern, latestMeasures, withdrawalOn, type CareStatus, type CareType } from '@/lib/health'
+import { careStatus, withdrawalOn, type CareStatus, type CareType } from '@/lib/health'
 import LogCareModal from '@/components/health/LogCareModal.vue'
 import TreatmentModal from '@/components/health/TreatmentModal.vue'
-import ObservationModal from '@/components/health/ObservationModal.vue'
-import TestModal from '@/components/health/TestModal.vue'
 
 const today = todayISO()
 const toast = useToast()
@@ -48,16 +46,9 @@ const careDue = computed(() =>
     .filter((x) => x.due.length || x.never.length),
 )
 
-const famacha = computed(() =>
-  herd.value
-    .map((goat) => ({ goat, score: latestMeasures(goat.id, data.value.observations).famacha }))
-    .filter((x) => x.score && famachaConcern(x.score.value) === 'treat'),
-)
-
 const recentTreatments = computed(() =>
   [...data.value.treatments].sort((a, b) => b.started_on.localeCompare(a.started_on)).slice(0, 8),
 )
-const recentTests = computed(() => [...data.value.tests].sort((a, b) => b.tested_on.localeCompare(a.tested_on)).slice(0, 8))
 
 function dueLabel(s: CareStatus) {
   return s.state === 'overdue' ? `${-s.daysUntilDue!} days overdue` : relativeDays(s.daysUntilDue!)
@@ -65,8 +56,6 @@ function dueLabel(s: CareStatus) {
 
 const careModal = ref<{ open: boolean; careTypeId?: string; goatIds?: string[] }>({ open: false })
 const treatmentOpen = ref(false)
-const observationOpen = ref(false)
-const testOpen = ref(false)
 
 // Care routine editor (owners).
 const draft = reactive({ name: '', interval: undefined as number | undefined, unit: '' })
@@ -95,8 +84,6 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
       <h1 class="text-2xl font-semibold flex-1">Health</h1>
       <UButton icon="i-lucide-clipboard-check" @click="careModal = { open: true }">Log care</UButton>
       <UButton variant="soft" icon="i-lucide-pill" @click="treatmentOpen = true">Treatment</UButton>
-      <UButton variant="soft" icon="i-lucide-stethoscope" @click="observationOpen = true">Health check</UButton>
-      <UButton variant="soft" icon="i-lucide-flask-conical" @click="testOpen = true">Test</UButton>
     </div>
 
     <UAlert
@@ -161,46 +148,19 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
         </div>
       </UCard>
 
-      <UCard v-if="famacha.length" :ui="{ body: 'p-0 sm:p-0' }">
-        <template #header><h2 class="font-semibold">FAMACHA 4 or 5</h2></template>
-        <ul class="divide-y divide-default">
-          <li v-for="{ goat, score } in famacha" :key="goat.id">
-            <RouterLink :to="`/goats/${goat.id}`" class="flex items-center gap-3 px-4 py-2 hover:bg-elevated/50">
-              <span class="flex-1">{{ name(goat) }}</span>
-              <UBadge color="error" variant="subtle" icon="i-lucide-droplet">FAMACHA {{ score!.value }}</UBadge>
-              <span class="text-xs text-muted">{{ formatDate(score!.on) }}</span>
+
+      <UCard :ui="{ body: 'p-0 sm:p-0' }">
+        <template #header><h2 class="font-semibold">Recent treatments</h2></template>
+        <p v-if="!recentTreatments.length" class="p-4 text-muted">None recorded.</p>
+        <ul v-else class="divide-y divide-default">
+          <li v-for="t in recentTreatments" :key="t.id">
+            <RouterLink :to="`/goats/${t.goat_id}`" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
+              <span class="w-24 text-muted">{{ formatDate(t.started_on) }}</span>
+              <span class="flex-1">{{ name(byId.get(t.goat_id)) }} · {{ t.medication }}</span>
             </RouterLink>
           </li>
         </ul>
       </UCard>
-
-      <div class="grid md:grid-cols-2 gap-4 items-start">
-        <UCard :ui="{ body: 'p-0 sm:p-0' }">
-          <template #header><h2 class="font-semibold">Recent treatments</h2></template>
-          <p v-if="!recentTreatments.length" class="p-4 text-muted">None recorded.</p>
-          <ul v-else class="divide-y divide-default">
-            <li v-for="t in recentTreatments" :key="t.id">
-              <RouterLink :to="`/goats/${t.goat_id}`" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
-                <span class="w-24 text-muted">{{ formatDate(t.started_on) }}</span>
-                <span class="flex-1">{{ name(byId.get(t.goat_id)) }} · {{ t.medication }}</span>
-              </RouterLink>
-            </li>
-          </ul>
-        </UCard>
-        <UCard :ui="{ body: 'p-0 sm:p-0' }">
-          <template #header><h2 class="font-semibold">Recent tests</h2></template>
-          <p v-if="!recentTests.length" class="p-4 text-muted">None recorded.</p>
-          <ul v-else class="divide-y divide-default">
-            <li v-for="t in recentTests" :key="t.id">
-              <RouterLink :to="`/goats/${t.goat_id}`" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
-                <span class="w-24 text-muted">{{ formatDate(t.tested_on) }}</span>
-                <span class="flex-1">{{ name(byId.get(t.goat_id)) }} · {{ t.disease }}</span>
-                <UBadge :color="t.result === 'positive' ? 'error' : 'neutral'" variant="subtle" size="sm">{{ t.result }}</UBadge>
-              </RouterLink>
-            </li>
-          </ul>
-        </UCard>
-      </div>
 
       <UCard>
         <template #header>
@@ -245,7 +205,5 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
 
     <LogCareModal v-model:open="careModal.open" :care-type-id="careModal.careTypeId" :goat-ids="careModal.goatIds" />
     <TreatmentModal v-model:open="treatmentOpen" />
-    <ObservationModal v-model:open="observationOpen" />
-    <TestModal v-model:open="testOpen" />
   </div>
 </template>

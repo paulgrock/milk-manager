@@ -17,7 +17,7 @@ test('a new herd has the usual routine, and care can be logged for everyone at o
 
   await page.goto('/health')
   await expect(page.getByText('Never recorded for 3: Clover, Ina, Rex').first()).toBeVisible()
-  for (const name of ['Hoof trim', 'Replamin Gel Plus', 'Copper bolus', 'CDT vaccine']) {
+  for (const name of ['Hoof trim', 'Replamin Gel Plus', 'Copper bolus', 'CDT vaccine', "CAE, CL, OPP & Johne's test"]) {
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   }
 
@@ -100,31 +100,24 @@ test('a treatment withholds her milk: banner on her page, badge on milk entry, w
   expect(saved.data).toEqual({ medication: 'Penicillin', reason: 'Mastitis', dose: '5 ml', lot_number: 'LOT-42', milk_withdrawal_days: 10 })
 })
 
-test('a FAMACHA 4 is flagged on the health page; weight and body condition are kept', async ({ page, owner, herd }) => {
+test('disease testing is logged as routine care, due again in a year', async ({ page, owner, herd }) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   await page.goto(`/goats/${ina.id}`)
-  await page.getByRole('button', { name: 'Check', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Health check' })
-  await dialog.getByRole('radio', { name: 'FAMACHA 4' }).click()
-  await dialog.getByRole('combobox', { name: 'Body condition' }).click()
-  await page.getByRole('option', { name: '2.5' }).click()
-  await dialog.getByLabel('Weight (lb)').fill('62')
-  await dialog.getByRole('button', { name: 'Save' }).click()
-  await expect(dialog).toBeHidden()
-  await expect(page.getByText('FAMACHA 4 · BCS 2.5 · 62 lb')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Check', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Test', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Log care' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Log care' })
+  await dialog.getByRole('combobox', { name: 'What was done' }).click()
+  await page.getByRole('option', { name: "CAE, CL, OPP & Johne's test" }).click()
+  await dialog.getByLabel('Notes').fill('All negative, WADDL')
+  await dialog.getByRole('button', { name: 'Log for 1' }).click()
+  await expect(page.getByText("CAE, CL, OPP & Johne's test · All negative, WADDL")).toBeVisible()
+  await expect(page.getByText(`Last ${shown(isoDate())} · next in 365 days`)).toBeVisible()
 
   await page.goto('/health')
-  await expect(page.getByRole('link', { name: /Ina.*FAMACHA 4/ })).toBeVisible()
-})
-
-test('records a CAE test', async ({ page, owner, herd }) => {
-  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
-  await page.goto(`/goats/${ina.id}`)
-  await page.getByRole('button', { name: 'Test', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Disease test' })
-  await dialog.getByLabel('Lab').fill('WADDL')
-  await dialog.getByRole('button', { name: 'Save' }).click()
-  await expect(page.getByText('CAE: negative · WADDL')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Health check' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Recent tests' })).toHaveCount(0)
 })
 
 test('owners set the care routine; helpers only see it', async ({ page, browser, herd }) => {
