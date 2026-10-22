@@ -33,6 +33,7 @@ declare module 'vue' {
     MilkDayEditor: typeof import('./src/components/milk/MilkDayEditor.vue')['default']
     MilkEntryRow: typeof import('./src/components/milk/MilkEntryRow.vue')['default']
     MilkTestsCard: typeof import('./src/components/milk/MilkTestsCard.vue')['default']
+    MonthYearPicker: typeof import('./src/components/MonthYearPicker.vue')['default']
     PasskeysCard: typeof import('./src/components/PasskeysCard.vue')['default']
     PedigreeChart: typeof import('./src/components/goats/PedigreeChart.vue')['default']
     PendingInvites: typeof import('./src/components/PendingInvites.vue')['default']
@@ -57,6 +58,7 @@ declare module 'vue' {
     UModal: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Modal.vue')['default']
     UNavigationMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/NavigationMenu.vue')['default']
     UPinInput: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/PinInput.vue')['default']
+    UPopover: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Popover.vue')['default']
     URadioGroup: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/RadioGroup.vue')['default']
     USelect: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
     USelectMenu: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/SelectMenu.vue')['default']
@@ -64,5 +66,6 @@ declare module 'vue' {
     USkeleton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Skeleton.vue')['default']
     UTabs: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Tabs.vue')['default']
     UTextarea: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Textarea.vue')['default']
+    WheelColumn: typeof import('./src/components/WheelColumn.vue')['default']
   }
 }

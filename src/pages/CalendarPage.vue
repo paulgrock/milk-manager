@@ -6,6 +6,7 @@ import { useCalendarEvents } from '@/composables/useCalendar'
 import { addMonths, formatDate, parseDate, toISODate, todayISO } from '@/lib/dates'
 import { GROUP_LABELS, type CalendarEvent, type EventGroup } from '@/lib/calendar'
 import CalendarEventItem from '@/components/CalendarEventItem.vue'
+import MonthYearPicker from '@/components/MonthYearPicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,7 +22,10 @@ const last = computed(() => {
   return toISODate(new Date(d.getFullYear(), d.getMonth() + 1, 0))
 })
 const goMonth = (delta: number) => router.replace({ query: { month: addMonths(first.value, delta).slice(0, 7) } })
-const title = computed(() => parseDate(first.value).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }))
+const pickedMonth = computed({
+  get: () => month.value,
+  set: (m: string) => router.replace({ query: m === today.slice(0, 7) ? {} : { month: m } }),
+})
 
 const groups = useLocalStorage<EventGroup[]>('calendar.groups', ['breeding', 'health', 'milk'])
 const showDone = useLocalStorage('calendar.showDone', true)
@@ -58,10 +62,14 @@ const dayLabel = (iso: string) => parseDate(iso).toLocaleDateString(undefined, {
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
       <h1 class="text-2xl font-semibold flex-1">Calendar</h1>
-      <UButton color="neutral" variant="outline" icon="i-lucide-chevron-left" aria-label="Previous month" @click="goMonth(-1)" />
-      <span class="font-medium w-40 text-center" aria-live="polite">{{ title }}</span>
-      <UButton color="neutral" variant="outline" icon="i-lucide-chevron-right" aria-label="Next month" @click="goMonth(1)" />
-      <UButton v-if="month !== today.slice(0, 7)" variant="link" @click="router.replace({ query: {} })">This month</UButton>
+      <!-- Kept together so the arrows never wrap apart from the month. -->
+      <div class="flex items-center gap-1 ms-auto">
+        <!-- Left of the arrows, so they don't move when it appears. -->
+        <UButton v-if="month !== today.slice(0, 7)" variant="link" class="whitespace-nowrap px-1" @click="router.replace({ query: {} })">This month</UButton>
+        <UButton color="neutral" variant="outline" icon="i-lucide-chevron-left" aria-label="Previous month" @click="goMonth(-1)" />
+        <MonthYearPicker v-model="pickedMonth" class="w-40" />
+        <UButton color="neutral" variant="outline" icon="i-lucide-chevron-right" aria-label="Next month" @click="goMonth(1)" />
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Show">

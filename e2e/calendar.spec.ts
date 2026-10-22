@@ -74,3 +74,36 @@ test('milk withdrawal shows when her milk is OK again', async ({ page, owner, he
   await page.goto('/')
   await expect(page.getByRole('link', { name: /Ina's milk OK again/ })).toBeVisible()
 })
+
+test('the month title opens month and year wheels, like iOS', async ({ page, herd }) => {
+  void herd
+  const now = new Date()
+  const thisMonth = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+  await page.goto('/calendar')
+  await page.getByRole('button', { name: thisMonth }).click()
+
+  const months = page.getByRole('listbox', { name: 'Month' })
+  const years = page.getByRole('listbox', { name: 'Year' })
+  await expect(months.getByRole('option', { selected: true })).toHaveText(now.toLocaleDateString(undefined, { month: 'long' }))
+
+  // Tapping an item.
+  await months.getByRole('option', { name: 'March' }).click()
+  await years.getByRole('option', { name: String(now.getFullYear() - 1) }).click()
+  await expect(page).toHaveURL(new RegExp(`month=${now.getFullYear() - 1}-03`))
+  await expect(page.getByRole('button', { name: `March ${now.getFullYear() - 1}` })).toBeVisible()
+
+  // Spinning the wheel: whatever settles in the middle is chosen.
+  await months.evaluate((el) => el.scrollTo({ top: 36 * 6, behavior: 'instant' }))
+  await expect(page).toHaveURL(new RegExp(`month=${now.getFullYear() - 1}-07`))
+  await expect(months.getByRole('option', { selected: true })).toHaveText('July')
+
+  // Arrow keys.
+  await years.focus()
+  await page.keyboard.press('ArrowUp')
+  await expect(page).toHaveURL(new RegExp(`month=${now.getFullYear() - 2}-07`))
+
+  // "This month" sits left of the arrows and brings it back.
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'This month' }).click()
+  await expect(page.getByRole('button', { name: thisMonth })).toBeVisible()
+})
