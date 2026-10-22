@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { localMailInbox } from '@/lib/supabase'
 
 const { sendCode, verifyCode } = useAuth()
 const router = useRouter()
@@ -67,6 +68,15 @@ async function submitCode() {
         <p class="text-sm">
           We sent a 6-digit code to <strong>{{ email }}</strong>.
         </p>
+        <UAlert
+          v-if="localMailInbox"
+          color="info"
+          variant="subtle"
+          icon="i-lucide-mail-search"
+          title="This is the local test setup"
+          description="Sign-in emails aren't really sent here. They're caught by the local mail inbox."
+          :actions="[{ label: 'Open local inbox', to: localMailInbox, target: '_blank', trailingIcon: 'i-lucide-external-link' }]"
+        />
         <UPinInput v-model="code" :length="6" otp type="number" size="xl" autofocus @complete="submitCode" />
         <UButton type="submit" block size="xl" :loading="busy" :disabled="code.join('').length < 6">Sign in</UButton>
         <UButton variant="link" color="neutral" @click="step = 'email'; code = []">Use a different email</UButton>

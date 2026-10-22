@@ -10,6 +10,8 @@ base('signs in with an emailed code and creates a herd', async ({ page }) => {
     await page.getByLabel('Email').fill(email)
     await page.getByRole('button', { name: 'Email me a code' }).click()
     await expect(page.getByText(`We sent a 6-digit code to ${email}`)).toBeVisible()
+    // Locally, emails only reach the Mailpit inbox; the screen says so and links to it.
+    await expect(page.getByRole('link', { name: 'Open local inbox' })).toHaveAttribute('href', 'http://127.0.0.1:54324')
 
     await page.getByLabel('pin input 1 of 6').click()
     await page.keyboard.type(await latestCode(email))

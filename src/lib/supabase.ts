@@ -10,6 +10,16 @@ if (!url || !key) {
 
 export const supabase = createClient<Database>(url, key)
 
+/**
+ * Where sign-in emails end up when running against the local Supabase stack:
+ * they're never delivered, only caught by its Mailpit inbox. Null for a
+ * hosted project.
+ */
+export const localMailInbox: string | null = (() => {
+  const { hostname, protocol } = new URL(url)
+  return hostname === '127.0.0.1' || hostname === 'localhost' ? `${protocol}//${hostname}:54324` : null
+})()
+
 /** Throws the Supabase error if there is one, otherwise returns the data. */
 export function unwrap<T>(result: { data: T | null; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message)
