@@ -1,5 +1,6 @@
 import { computed } from 'vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import type { FinanceEntry } from '@/lib/finances'
 import type { Database } from '@/lib/database.types'
@@ -23,9 +24,8 @@ export function useFinances() {
 }
 
 export function useFinanceMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: financesKey(herdId.value) })
+  const refresh = () => refreshQueries(financesKey(herdId.value))
   const save = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: Insert }) => {
       if (id) return unwrap(await supabase.from('finance_entries').update(values).eq('id', id))

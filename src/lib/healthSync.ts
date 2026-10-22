@@ -1,7 +1,7 @@
 // Routine care logs, registered as mutation defaults like milk saves
 // (milkSync.ts): hoof trims and copper happen in the barn, so a log made
 // with no signal is kept on the device and sent later.
-import { queryClient, saveCacheNow } from './queryClient'
+import { queryClient, saveCacheNow, refreshQueries } from './queryClient'
 import { supabase, unwrap } from './supabase'
 import type { CareEvent, CareType, DiseaseTest, HealthObservation, Treatment } from './health'
 import { retry, retryDelay } from './offlineRetry'
@@ -49,8 +49,8 @@ queryClient.setMutationDefaults<unknown, Error, LogCareVars>(LOG_CARE, {
     update(v.herdId, (events) => [...events.filter((e) => !ids.has(e.id)), ...v.events])
     await saveCacheNow()
   },
-  onError: (_e, v) => void queryClient.invalidateQueries({ queryKey: healthKey(v.herdId) }),
-  onSettled: (_d, _e, v) => void queryClient.invalidateQueries({ queryKey: healthKey(v.herdId) }),
+  onError: (_e, v) => void refreshQueries(healthKey(v.herdId)),
+  onSettled: (_d, _e, v) => void refreshQueries(healthKey(v.herdId)),
 })
 
 queryClient.setMutationDefaults<unknown, Error, DeleteCareVars>(DELETE_CARE, {
@@ -63,5 +63,5 @@ queryClient.setMutationDefaults<unknown, Error, DeleteCareVars>(DELETE_CARE, {
     update(v.herdId, (events) => events.filter((e) => e.id !== v.id))
     await saveCacheNow()
   },
-  onError: (_e, v) => void queryClient.invalidateQueries({ queryKey: healthKey(v.herdId) }),
+  onError: (_e, v) => void refreshQueries(healthKey(v.herdId)),
 })

@@ -1,5 +1,6 @@
 import { computed } from 'vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { supabase, unwrap } from '@/lib/supabase'
 import { resizeImage } from '@/lib/images'
 import type { Appraisal, Goat, GoatInsert, GoatPhoto } from '@/lib/goats'
@@ -76,10 +77,9 @@ export function usePhotoUrls(paths: () => string[]) {
 }
 
 export function useGoatMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
 
-  const refresh = (key: readonly unknown[]) => queryClient.invalidateQueries({ queryKey: key })
+  const refresh = (key: readonly unknown[]) => refreshQueries(key)
 
   const saveGoat = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: Omit<GoatInsert, 'herd_id'> }): Promise<Goat> => {

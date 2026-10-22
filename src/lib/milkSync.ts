@@ -1,6 +1,6 @@
 // Milk saves, registered as mutation defaults so a save made offline can be
 // restored from the device cache and sent later, even after a reload.
-import { queryClient, saveCacheNow } from './queryClient'
+import { queryClient, saveCacheNow, refreshQueries } from './queryClient'
 import { supabase, unwrap } from './supabase'
 import { applyRecord, type MilkRow, type RecordInput } from './milk'
 import { retry, retryDelay } from './offlineRetry'
@@ -26,8 +26,8 @@ function setGoatDay(herdId: string, date: string, goatId: string, update: (rows:
 }
 
 function refreshAfter(herdId: string, goatId: string) {
-  void queryClient.invalidateQueries({ queryKey: milkKeys.totals(herdId) })
-  void queryClient.invalidateQueries({ queryKey: milkKeys.goat(goatId) })
+  void refreshQueries(milkKeys.totals(herdId))
+  void refreshQueries(milkKeys.goat(goatId))
 }
 
 // One queue for all milk saves: they reach the server in the order they
@@ -59,7 +59,7 @@ queryClient.setMutationDefaults<MilkRow[], Error, RecordVars>(RECORD_MILKING, {
   },
   onError: (_e: Error, v: RecordVars) => {
     // The server said no; reload the day so the screen shows what's really saved.
-    void queryClient.invalidateQueries({ queryKey: milkKeys.day(v.herdId, v.milkedOn) })
+    void refreshQueries(milkKeys.day(v.herdId, v.milkedOn))
   },
   onSettled: (_d: unknown, _e: unknown, v: RecordVars) => refreshAfter(v.herdId, v.goatId),
 })
@@ -78,7 +78,7 @@ queryClient.setMutationDefaults<unknown, Error, ClearVars>(CLEAR_MILKING, {
     await saveCacheNow()
   },
   onError: (_e: Error, v: ClearVars) => {
-    void queryClient.invalidateQueries({ queryKey: milkKeys.day(v.herdId, v.milkedOn) })
+    void refreshQueries(milkKeys.day(v.herdId, v.milkedOn))
   },
   onSettled: (_d: unknown, _e: unknown, v: ClearVars) => refreshAfter(v.herdId, v.goatId),
 })

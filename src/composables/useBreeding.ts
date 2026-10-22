@@ -1,5 +1,6 @@
 import { computed } from 'vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import type { Breeding, BreedingData, Heat, Kid, Kidding, PregnancyCheck } from '@/lib/breeding'
 import type { Database } from '@/lib/database.types'
@@ -50,9 +51,8 @@ export function useBreedingData() {
 }
 
 export function useBreedingMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: breedingKey(herdId.value) })
+  const refresh = () => refreshQueries(breedingKey(herdId.value))
 
   function saver<T extends 'heats' | 'breedings' | 'pregnancy_checks'>(table: T) {
     return useMutation({
@@ -96,8 +96,8 @@ export function useBreedingMutations() {
     onSuccess: () =>
       Promise.all([
         refresh(),
-        queryClient.invalidateQueries({ queryKey: goatKeys.goats(herdId.value) }),
-        queryClient.invalidateQueries({ queryKey: lactationsKey(herdId.value) }),
+        refreshQueries(goatKeys.goats(herdId.value)),
+        refreshQueries(lactationsKey(herdId.value)),
       ]),
   })
 

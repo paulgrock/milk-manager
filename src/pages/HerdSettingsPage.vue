@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { refreshQueries } from '@/lib/queryClient'
 import { useRouter } from 'vue-router'
 import { useToast } from '@nuxt/ui/composables'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { supabase, unwrap } from '@/lib/supabase'
 import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
@@ -11,7 +12,6 @@ import PasskeysCard from '@/components/PasskeysCard.vue'
 
 const router = useRouter()
 const toast = useToast()
-const queryClient = useQueryClient()
 const { user, signOut } = useAuth()
 const { herd, herdId, isOwner, refreshMemberships } = useHerd()
 
@@ -56,7 +56,7 @@ const { members, membersKey } = useHerdMembers()
 const changeRole = useMutation({
   mutationFn: async ({ userId, role }: { userId: string; role: HerdRole }) =>
     unwrap(await supabase.from('herd_members').update({ role }).eq('herd_id', herdId.value).eq('user_id', userId)),
-  onSettled: () => queryClient.invalidateQueries({ queryKey: membersKey.value }),
+  onSettled: () => refreshQueries(membersKey.value),
   onError: onError('Could not change role'),
 })
 
@@ -68,7 +68,7 @@ const removeMember = useMutation({
       await refreshMemberships()
       await router.replace('/')
     } else {
-      await queryClient.invalidateQueries({ queryKey: membersKey.value })
+      await refreshQueries(membersKey.value)
     }
   },
   onError: onError('Could not remove member'),
@@ -97,7 +97,7 @@ const sendInvite = useMutation({
   onSuccess: async () => {
     lastInvited.value = invite.email.trim().toLowerCase()
     invite.email = ''
-    await queryClient.invalidateQueries({ queryKey: invitesKey.value })
+    await refreshQueries(invitesKey.value)
   },
   onError: (e: Error) =>
     toast.add({
@@ -109,7 +109,7 @@ const sendInvite = useMutation({
 
 const cancelInvite = useMutation({
   mutationFn: async (id: string) => unwrap(await supabase.from('herd_invites').delete().eq('id', id)),
-  onSettled: () => queryClient.invalidateQueries({ queryKey: invitesKey.value }),
+  onSettled: () => refreshQueries(invitesKey.value),
 })
 
 const appUrl = window.location.origin

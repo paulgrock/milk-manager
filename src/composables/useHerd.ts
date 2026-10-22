@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useLocalStorage } from '@vueuse/core'
 import { supabase, unwrap } from '@/lib/supabase'
-import { queryClient } from '@/lib/queryClient'
+import { queryClient, refreshQueries } from '@/lib/queryClient'
 import { useAuth } from './useAuth'
 import type { Database } from '@/lib/database.types'
 
@@ -57,6 +57,6 @@ export function useHerd() {
     selectHerd: (id: string) => {
       selectedHerdId.value = id
     },
-    refreshMemberships: () => queryClient.invalidateQueries({ queryKey: membershipsKey(userId.value) }),
+    refreshMemberships: () => refreshQueries(membershipsKey(userId.value)),
   }
 }

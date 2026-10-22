@@ -1,5 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
-import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { toISODate, parseDate } from '@/lib/dates'
 import type { DayTotal, Lactation, MilkRow } from '@/lib/milk'
@@ -93,9 +94,8 @@ export function useMilkSaves() {
 type LactationInsert = Omit<Lactation, 'id' | 'herd_id' | 'created_at' | 'created_by'>
 
 export function useLactationMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: lactationsKey(herdId.value) })
+  const refresh = () => refreshQueries(lactationsKey(herdId.value))
 
   const save = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: Partial<LactationInsert> & { goat_id: string } }) => {

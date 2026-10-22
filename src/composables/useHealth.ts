@@ -1,5 +1,6 @@
 import { computed } from 'vue'
-import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { DELETE_CARE, LOG_CARE, healthKey, type DeleteCareVars, type HealthData, type LogCareVars } from '@/lib/healthSync'
 import type { CareEvent } from '@/lib/health'
@@ -71,9 +72,8 @@ export function useCareLog() {
 
 /** Treatments, health checks, tests and the care routine: saved online. */
 export function useHealthMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: healthKey(herdId.value) })
+  const refresh = () => refreshQueries(healthKey(herdId.value))
 
   function saver<T extends Exclude<HealthTable, 'care_events'>>(table: T) {
     return useMutation({

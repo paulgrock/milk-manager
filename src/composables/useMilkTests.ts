@@ -1,5 +1,6 @@
 import { computed } from 'vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import type { MilkTest, MilkTestKind, MilkTestResult } from '@/lib/dhia'
 import { useHerd } from './useHerd'
@@ -29,9 +30,8 @@ export function useMilkTests() {
 export type ResultInput = Pick<MilkTestResult, 'goat_id' | 'milk_g' | 'butterfat_pct' | 'protein_pct' | 'scc'>
 
 export function useMilkTestMutations() {
-  const queryClient = useQueryClient()
   const { herdId } = useHerd()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: milkTestsKey(herdId.value) })
+  const refresh = () => refreshQueries(milkTestsKey(herdId.value))
 
   /** Saves the test and replaces its results with `results` (does left blank are removed). */
   const save = useMutation({

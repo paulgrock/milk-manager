@@ -1,4 +1,4 @@
-import { QueryClient, dehydrate } from '@tanstack/vue-query'
+import { QueryClient, dehydrate, type QueryKey } from '@tanstack/vue-query'
 import { persistQueryClient, type PersistedClient } from '@tanstack/query-persist-client-core'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { del, get, set } from 'idb-keyval'
@@ -98,6 +98,16 @@ export async function restoreQueryCache(): Promise<void> {
   })
   window.addEventListener('pagehide', () => void saveCacheNow())
   void queryClient.resumePausedMutations()
+}
+
+/**
+ * Refetches after a save. A query still on its first load is cancelled
+ * first: otherwise TanStack Query hands back that in-flight request, which
+ * started before the save and so misses it (a just-sent invite wouldn't show).
+ */
+export async function refreshQueries(queryKey: QueryKey): Promise<void> {
+  await queryClient.cancelQueries({ queryKey })
+  await queryClient.invalidateQueries({ queryKey })
 }
 
 /** Drops everything cached on this device, e.g. on sign-out. */

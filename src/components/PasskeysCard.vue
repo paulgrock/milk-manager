@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { refreshQueries } from '@/lib/queryClient'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { useToast } from '@nuxt/ui/composables'
 import { passkeysSupported, supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/dates'
 import { deviceName, passkeyErrorMessage } from '@/lib/passkeys'
 
 const toast = useToast()
-const queryClient = useQueryClient()
 const key = ['passkeys']
 
 const passkeys = useQuery({
@@ -19,7 +19,7 @@ const passkeys = useQuery({
   },
   enabled: passkeysSupported,
 })
-const refresh = () => queryClient.invalidateQueries({ queryKey: key })
+const refresh = () => refreshQueries(key)
 
 const add = useMutation({
   mutationFn: async () => {
