@@ -21,6 +21,7 @@ import LactationSection from '@/components/milk/LactationSection.vue'
 import LactationCurveCard from '@/components/milk/LactationCurveCard.vue'
 import BreedingCard from '@/components/breeding/BreedingCard.vue'
 import HealthCard from '@/components/health/HealthCard.vue'
+import MilkTestsCard from '@/components/milk/MilkTestsCard.vue'
 import { useHealthData } from '@/composables/useHealth'
 import { todayISO } from '@/lib/dates'
 import { withdrawalOn } from '@/lib/health'
@@ -130,6 +131,7 @@ const details = computed(() => {
       </div>
 
       <div class="space-y-4">
+        <MilkTestsCard v-if="goat.sex === 'doe'" :goat="goat" />
         <HealthCard :goat="goat" />
         <BreedingCard v-if="goat.sex === 'doe'" :goat="goat" />
         <LactationSection v-if="goat.sex === 'doe'" :goat="goat" />

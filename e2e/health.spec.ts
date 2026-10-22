@@ -25,7 +25,7 @@ test('a new herd has the usual routine, and care can be logged for everyone at o
   const dialog = page.getByRole('dialog', { name: 'Log care' })
   await dialog.getByRole('button', { name: 'Everyone' }).click()
   await dialog.getByRole('button', { name: 'Log for 3' }).click()
-  await expect(page.getByText('Hoof trim logged for 3 goats')).toBeVisible()
+  await expect(page.getByText('Hoof trim logged for 3 goats').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Hoof trim', exact: true })).toBeHidden()
 
   await expect

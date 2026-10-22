@@ -29,6 +29,7 @@ declare module 'vue' {
     LogCareModal: typeof import('./src/components/health/LogCareModal.vue')['default']
     MilkDayEditor: typeof import('./src/components/milk/MilkDayEditor.vue')['default']
     MilkEntryRow: typeof import('./src/components/milk/MilkEntryRow.vue')['default']
+    MilkTestsCard: typeof import('./src/components/milk/MilkTestsCard.vue')['default']
     ObservationModal: typeof import('./src/components/health/ObservationModal.vue')['default']
     PedigreeChart: typeof import('./src/components/goats/PedigreeChart.vue')['default']
     PendingInvites: typeof import('./src/components/PendingInvites.vue')['default']

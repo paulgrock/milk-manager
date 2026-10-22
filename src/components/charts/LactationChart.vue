@@ -13,6 +13,8 @@ export interface CurveSeries {
   summary: LactationSummary
   /** Draw the fitted curve forward from today to day 305. */
   showProjection: boolean
+  /** Official test-day weights, marked separately. */
+  testPoints?: { dim: number; grams: number }[]
 }
 
 const props = defineProps<{ series: CurveSeries[]; unit: WeightUnit }>()
@@ -66,6 +68,17 @@ const option = computed<EChartsOption>(() => {
         itemStyle: { color },
         emphasis: { disabled: true },
         z: 3,
+      },
+      {
+        name: s.label,
+        type: 'scatter',
+        data: (s.testPoints ?? []).map((p) => [p.dim, toUnit(p.grams)]),
+        symbol: 'diamond',
+        symbolSize: 10,
+        itemStyle: { color, borderColor: t.surface, borderWidth: 2 },
+        emphasis: { disabled: true },
+        silent: true,
+        z: 4,
       },
       {
         name: s.label,
@@ -180,6 +193,7 @@ const tableRows = computed(() => {
       <span class="inline-flex items-center gap-1"><span class="inline-block size-1.5 rounded-full bg-current opacity-50" /> daily weigh-in</span>
       <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-0.5 bg-current" /> 7-day average</span>
       <span class="inline-flex items-center gap-1"><span class="inline-block w-4 border-t-2 border-dashed border-current" /> projected</span>
+      <span v-if="series.some((s) => s.testPoints?.length)" class="inline-flex items-center gap-1"><span class="inline-block size-2 rotate-45 bg-current" /> test day</span>
       <UButton size="xs" variant="link" color="neutral" class="ms-auto" @click="showTable = !showTable">
         {{ showTable ? 'Hide table' : 'Show as table' }}
       </UButton>

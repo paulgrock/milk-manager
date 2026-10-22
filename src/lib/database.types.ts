@@ -353,6 +353,52 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"milk_test_results": {
+                  Row: {
+                    "butterfat_pct": number | null,"goat_id": string,"herd_id": string,"id": string,"milk_g": number | null,"notes": string | null,"protein_pct": number | null,"scc": number | null,"test_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "butterfat_pct"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"milk_g"?: number | null,"notes"?: string | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id": string
+                  }
+                  Update: {
+                    "butterfat_pct"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"milk_g"?: number | null,"notes"?: string | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "milk_test_results_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "milk_test_results_test_id_herd_id_fkey"
+      columns: ["test_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "milk_tests"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"milk_tests": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["milk_test_kind"],"lab": string | null,"notes": string | null,"tested_on": string,"tester": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on": string,"tester"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on"?: string,"tester"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "milk_tests_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"milk_weights": {
                   Row: {
                     "goat_id": string,"herd_id": string,"id": string,"milked_on": string,"milking": number,"note": string | null,"portions_g": (number)[] | null,"recorded_at": string,"recorded_by": string | null,"weight_g": number
@@ -527,7 +573,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","test_result": "negative"|"positive"|"inconclusive"|"pending","treatment_route": "oral"|"subq"|"im"|"iv"|"topical"|"intramammary"|"other","weight_unit": "lb"|"kg"
+            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","milk_test_kind": "dhir"|"one_day"|"owner","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","test_result": "negative"|"positive"|"inconclusive"|"pending","treatment_route": "oral"|"subq"|"im"|"iv"|"topical"|"intramammary"|"other","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -647,7 +693,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"test_result": ["negative", "positive", "inconclusive", "pending"],"treatment_route": ["oral", "subq", "im", "iv", "topical", "intramammary", "other"],"weight_unit": ["lb", "kg"]
+            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"milk_test_kind": ["dhir", "one_day", "owner"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"test_result": ["negative", "positive", "inconclusive", "pending"],"treatment_route": ["oral", "subq", "im", "iv", "topical", "intramammary", "other"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const
