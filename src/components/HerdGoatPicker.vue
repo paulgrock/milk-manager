@@ -4,13 +4,22 @@ import { useHerdGoats } from '@/composables/useGoats'
 import { CURRENT_STATUSES, goatFullName } from '@/lib/goats'
 
 /** Picks a goat in the current herd: does by default, or any sex. */
-const props = withDefaults(defineProps<{ sex?: 'doe' | 'any'; placeholder?: string }>(), { sex: 'doe', placeholder: undefined })
+const props = withDefaults(
+  defineProps<{
+    sex?: 'doe' | 'any'
+    placeholder?: string
+    /** Also list sold and deceased goats (never outside reference goats). */
+    includeFormer?: boolean
+  }>(),
+  { sex: 'doe', placeholder: undefined, includeFormer: false },
+)
 const model = defineModel<string | null>({ required: true })
 const { goats } = useHerdGoats()
 
 const items = computed(() =>
   (goats.data.value ?? [])
-    .filter((g) => (props.sex === 'any' || g.sex === props.sex) && CURRENT_STATUSES.includes(g.status))
+    .filter((g) => props.sex === 'any' || g.sex === props.sex)
+    .filter((g) => (props.includeFormer ? g.status !== 'reference' : CURRENT_STATUSES.includes(g.status)))
     .map((g) => ({ label: g.barn_name ? `${g.barn_name} (${goatFullName(g)})` : goatFullName(g), value: g.id }))
     .sort((a, b) => a.label.localeCompare(b.label)),
 )

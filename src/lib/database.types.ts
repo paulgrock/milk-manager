@@ -115,6 +115,38 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"finance_entries": {
+                  Row: {
+                    "amount_cents": number,"breeding_id": string | null,"category": string,"created_at": string,"created_by": string | null,"description": string | null,"goat_id": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["finance_kind"],"notes": string | null,"occurred_on": string,"party": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_cents": number,"breeding_id"?: string | null,"category": string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"goat_id"?: string | null,"herd_id": string,"id"?: string,"kind": Database["public"]['Enums']["finance_kind"],"notes"?: string | null,"occurred_on": string,"party"?: string | null
+                  }
+                  Update: {
+                    "amount_cents"?: number,"breeding_id"?: string | null,"category"?: string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"goat_id"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["finance_kind"],"notes"?: string | null,"occurred_on"?: string,"party"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "finance_entries_breeding_id_herd_id_fkey"
+      columns: ["breeding_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "breedings"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "finance_entries_goat_id_herd_id_fkey"
+      columns: ["goat_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "goats"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "finance_entries_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"goat_photos": {
                   Row: {
                     "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null
@@ -573,7 +605,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "breeding_method": "hand"|"pen"|"ai","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","milk_test_kind": "dhir"|"one_day"|"owner","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","test_result": "negative"|"positive"|"inconclusive"|"pending","treatment_route": "oral"|"subq"|"im"|"iv"|"topical"|"intramammary"|"other","weight_unit": "lb"|"kg"
+            "breeding_method": "hand"|"pen"|"ai","finance_kind": "income"|"expense","goat_sex": "doe"|"buck"|"wether","goat_status": "active"|"for_sale"|"sold"|"deceased"|"reference","herd_role": "owner"|"helper","horn_status": "disbudded"|"polled"|"horned"|"unknown","kid_outcome": "alive"|"stillborn"|"died","kidding_difficulty": "unassisted"|"assisted"|"vet","milk_test_kind": "dhir"|"one_day"|"owner","pregnancy_check_method": "blood"|"ultrasound"|"observation","pregnancy_result": "pregnant"|"open"|"unsure","test_result": "negative"|"positive"|"inconclusive"|"pending","treatment_route": "oral"|"subq"|"im"|"iv"|"topical"|"intramammary"|"other","weight_unit": "lb"|"kg"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -693,7 +725,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "breeding_method": ["hand", "pen", "ai"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"milk_test_kind": ["dhir", "one_day", "owner"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"test_result": ["negative", "positive", "inconclusive", "pending"],"treatment_route": ["oral", "subq", "im", "iv", "topical", "intramammary", "other"],"weight_unit": ["lb", "kg"]
+            "breeding_method": ["hand", "pen", "ai"],"finance_kind": ["income", "expense"],"goat_sex": ["doe", "buck", "wether"],"goat_status": ["active", "for_sale", "sold", "deceased", "reference"],"herd_role": ["owner", "helper"],"horn_status": ["disbudded", "polled", "horned", "unknown"],"kid_outcome": ["alive", "stillborn", "died"],"kidding_difficulty": ["unassisted", "assisted", "vet"],"milk_test_kind": ["dhir", "one_day", "owner"],"pregnancy_check_method": ["blood", "ultrasound", "observation"],"pregnancy_result": ["pregnant", "open", "unsure"],"test_result": ["negative", "positive", "inconclusive", "pending"],"treatment_route": ["oral", "subq", "im", "iv", "topical", "intramammary", "other"],"weight_unit": ["lb", "kg"]
           }
         }
 } as const

@@ -36,10 +36,7 @@ export const router = createRouter({
         { path: 'breeding/kidding', component: () => import('@/pages/breeding/KiddingPage.vue') },
         { path: 'health', component: () => import('@/pages/health/HealthPage.vue') },
         { path: 'calendar', component: () => import('@/pages/CalendarPage.vue') },
-        {
-          path: ':section(finances)',
-          component: () => import('@/pages/ComingSoonPage.vue'),
-        },
+        { path: 'finances', component: () => import('@/pages/FinancesPage.vue') },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

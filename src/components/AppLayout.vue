@@ -4,10 +4,10 @@ import { useOnline } from '@vueuse/core'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useHerd } from '@/composables/useHerd'
 
-const { herd, herdId, memberships, selectHerd } = useHerd()
+const { herd, herdId, memberships, selectHerd, isOwner } = useHerd()
 const online = useOnline()
 
-const nav: NavigationMenuItem[] = [
+const allNav: NavigationMenuItem[] = [
   { label: 'Today', icon: 'i-lucide-sun', to: '/', exact: true },
   { label: 'Goats', icon: 'i-lucide-list', to: '/goats' },
   { label: 'Milk', icon: 'i-lucide-milk', to: '/milk' },
@@ -17,6 +17,9 @@ const nav: NavigationMenuItem[] = [
   { label: 'Finances', icon: 'i-lucide-wallet', to: '/finances' },
   { label: 'Settings', icon: 'i-lucide-settings', to: '/settings' },
 ]
+
+// Finances are owners-only, so helpers don't get the menu item.
+const nav = computed(() => allNav.filter((item) => item.to !== '/finances' || isOwner.value))
 
 const herdOptions = computed(() =>
   (memberships.data.value ?? []).map((m) => ({ label: m.herd.name, value: m.herd.id })),

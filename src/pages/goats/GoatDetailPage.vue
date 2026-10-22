@@ -22,6 +22,11 @@ import LactationCurveCard from '@/components/milk/LactationCurveCard.vue'
 import BreedingCard from '@/components/breeding/BreedingCard.vue'
 import HealthCard from '@/components/health/HealthCard.vue'
 import MilkTestsCard from '@/components/milk/MilkTestsCard.vue'
+import GoatFinanceCard from '@/components/finances/GoatFinanceCard.vue'
+import EntryModal from '@/components/finances/EntryModal.vue'
+import { useHerd } from '@/composables/useHerd'
+import { useRouter } from 'vue-router'
+import { ageInYears } from '@/lib/goats'
 import { useHealthData } from '@/composables/useHealth'
 import { todayISO } from '@/lib/dates'
 import { withdrawalOn } from '@/lib/health'
@@ -35,6 +40,28 @@ const goatAppraisals = computed(() => (appraisals.data.value ?? []).filter((a) =
 const goatPhotos = computed(() => (photos.data.value ?? []).filter((p) => p.goat_id === goat.value?.id))
 const primary = computed(() => goatPhotos.value.find((p) => p.is_primary))
 const primaryUrl = usePhotoUrls(() => (primary.value ? [primary.value.storage_path] : []))
+const router = useRouter()
+const { isOwner } = useHerd()
+// Arriving with ?recordSale=1 (just marked sold): offer to put the sale in the books.
+const saleOpen = computed({
+  get: () => route.query.recordSale === '1' && isOwner.value && !!goat.value,
+  set: (open) => {
+    if (!open) void router.replace({ query: {} })
+  },
+})
+const saleDraft = computed(() => {
+  const g = goat.value
+  if (!g) return undefined
+  const young = (ageInYears(g.birth_date, g.left_herd_on ?? todayISO()) ?? 99) < 1
+  return {
+    kind: 'income' as const,
+    category: young ? 'kid_sale' : 'goat_sale',
+    occurred_on: g.left_herd_on ?? todayISO(),
+    description: `Sold ${g.barn_name || g.registered_name || ''}`.trim(),
+    goat_id: g.id,
+  }
+})
+
 const health = useHealthData()
 const withdrawal = computed(() => (goat.value ? withdrawalOn(goat.value.id, health.data.value.treatments, todayISO()) : null))
 const kids = computed(() => (goat.value ? offspringOf(goat.value.id, goats.data.value ?? []) : []))
@@ -133,6 +160,7 @@ const details = computed(() => {
       <div class="space-y-4">
         <MilkTestsCard v-if="goat.sex === 'doe'" :goat="goat" />
         <HealthCard :goat="goat" />
+        <GoatFinanceCard :goat="goat" />
         <BreedingCard v-if="goat.sex === 'doe'" :goat="goat" />
         <LactationSection v-if="goat.sex === 'doe'" :goat="goat" />
         <AppraisalSection :goat="goat" :appraisals="goatAppraisals" />
@@ -152,5 +180,7 @@ const details = computed(() => {
         </UCard>
       </div>
     </div>
+
+    <EntryModal v-model:open="saleOpen" :draft="saleDraft" />
   </div>
 </template>

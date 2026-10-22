@@ -165,8 +165,11 @@ async function submit() {
     return
   }
   try {
+    const wasSold = existing.value?.status === 'sold'
     const saved = await saveGoat.mutateAsync({ id: goatId.value, values: toValues() })
-    await router.replace(`/goats/${saved.id}`)
+    // Just marked sold: the goat page offers to record the sale (owners only).
+    const recordSale = saved.status === 'sold' && !wasSold && isOwner.value
+    await router.replace({ path: `/goats/${saved.id}`, query: recordSale ? { recordSale: '1' } : {} })
   } catch (e) {
     toast.add({ color: 'error', title: 'Could not save goat', description: (e as Error).message })
   }
