@@ -148,3 +148,33 @@ test('a doe who dies leaves the milk line and care lists but keeps her page and 
   await page.getByRole('option', { name: 'Deceased' }).click()
   await expect(page.getByRole('main').getByRole('listitem').filter({ hasText: 'Chimi' })).toHaveCount(1)
 })
+
+test('an uploaded photo becomes her picture, as a rounded square like the app icon', async ({ page, owner, herd }) => {
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', registered_name: 'Ina May', sex: 'doe' })
+  await page.goto(`/goats/${ina.id}`)
+
+  // A small generated photo.
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 400
+    const g = c.getContext('2d')!
+    g.fillStyle = '#b45309'
+    g.fillRect(0, 0, 400, 400)
+    g.fillStyle = '#fafaf9'
+    g.fillRect(100, 120, 200, 160)
+    return c.toDataURL('image/png').split(',')[1]!
+  })
+  await page.locator('input[type=file]').setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await expect(page.getByRole('img', { name: /Ina May, / })).toBeVisible()
+
+  // The first photo is her main one, shown at the top of her page and on the goat list.
+  const avatarRadius = (img: import('@playwright/test').Locator) => img.evaluate((el) => getComputedStyle(el.parentElement!).borderTopLeftRadius)
+  const header = page.getByRole('img', { name: 'Ina May', exact: true })
+  await expect(header).toBeVisible()
+  expect(await avatarRadius(header)).toBe('22%')
+
+  await page.goto('/goats')
+  const listed = page.getByRole('img', { name: 'Ina May', exact: true })
+  await expect(listed).toBeVisible()
+  expect(await avatarRadius(listed)).toBe('22%')
+})
