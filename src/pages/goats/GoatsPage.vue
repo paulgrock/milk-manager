@@ -15,17 +15,21 @@ import {
   type GoatStatus,
 } from '@/lib/goats'
 import GoatAvatar from '@/components/goats/GoatAvatar.vue'
+import { useLactations } from '@/composables/useMilk'
+import { todayISO } from '@/lib/dates'
+import { lactationOn } from '@/lib/milk'
 
 const { goats, appraisals, photos } = useHerdGoats()
 
 // Remembered per device so the list opens the way you left it.
 const search = useLocalStorage('goats.search', '')
-const view = useLocalStorage<'current' | 'all' | GoatStatus>('goats.view', 'current')
+const view = useLocalStorage<'current' | 'in_milk' | 'all' | GoatStatus>('goats.view', 'current')
 const sex = useLocalStorage<GoatSex | 'any'>('goats.sex', 'any')
 const breed = useLocalStorage<string>('goats.breed', 'any')
 
 const viewOptions = [
   { label: 'Current herd', value: 'current' },
+  { label: 'In milk', value: 'in_milk' },
   { label: 'Everyone', value: 'all' },
   ...(['for_sale', 'sold', 'deceased', 'reference'] as const).map((s) => ({ label: STATUS_LABELS[s], value: s })),
 ]
@@ -37,14 +41,18 @@ const breedOptions = computed(() => [
     .map((b) => ({ label: b, value: b })),
 ])
 
-const filtered = computed(() =>
-  filterGoats(goats.data.value ?? [], {
+const lactations = useLactations()
+const today = todayISO()
+
+const filtered = computed(() => {
+  const list = filterGoats(goats.data.value ?? [], {
     search: search.value,
-    statuses: view.value === 'current' ? CURRENT_STATUSES : view.value === 'all' ? [] : [view.value],
+    statuses: view.value === 'current' || view.value === 'in_milk' ? CURRENT_STATUSES : view.value === 'all' ? [] : [view.value],
     sex: sex.value === 'any' ? null : sex.value,
     breed: breed.value === 'any' ? null : breed.value,
-  }),
-)
+  })
+  return view.value === 'in_milk' ? list.filter((g) => lactationOn(lactations.data.value ?? [], g.id, today)) : list
+})
 
 const latest = computed(() => latestAppraisals(appraisals.data.value ?? []))
 const primaryPhotos = computed(

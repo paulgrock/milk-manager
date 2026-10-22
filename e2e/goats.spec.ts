@@ -1,5 +1,5 @@
 import { admin, expect, test } from './fixtures.ts'
-import { addGoat } from './seed.ts'
+import { addDoeInMilk, addGoat, addLactation, isoDate } from './seed.ts'
 
 test('adds a goat with an outside sire and an in-herd dam, then sees her pedigree', async ({ page, owner, herd }) => {
   const ds = await addGoat(owner, herd.id, { registered_name: 'Castle Rock Roxstar', title_suffix: '+*B', sex: 'buck', status: 'reference' })
@@ -97,4 +97,19 @@ test('owner deletes a goat; her kids keep their records', async ({ page, owner, 
 
   const after = await admin.from('goats').select('id, dam_id').eq('id', kid.id).single()
   expect(after.data).toEqual({ id: kid.id, dam_id: null })
+})
+
+test('the In milk view lists only does milking today', async ({ page, owner, herd }) => {
+  await addDoeInMilk(owner, herd.id, 'Clover')
+  const dry = await addGoat(owner, herd.id, { barn_name: 'Dry Doe', sex: 'doe' })
+  await addLactation(owner, herd.id, dry.id, isoDate(-400), 1, isoDate(-30))
+  await addGoat(owner, herd.id, { barn_name: 'Rex', sex: 'buck' })
+
+  await page.goto('/goats')
+  const rows = page.getByRole('main').getByRole('listitem')
+  await expect(rows).toHaveCount(3)
+  await page.getByRole('combobox').filter({ hasText: 'Current herd' }).click()
+  await page.getByRole('option', { name: 'In milk' }).click()
+  await expect(rows).toHaveCount(1)
+  await expect(rows.first()).toContainText('Clover')
 })
