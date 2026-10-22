@@ -1,6 +1,7 @@
 // Imports goats from a Sanity CMS export (the farm website's content) into a herd.
 //
-//   node scripts/import-sanity-goats.ts --export <dir> --herd <herd id> [--breed "Nigerian Dwarf"] [--apply]
+//   node scripts/import-sanity-goats.ts --export <dir> --herd <herd id> [--breed "Nigerian Dwarf"]
+//     [--appraised-on YYYY-MM-DD] [--apply]
 //
 // Without --apply it only prints what it would do. Runs against the local
 // Supabase stack by default; set SUPABASE_URL and SUPABASE_SECRET_KEY to point
@@ -11,12 +12,16 @@
 // ("Diji Farm JRB Typhoon VGV 85", "Diji Farm JRB Typhoon *B VGV 85"), so
 // goats are matched on their name with titles, appraisal scores and sire
 // initials removed.
+//
+// A linear appraisal score in a name ("5*M VVEV 88 (@ 2 yo)") becomes an
+// appraisal record dated --appraised-on (today if not given), not a title.
 
 import { execFileSync, execSync } from 'node:child_process'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
+import { splitAppraisal } from '../src/lib/appraisalText.ts'
 
 type Node = { name?: string; link?: string; sire?: Node; dam?: Node }
 type SanityGoat = {
@@ -45,6 +50,7 @@ const exportDir = arg('export')
 const herdId = arg('herd')
 const breed = arg('breed') ?? null
 const apply = args.includes('--apply')
+const appraisedOn = arg('appraised-on') ?? new Date().toISOString().slice(0, 10)
 if (!exportDir || !herdId) {
   console.error('Usage: node scripts/import-sanity-goats.ts --export <dir> --herd <herd id> [--breed "Nigerian Dwarf"] [--apply]')
   process.exit(1)
@@ -218,6 +224,7 @@ const regIds = new Map((existing ?? []).filter((g) => g.registration_number).map
 
 // Goats first (parents linked in a second pass, since they reference each other).
 let created = 0
+let appraisals = 0
 for (const g of planned.values()) {
   const reg = g.doc?.adgaPedigree?.match(/RegNumber=([A-Z0-9]+)/)?.[1] ?? null
   const already = (reg && regIds.get(reg)) || ids.get(g.key)
@@ -231,7 +238,7 @@ for (const g of planned.values()) {
       herd_id: herdId,
       registered_name: g.name,
       title_prefix: g.prefix,
-      title_suffix: g.suffix,
+      title_suffix: splitAppraisal(g.suffix).titles,
       barn_name: g.doc?.aka ?? null,
       sex: g.sex,
       birth_date: g.doc?.date ?? null,
@@ -247,6 +254,15 @@ for (const g of planned.values()) {
   if (error) throw new Error(`${g.name}: ${error.message}`)
   ids.set(g.key, data.id)
   created += 1
+  const { appraisal } = splitAppraisal(g.suffix)
+  if (appraisal) {
+    const { age, ...scores } = appraisal
+    const { error } = await db
+      .from('linear_appraisals')
+      .insert({ herd_id: herdId, goat_id: data.id, appraised_on: appraisedOn, ...scores, notes: age ? `Listed as ${age}` : null })
+    if (error) throw new Error(`${g.name} appraisal: ${error.message}`)
+    appraisals += 1
+  }
 }
 
 let linked = 0
@@ -288,4 +304,4 @@ for (const g of herd) {
   }
 }
 
-console.log(`\nImported into "${herdRow.name}": ${created} goats created, ${linked} parent links, ${photos} photos.`)
+console.log(`\nImported into "${herdRow.name}": ${created} goats created, ${appraisals} appraisals, ${linked} parent links, ${photos} photos.`)
