@@ -35,8 +35,9 @@ export const router = createRouter({
         { path: 'breeding', component: () => import('@/pages/breeding/BreedingPage.vue') },
         { path: 'breeding/kidding', component: () => import('@/pages/breeding/KiddingPage.vue') },
         { path: 'health', component: () => import('@/pages/health/HealthPage.vue') },
+        { path: 'calendar', component: () => import('@/pages/CalendarPage.vue') },
         {
-          path: ':section(calendar|finances)',
+          path: ':section(finances)',
           component: () => import('@/pages/ComingSoonPage.vue'),
         },
       ],

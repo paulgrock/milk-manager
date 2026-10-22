@@ -6,7 +6,7 @@ test('main pages fit a phone screen', async ({ page, owner, herd }) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Clover', 60)
   await addMilkCurve(herd.id, goat.id, 60)
 
-  for (const path of ['/', '/goats', `/goats/${goat.id}`, `/goats/${goat.id}/edit`, '/milk', '/milk/history', '/milk/production', '/breeding', `/breeding/kidding?doe=${goat.id}`, '/health', '/milk/tests', '/milk/tests/new', '/settings']) {
+  for (const path of ['/', '/goats', `/goats/${goat.id}`, `/goats/${goat.id}/edit`, '/milk', '/milk/history', '/milk/production', '/breeding', `/breeding/kidding?doe=${goat.id}`, '/health', '/milk/tests', '/milk/tests/new', '/calendar', '/settings']) {
     await page.goto(path)
     await expect(page.getByRole('main')).toBeVisible()
     await page.waitForLoadState('networkidle')

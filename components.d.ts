@@ -15,6 +15,7 @@ declare module 'vue' {
     AppraisalSection: typeof import('./src/components/goats/AppraisalSection.vue')['default']
     BreedingCard: typeof import('./src/components/breeding/BreedingCard.vue')['default']
     BreedingModal: typeof import('./src/components/breeding/BreedingModal.vue')['default']
+    CalendarEventItem: typeof import('./src/components/CalendarEventItem.vue')['default']
     CheckModal: typeof import('./src/components/breeding/CheckModal.vue')['default']
     GoatAvatar: typeof import('./src/components/goats/GoatAvatar.vue')['default']
     GoatPicker: typeof import('./src/components/goats/GoatPicker.vue')['default']
