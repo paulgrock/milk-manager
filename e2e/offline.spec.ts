@@ -1,7 +1,7 @@
 // The barn case: milk entered with bad or no signal must never be lost.
 import { env } from './env.ts'
 import { expect, test } from './fixtures.ts'
-import { addDoeInMilk, isoDate, lbToGrams, milkRows } from './seed.ts'
+import { addDoeInMilk, isoDate, milkRows, ozToGrams } from './seed.ts'
 
 const today = isoDate()
 const apiRoutes = `${env.apiUrl}/**`
@@ -36,14 +36,14 @@ test('weak signal: a save that keeps failing survives a reload and uploads later
   // The phone says it's online, but every request to the server fails.
   await context.route(apiRoutes, (route) => route.abort('internetdisconnected'))
 
-  await page.getByLabel('Clover PM').fill('2.9')
+  await page.getByLabel('Clover PM').fill('46')
   await page.keyboard.press('Enter')
   await expect(page.getByText('1 weight is saved on this phone')).toBeVisible({ timeout: 20_000 })
 
   // Close and reopen the app while the server is still unreachable.
   await page.reload()
   await page.getByRole('tab', { name: 'PM' }).click()
-  await expect(page.getByLabel('Clover PM')).toHaveValue('2.9')
+  await expect(page.getByLabel('Clover PM')).toHaveValue('46')
   await expect(page.getByText('1 weight is saved on this phone')).toBeVisible()
   expect(await milkRows(goat.id, today)).toEqual([])
 
@@ -51,7 +51,7 @@ test('weak signal: a save that keeps failing survives a reload and uploads later
   await context.unroute(apiRoutes)
   await expect
     .poll(() => milkRows(goat.id, today), { timeout: 40_000 })
-    .toEqual([{ milking: 2, weight_g: lbToGrams(2.9), portions_g: null }])
+    .toEqual([{ milking: 2, weight_g: ozToGrams(46), portions_g: null }])
   await expect(page.getByText('saved on this phone')).toBeHidden({ timeout: 10_000 })
 })
 
@@ -72,7 +72,7 @@ test('no signal at all: the app opens from the device, queues the weight, and se
   await expect(page.getByText('Offline')).toBeVisible()
   await page.getByRole('tab', { name: 'AM' }).click()
   // The milk line comes from the cache saved on the device.
-  await page.getByLabel('Pepper AM').fill('3.1')
+  await page.getByLabel('Pepper AM').fill('50')
   await page.keyboard.press('Enter')
   await expect(page.getByText('1 weight is saved on this phone')).toBeVisible()
   await expect(page.getByText('They will upload automatically when you have signal.')).toBeVisible()
@@ -80,7 +80,7 @@ test('no signal at all: the app opens from the device, queues the weight, and se
   await context.setOffline(false)
   await expect
     .poll(() => milkRows(goat.id, today), { timeout: 30_000 })
-    .toEqual([{ milking: 1, weight_g: lbToGrams(3.1), portions_g: null }])
+    .toEqual([{ milking: 1, weight_g: ozToGrams(50), portions_g: null }])
 })
 
 test('a correction made offline lands after the original weight, not before', async ({ page, context, owner, herd }) => {
@@ -90,14 +90,14 @@ test('a correction made offline lands after the original weight, not before', as
   await expect(page.getByLabel('Clover AM')).toBeVisible()
 
   await context.setOffline(true)
-  await page.getByLabel('Clover AM').fill('3')
+  await page.getByLabel('Clover AM').fill('48')
   await page.keyboard.press('Tab')
-  await page.getByLabel('Clover AM').fill('3.5')
+  await page.getByLabel('Clover AM').fill('56')
   await page.keyboard.press('Tab')
   await expect(page.getByText('2 weights are saved on this phone')).toBeVisible()
 
   await context.setOffline(false)
   await expect
     .poll(() => milkRows(goat.id, today), { timeout: 30_000 })
-    .toEqual([{ milking: 1, weight_g: lbToGrams(3.5), portions_g: null }])
+    .toEqual([{ milking: 1, weight_g: ozToGrams(56), portions_g: null }])
 })

@@ -6,18 +6,20 @@ export type MilkRow = Tables['milk_weights']['Row']
 export type Lactation = Tables['lactations']['Row']
 export type DayTotal = Database['public']['Views']['milk_day_totals']['Row']
 export type WeightUnit = Database['public']['Enums']['weight_unit']
+/** Units a weight can be typed in: the herd's unit, or ounces for small weights. */
+export type EntryUnit = WeightUnit | 'oz'
 
 export const DAY_TOTAL = 0
 export const AM = 1
 export const PM = 2
 
-const GRAMS_PER: Record<WeightUnit, number> = { lb: 453.59237, kg: 1000 }
+const GRAMS_PER: Record<EntryUnit, number> = { lb: 453.59237, kg: 1000, oz: 28.349523125 }
 
-export function toGrams(value: number, unit: WeightUnit): number {
+export function toGrams(value: number, unit: EntryUnit): number {
   return Math.round(value * GRAMS_PER[unit])
 }
 
-export function fromGrams(grams: number, unit: WeightUnit): number {
+export function fromGrams(grams: number, unit: EntryUnit): number {
   return grams / GRAMS_PER[unit]
 }
 
@@ -26,7 +28,7 @@ export function fromGrams(grams: number, unit: WeightUnit): number {
  * number grows (two under 10, one under 100, none above) so totals stay
  * readable.
  */
-export function formatWeight(grams: number | null | undefined, unit: WeightUnit, withUnit = false): string {
+export function formatWeight(grams: number | null | undefined, unit: EntryUnit, withUnit = false): string {
   if (grams === null || grams === undefined) return ''
   const value = fromGrams(grams, unit)
   const decimals = Math.abs(value) >= 100 ? 0 : Math.abs(value) >= 10 ? 1 : 2
@@ -34,9 +36,14 @@ export function formatWeight(grams: number | null | undefined, unit: WeightUnit,
   return withUnit ? `${text} ${unit}` : text
 }
 
-/** A weight as typed into a box: always up to two decimals, so editing never loses precision. */
-function formatInputWeight(grams: number, unit: WeightUnit): string {
-  return String(Math.round(fromGrams(grams, unit) * 100) / 100)
+/**
+ * A weight as typed into a box, so it reads back as typed: two decimals for
+ * pounds and kilograms, one for ounces (weights are stored in whole grams, so
+ * 30 oz comes back as 29.98 before rounding).
+ */
+function formatInputWeight(grams: number, unit: EntryUnit): string {
+  const scale = unit === 'oz' ? 10 : 100
+  return String(Math.round(fromGrams(grams, unit) * scale) / scale)
 }
 
 export function milkingLabel(milking: number): string {
@@ -61,14 +68,14 @@ export const MAX_MILKING_GRAMS = 20000
  */
 export function parseWeightInput(
   text: string,
-  unit: WeightUnit,
+  unit: EntryUnit,
   max: { grams: number; message: string } = { grams: MAX_MILKING_GRAMS, message: 'That is more than a goat gives in one milking' },
 ): ParsedWeight {
   const trimmed = text.trim()
   if (!trimmed) return { kind: 'empty' }
   const parts = trimmed.split('+').map((p) => p.trim().replace(',', '.'))
   if (parts.some((p) => !/^\d*\.?\d+$/.test(p))) {
-    return { kind: 'invalid', message: 'Use numbers like 3.4, or 2.1 + 1.3 for parts' }
+    return { kind: 'invalid', message: `Use numbers like ${unit === 'oz' ? '54' : '3.4'}, or ${partsExample(unit)} for parts` }
   }
   if (parts.length > 20) return { kind: 'invalid', message: 'Too many parts' }
   // Round each part first so the stored parts always add up to the total exactly.
@@ -78,8 +85,13 @@ export function parseWeightInput(
   return { kind: 'ok', grams: total, portions: grams.length > 1 ? grams : null }
 }
 
+/** An example of a milking weighed in two containers, in the unit being typed. */
+export function partsExample(unit: EntryUnit): string {
+  return unit === 'oz' ? '30 + 24' : '2.1 + 1.3'
+}
+
 /** What to show in a weight box for a saved milking. */
-export function formatWeightInput(row: Pick<MilkRow, 'weight_g' | 'portions_g'>, unit: WeightUnit): string {
+export function formatWeightInput(row: Pick<MilkRow, 'weight_g' | 'portions_g'>, unit: EntryUnit): string {
   return row.portions_g?.length
     ? row.portions_g.map((g) => formatInputWeight(g, unit)).join(' + ')
     : formatInputWeight(row.weight_g, unit)

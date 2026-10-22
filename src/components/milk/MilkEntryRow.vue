@@ -8,6 +8,7 @@ import {
   formatWeight,
   formatWeightInput,
   milkingLabel,
+  type EntryUnit,
   type MilkRow,
   type WeightUnit,
 } from '@/lib/milk'
@@ -18,7 +19,10 @@ const props = defineProps<{
   goat: Goat
   rows: MilkRow[]
   milking: number
+  /** For the day total. */
   unit: WeightUnit
+  /** What weights are typed and shown in. */
+  entryUnit: EntryUnit
   dim: number
   photoUrl?: string
   isToday: boolean
@@ -48,9 +52,9 @@ const locked = computed(() => props.milking === DAY_TOTAL && hasSeparate.value)
 const text = ref('')
 const focused = ref(false)
 watch(
-  [current, () => props.unit],
+  [current, () => props.entryUnit],
   () => {
-    if (!focused.value) text.value = current.value ? formatWeightInput(current.value, props.unit) : ''
+    if (!focused.value) text.value = current.value ? formatWeightInput(current.value, props.entryUnit) : ''
   },
   { immediate: true },
 )
@@ -58,13 +62,13 @@ watch(
 const summary = computed(() =>
   props.rows
     .filter((r) => r.milking !== props.milking)
-    .map((r) => `${milkingLabel(r.milking)} ${formatWeight(r.weight_g, props.unit)}`)
+    .map((r) => `${milkingLabel(r.milking)} ${formatWeight(r.weight_g, props.entryUnit, true)}`)
     .join(' · '),
 )
 
 const placeholder = computed(() => {
-  if (locked.value) return formatWeight(status.value.totalG, props.unit)
-  if (dayTotalRow.value && props.milking !== DAY_TOTAL) return `of ${formatWeight(dayTotalRow.value.weight_g, props.unit)}`
+  if (locked.value) return formatWeight(status.value.totalG, props.entryUnit)
+  if (dayTotalRow.value && props.milking !== DAY_TOTAL) return `of ${formatWeight(dayTotalRow.value.weight_g, props.entryUnit)}`
   return '—'
 })
 
@@ -75,7 +79,7 @@ watch(current, () => (lastSent = undefined))
 
 function commit() {
   focused.value = false
-  const saved = lastSent ?? (current.value ? formatWeightInput(current.value, props.unit) : '')
+  const saved = lastSent ?? (current.value ? formatWeightInput(current.value, props.entryUnit) : '')
   if (text.value.trim() !== saved) {
     lastSent = text.value.trim()
     emit('save', text.value)
@@ -103,7 +107,7 @@ const menu = computed<DropdownMenuItem[]>(() => [
       </p>
       <p class="text-xs text-muted truncate">
         <template v-if="summary">{{ summary }}</template>
-        <template v-if="rows.length > 1 || (rows.length && !current)"> · Day {{ formatWeight(status.totalG, unit) }}</template>
+        <template v-if="rows.length > 1 || (rows.length && !current)"> · Day {{ formatWeight(status.totalG, unit, true) }}</template>
       </p>
       <UBadge v-if="withheldThrough" color="warning" variant="subtle" size="sm" icon="i-lucide-milk-off" class="me-1">
         Withhold · through {{ formatDate(withheldThrough) }}
@@ -139,7 +143,7 @@ const menu = computed<DropdownMenuItem[]>(() => [
         @blur="commit"
         @keydown.enter.prevent="onEnter"
       >
-        <template #trailing><span class="text-xs text-muted">{{ unit }}</span></template>
+        <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
       </UInput>
       <UDropdownMenu :items="menu">
         <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis-vertical" aria-label="More" />

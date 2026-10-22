@@ -7,6 +7,7 @@ type GoatInsert = Database['public']['Tables']['goats']['Insert']
 
 export const GRAMS_PER_LB = 453.59237
 export const lbToGrams = (lb: number) => Math.round(lb * GRAMS_PER_LB)
+export const ozToGrams = (oz: number) => Math.round((oz * GRAMS_PER_LB) / 16)
 
 /** Local 'YYYY-MM-DD', shifted by whole days. The browser uses the same clock. */
 export function isoDate(daysFromToday = 0): string {

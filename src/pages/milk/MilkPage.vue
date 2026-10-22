@@ -5,7 +5,7 @@ import { useOnline } from '@vueuse/core'
 import { useToast } from '@nuxt/ui/composables'
 import { useHerd } from '@/composables/useHerd'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
-import { shiftDate, useLactations, useMilkDay, useMilkSaves } from '@/composables/useMilk'
+import { shiftDate, useLactations, useMilkDay, useMilkSaves, useMilkUnits } from '@/composables/useMilk'
 import { formatDate, todayISO } from '@/lib/dates'
 import { goatName, inHerdOn, type Goat } from '@/lib/goats'
 import {
@@ -32,7 +32,7 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const online = useOnline()
-const { herd, herdId } = useHerd()
+const { herdId } = useHerd()
 const { goats, photos } = useHerdGoats()
 const lactations = useLactations()
 const { record, clear, pending, pendingFor } = useMilkSaves()
@@ -53,7 +53,12 @@ const milkingOptions = [
   { label: 'Day total', value: DAY_TOTAL },
 ]
 
-const unit = computed(() => herd.value?.weight_unit ?? 'lb')
+// Weights are typed in entryUnit (ounces by default); totals are in the herd's unit.
+const { unit, entryUnit } = useMilkUnits()
+const entryUnitOptions = [
+  { label: 'oz', value: 'oz' },
+  { label: 'lb', value: 'lb' },
+]
 const day = useMilkDay(date)
 
 // The milk line: does in milk on this date, by barn name.
@@ -110,7 +115,7 @@ function save(goat: Goat, text: string) {
   const key = goat.id
   delete errors.value[key]
   const rows = rowsByGoat.value.get(goat.id) ?? []
-  const parsed = parseWeightInput(text, unit.value)
+  const parsed = parseWeightInput(text, entryUnit.value)
 
   if (parsed.kind === 'invalid') {
     errors.value[key] = parsed.message
@@ -187,14 +192,20 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
         />
         <UButton v-if="date !== today" variant="link" @click="goTo(today)">Today</UButton>
       </div>
-      <UTabs
-        v-model="milking"
-        :items="milkingOptions"
-        :content="false"
-        size="md"
-        class="ms-auto"
-        :ui="{ list: 'w-auto' }"
-      />
+      <div class="ms-auto flex items-center gap-2">
+        <UTabs
+          v-if="unit === 'lb'"
+          v-model="entryUnit"
+          :items="entryUnitOptions"
+          :content="false"
+          size="md"
+          color="neutral"
+          variant="link"
+          aria-label="Enter weights in"
+          :ui="{ list: 'w-auto' }"
+        />
+        <UTabs v-model="milking" :items="milkingOptions" :content="false" size="md" :ui="{ list: 'w-auto' }" />
+      </div>
     </div>
 
     <UAlert
@@ -231,6 +242,7 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
           :rows="rowsByGoat.get(goat.id) ?? []"
           :milking="milking"
           :unit="unit"
+          :entry-unit="entryUnit"
           :dim="daysInMilk(lactation.freshened_on, date)"
           :photo-url="photoUrls[primaryPhotos.get(goat.id) ?? '']"
           :is-today="date === today"
@@ -274,6 +286,7 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
       :date="date"
       :rows="rowsByGoat.get(editing.id) ?? []"
       :unit="unit"
+      :entry-unit="entryUnit"
       :herd-id="herdId"
     />
     <LactationModal

@@ -1,33 +1,56 @@
 import { admin, expect, test } from './fixtures.ts'
-import { addDoeInMilk, addGoat, isoDate, lbToGrams, milkRows } from './seed.ts'
+import { addDoeInMilk, addGoat, isoDate, lbToGrams, milkRows, ozToGrams } from './seed.ts'
 
 const today = isoDate()
 
-test('enters AM weights by keyboard, including a milking weighed in parts', async ({ page, owner, herd }) => {
+test('enters AM weights in ounces by keyboard, including a milking weighed in parts; totals are in pounds', async ({ page, owner, herd }) => {
   const { goat: clover } = await addDoeInMilk(owner, herd.id, 'Clover')
   const { goat: pepper } = await addDoeInMilk(owner, herd.id, 'Pepper')
 
   await page.goto('/milk')
   await page.getByRole('tab', { name: 'AM' }).click()
-  await page.getByLabel('Clover AM').fill('3.4')
+  await expect(page.getByRole('tab', { name: 'oz' })).toHaveAttribute('aria-selected', 'true')
+  await page.getByLabel('Clover AM').fill('54')
   await page.keyboard.press('Enter')
   // Enter moves straight to the next doe.
   await expect(page.getByLabel('Pepper AM')).toBeFocused()
-  await page.keyboard.type('2.1 + 0.8')
+  await page.keyboard.type('34 + 13')
   await page.keyboard.press('Enter')
 
+  // 101 oz.
   await expect(page.getByText('AM · 2/2 does')).toBeVisible()
-  await expect(page.getByText('6.3 lb').first()).toBeVisible()
+  await expect(page.getByText('6.31 lb').first()).toBeVisible()
 
-  await expect.poll(() => milkRows(clover.id, today)).toEqual([{ milking: 1, weight_g: lbToGrams(3.4), portions_g: null }])
+  await expect.poll(() => milkRows(clover.id, today)).toEqual([{ milking: 1, weight_g: ozToGrams(54), portions_g: null }])
   await expect
     .poll(() => milkRows(pepper.id, today))
-    .toEqual([{ milking: 1, weight_g: lbToGrams(2.1) + lbToGrams(0.8), portions_g: [lbToGrams(2.1), lbToGrams(0.8)] }])
+    .toEqual([{ milking: 1, weight_g: ozToGrams(34) + ozToGrams(13), portions_g: [ozToGrams(34), ozToGrams(13)] }])
 
   // Reloading shows the saved parts the way they were typed.
   await page.reload()
   await page.getByRole('tab', { name: 'AM' }).click()
-  await expect(page.getByLabel('Pepper AM')).toHaveValue('2.1 + 0.8')
+  await expect(page.getByLabel('Pepper AM')).toHaveValue('34 + 13')
+  await expect(page.getByLabel('Clover AM')).toHaveValue('54')
+})
+
+test('weights can be typed in pounds instead, and the choice is remembered', async ({ page, owner, herd }) => {
+  const { goat: clover } = await addDoeInMilk(owner, herd.id, 'Clover')
+  await page.goto('/milk')
+  await page.getByRole('tab', { name: 'AM' }).click()
+  await page.getByRole('tab', { name: 'lb' }).click()
+  await page.getByLabel('Clover AM').fill('3.4')
+  await page.keyboard.press('Tab')
+  await expect.poll(() => milkRows(clover.id, today)).toEqual([{ milking: 1, weight_g: lbToGrams(3.4), portions_g: null }])
+  await expect(page.getByText('3.4 lb').first()).toBeVisible()
+
+  await page.reload()
+  await page.getByRole('tab', { name: 'AM' }).click()
+  await expect(page.getByRole('tab', { name: 'lb' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByLabel('Clover AM')).toHaveValue('3.4')
+
+  // The same weight in ounces.
+  await page.getByRole('tab', { name: 'oz' }).click()
+  await expect(page.getByLabel('Clover AM')).toHaveValue('54.4')
 })
 
 test('rejects a weight that is not a number and keeps the row unsaved', async ({ page, owner, herd }) => {
@@ -36,7 +59,7 @@ test('rejects a weight that is not a number and keeps the row unsaved', async ({
   await page.getByRole('tab', { name: 'AM' }).click()
   await page.getByLabel('Clover AM').fill('abc')
   await page.keyboard.press('Tab')
-  await expect(page.getByText('Use numbers like 3.4, or 2.1 + 1.3 for parts')).toBeVisible()
+  await expect(page.getByText('Use numbers like 54, or 30 + 24 for parts')).toBeVisible()
   expect(await milkRows(goat.id, today)).toEqual([])
 })
 
@@ -45,20 +68,21 @@ test('a day total splits into AM and PM when AM is entered later', async ({ page
   await page.goto('/milk')
 
   await page.getByRole('tab', { name: 'Day total' }).click()
-  await page.getByLabel('Ina Day total').fill('6.5')
+  await page.getByLabel('Ina Day total').fill('104')
   await page.keyboard.press('Tab')
-  await expect.poll(() => milkRows(goat.id, today)).toEqual([{ milking: 0, weight_g: lbToGrams(6.5), portions_g: null }])
+  await expect.poll(() => milkRows(goat.id, today)).toEqual([{ milking: 0, weight_g: ozToGrams(104), portions_g: null }])
+  await expect(page.getByText('6.5 lb').first()).toBeVisible()
 
   await page.getByRole('tab', { name: 'AM' }).click()
-  await expect(page.getByLabel('Ina AM')).toHaveAttribute('placeholder', 'of 6.5')
-  await page.getByLabel('Ina AM').fill('3.7')
+  await expect(page.getByLabel('Ina AM')).toHaveAttribute('placeholder', 'of 104')
+  await page.getByLabel('Ina AM').fill('59')
   await page.keyboard.press('Tab')
-  await expect(page.getByText('PM 2.8')).toBeVisible()
+  await expect(page.getByText('PM 45 oz')).toBeVisible()
   await expect
     .poll(() => milkRows(goat.id, today))
     .toEqual([
-      { milking: 1, weight_g: lbToGrams(3.7), portions_g: null },
-      { milking: 2, weight_g: lbToGrams(6.5) - lbToGrams(3.7), portions_g: null },
+      { milking: 1, weight_g: ozToGrams(59), portions_g: null },
+      { milking: 2, weight_g: ozToGrams(104) - ozToGrams(59), portions_g: null },
     ])
 })
 
@@ -69,19 +93,19 @@ test('the day editor adds an extra milking weighed in parts', async ({ page, own
   await page.getByRole('menuitem', { name: 'Edit this day' }).click()
 
   const dialog = page.getByRole('dialog')
-  await dialog.getByLabel('AM weight').fill('3.7')
-  await dialog.getByLabel('PM weight').fill('2.8')
+  await dialog.getByLabel('AM weight').fill('59')
+  await dialog.getByLabel('PM weight').fill('45')
   await dialog.getByRole('button', { name: 'Extra milking' }).click()
-  await dialog.getByLabel('Extra weight').fill('0.4 + 0.3')
+  await dialog.getByLabel('Extra weight').fill('6 + 5')
   await dialog.getByLabel('Extra note').click()
   await dialog.getByRole('button', { name: 'Done' }).click()
 
   await expect
     .poll(() => milkRows(goat.id, today))
     .toEqual([
-      { milking: 1, weight_g: lbToGrams(3.7), portions_g: null },
-      { milking: 2, weight_g: lbToGrams(2.8), portions_g: null },
-      { milking: 3, weight_g: lbToGrams(0.4) + lbToGrams(0.3), portions_g: [lbToGrams(0.4), lbToGrams(0.3)] },
+      { milking: 1, weight_g: ozToGrams(59), portions_g: null },
+      { milking: 2, weight_g: ozToGrams(45), portions_g: null },
+      { milking: 3, weight_g: ozToGrams(6) + ozToGrams(5), portions_g: [ozToGrams(6), ozToGrams(5)] },
     ])
 })
 

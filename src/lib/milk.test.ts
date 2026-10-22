@@ -72,6 +72,20 @@ describe('parseWeightInput', () => {
     expect(parsed).toEqual({ kind: 'ok', grams: 953 + 590, portions: [953, 590] })
   })
 
+  it('reads ounces, and a day of ounces totals in pounds', () => {
+    const am = parseWeightInput('54', 'oz')
+    expect(am).toEqual({ kind: 'ok', grams: 1531, portions: null })
+    const pm = parseWeightInput('30 + 18', 'oz')
+    expect(pm).toEqual({ kind: 'ok', grams: 850 + 510, portions: [850, 510] })
+    expect(formatWeight(1531 + 850 + 510, 'lb', true)).toBe('6.37 lb')
+    expect(formatWeightInput({ weight_g: 850 + 510, portions_g: [850, 510] }, 'oz')).toBe('30 + 18')
+  })
+
+  it('gives an example in the unit being typed', () => {
+    expect(parseWeightInput('abc', 'oz')).toEqual({ kind: 'invalid', message: 'Use numbers like 54, or 30 + 24 for parts' })
+    expect(parseWeightInput('abc', 'lb')).toEqual({ kind: 'invalid', message: 'Use numbers like 3.4, or 2.1 + 1.3 for parts' })
+  })
+
   it('rejects junk and impossible weights', () => {
     expect(parseWeightInput('abc', 'lb').kind).toBe('invalid')
     expect(parseWeightInput('2 +', 'lb').kind).toBe('invalid')

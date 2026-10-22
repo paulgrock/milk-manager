@@ -3,7 +3,8 @@ import { refreshQueries } from '@/lib/queryClient'
 import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { toISODate, parseDate } from '@/lib/dates'
-import type { DayTotal, Lactation, MilkRow } from '@/lib/milk'
+import type { DayTotal, EntryUnit, Lactation, MilkRow, WeightUnit } from '@/lib/milk'
+import { useLocalStorage } from '@vueuse/core'
 import { CLEAR_MILKING, RECORD_MILKING, milkKeys, type ClearVars, type RecordVars } from '@/lib/milkSync'
 import { useHerd } from './useHerd'
 
@@ -123,4 +124,23 @@ export function shiftDate(date: string, days: number): string {
   const d = parseDate(date)
   d.setDate(d.getDate() + days)
   return toISODate(d)
+}
+
+// Ounces by default: a scale reading at milking time. Kept per device.
+const entryUnitChoice = useLocalStorage<'oz' | 'lb'>('milk-entry-unit', 'oz')
+
+/**
+ * The herd's unit, for totals, and the unit weights are typed in. Pound
+ * herds can type in ounces or pounds; kilogram herds type kilograms.
+ */
+export function useMilkUnits() {
+  const { herd } = useHerd()
+  const unit = computed<WeightUnit>(() => herd.value?.weight_unit ?? 'lb')
+  const entryUnit = computed<EntryUnit>({
+    get: () => (unit.value === 'kg' ? 'kg' : entryUnitChoice.value),
+    set: (v) => {
+      if (v === 'oz' || v === 'lb') entryUnitChoice.value = v
+    },
+  })
+  return { unit, entryUnit }
 }

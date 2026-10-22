@@ -15,11 +15,22 @@ import {
   formatWeightInput,
   milkingLabel,
   parseWeightInput,
+  partsExample,
+  type EntryUnit,
   type MilkRow,
   type WeightUnit,
 } from '@/lib/milk'
 
-const props = defineProps<{ goat: Goat; date: string; rows: MilkRow[]; unit: WeightUnit; herdId: string }>()
+const props = defineProps<{
+  goat: Goat
+  date: string
+  rows: MilkRow[]
+  /** For the day total. */
+  unit: WeightUnit
+  /** What weights are typed in. */
+  entryUnit: EntryUnit
+  herdId: string
+}>()
 const open = defineModel<boolean>('open', { required: true })
 
 const toast = useToast()
@@ -49,7 +60,7 @@ const shown: Record<number, { text: string; note: string }> = {}
 function load(keepEdits = false) {
   for (const slot of [DAY_TOTAL, AM, PM, 3, 4, 5, 6]) {
     const row = props.rows.find((r) => r.milking === slot)
-    const next = { text: row ? formatWeightInput(row, props.unit) : '', note: row?.note ?? '' }
+    const next = { text: row ? formatWeightInput(row, props.entryUnit) : '', note: row?.note ?? '' }
     const field = fields[slot]
     const edited = keepEdits && field && shown[slot] && (field.text !== shown[slot].text || field.note !== shown[slot].note)
     if (!edited) fields[slot] = { ...next, error: field?.error ?? '' }
@@ -74,7 +85,7 @@ function save(slot: number) {
   const field = fields[slot]!
   field.error = ''
   const existing = rowFor(slot)
-  const parsed = parseWeightInput(field.text, props.unit)
+  const parsed = parseWeightInput(field.text, props.entryUnit)
 
   if (parsed.kind === 'invalid') {
     field.error = parsed.message
@@ -134,7 +145,7 @@ const splitText = ref('')
 const splitError = ref('')
 function saveSplit() {
   splitError.value = ''
-  const parsed = parseWeightInput(splitText.value, props.unit)
+  const parsed = parseWeightInput(splitText.value, props.entryUnit)
   if (parsed.kind !== 'ok') {
     splitError.value = parsed.kind === 'invalid' ? parsed.message : 'Enter the AM weight'
     return
@@ -165,14 +176,14 @@ watch(open, () => (enteringDayTotal.value = false))
   <UModal
     v-model:open="open"
     :title="`${goat.barn_name || goatName(goat)} · ${formatDate(date)}`"
-    :description="`Day total ${formatWeight(status.totalG, unit, true)}. Type parts like 2.1 + 1.3 if you weighed a milking in more than one container.`"
+    :description="`Day total ${formatWeight(status.totalG, unit, true)}. Type parts like ${partsExample(entryUnit)} if you weighed a milking in more than one container.`"
   >
     <template #body>
       <div class="space-y-4">
         <template v-if="isDayTotal || enteringDayTotal">
           <UFormField label="Day total" :error="fields[DAY_TOTAL]?.error || undefined" :hint="rowFor(DAY_TOTAL) && nameOf(rowFor(DAY_TOTAL)!.recorded_by) ? `by ${nameOf(rowFor(DAY_TOTAL)!.recorded_by)}` : undefined">
             <UInput v-model="fields[DAY_TOTAL]!.text" inputmode="text" autocomplete="off" class="w-full" size="xl" @blur="save(DAY_TOTAL)">
-              <template #trailing><span class="text-xs text-muted">{{ unit }}</span></template>
+              <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
             </UInput>
           </UFormField>
           <UFormField label="Note">
@@ -212,7 +223,7 @@ watch(open, () => (enteringDayTotal.value = false))
                   :aria-label="`${milkingLabel(slot)} weight`"
                   @blur="save(slot)"
                 >
-                  <template #trailing><span class="text-xs text-muted">{{ unit }}</span></template>
+                  <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
                 </UInput>
               </UFormField>
               <UInput

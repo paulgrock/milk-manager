@@ -88,7 +88,7 @@ test('a treatment withholds her milk: banner on her page, badge on milk entry, w
   await page.goto('/milk')
   await expect(page.getByText(`Withhold · through ${shown(through)}`)).toBeVisible()
   await page.getByRole('tab', { name: 'AM' }).click()
-  await page.getByLabel('Ina AM').fill('3')
+  await page.getByLabel('Ina AM').fill('48')
   await page.keyboard.press('Tab')
   await expect(page.getByText('Withheld', { exact: true })).toBeVisible()
   await expect(page.getByText('3 lb').last()).toBeVisible()
