@@ -49,10 +49,12 @@ Every feature ships with three kinds of tests:
   See `supabase/migrations/20261021000000_herds_and_members.sql`.
 - Owners invite people by email from Settings. The invitee signs in with that email and accepts the invite.
 
-## Deploying (later)
+## Deploying
 
 1. Create a Supabase project, then run `npx supabase link` and `npx supabase db push`.
 2. In the dashboard, under **Auth → Email Templates**, set the Magic Link and Confirm Signup templates to show `{{ .Token }}`
    (copy `supabase/templates/sign_in_code.html`). This makes sign-in use a code instead of a link, which works inside an installed iPhone app.
 3. Set up custom SMTP for real email delivery. Supabase's built-in sender is heavily rate-limited.
-4. Deploy `dist/` to Cloudflare Pages with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set.
+4. On Netlify, import the GitHub repo. `netlify.toml` sets the build, the single-page-app routing and cache headers.
+   Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under Site configuration → Environment variables, then deploy.
+5. In Supabase, set Auth → URL Configuration → Site URL to the Netlify address.
