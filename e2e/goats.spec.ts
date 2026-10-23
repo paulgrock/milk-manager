@@ -197,7 +197,29 @@ test("a goat's page is at her name, and older links with her id still get there"
 
   // Renaming her moves her page; editing goes through the same address.
   await page.goto('/goats/ina-2/edit')
+  await expect(page.getByLabel('Barn name')).toHaveValue('Ina')
   await page.getByLabel('Barn name').fill('Pearl')
   await page.getByRole('button', { name: 'Save changes' }).click()
   await expect(page).toHaveURL(/\/goats\/pearl$/)
+})
+
+test("the edit page waits for the goat to load, so it can't be typed over or saved as a new goat", async ({ page, owner, herd }) => {
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
+  // A slow connection: hold the goats list until we say so.
+  let release!: () => void
+  const held = new Promise<void>((r) => (release = r))
+  await page.route('**/rest/v1/goats?*', async (route) => {
+    await held
+    await route.continue()
+  })
+  const loading = page.goto(`/goats/${ina.id}/edit`)
+
+  await expect(page.getByLabel('Loading goat')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add goat' })).toHaveCount(0)
+  await expect(page.getByLabel('Barn name')).toHaveCount(0)
+
+  release()
+  await loading
+  await expect(page.getByLabel('Barn name')).toHaveValue('Ina')
+  await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible()
 })

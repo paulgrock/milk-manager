@@ -213,6 +213,11 @@ async function remove() {
 
     <UAlert v-if="goatRef && !existing && !goats.isPending.value" color="error" variant="subtle" title="Goat not found" />
 
+    <!-- Editing: wait for her details, or the empty form would be typed over, or saved as a new goat. -->
+    <div v-else-if="goatRef && !existing" class="space-y-4" aria-label="Loading goat">
+      <USkeleton v-for="i in 3" :key="i" class="h-40 w-full" />
+    </div>
+
     <form v-else class="space-y-4" @submit.prevent="submit">
       <UCard>
         <template #header><h2 class="font-semibold">Name and titles</h2></template>
