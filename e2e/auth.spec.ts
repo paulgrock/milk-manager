@@ -1,8 +1,12 @@
 import { test as base } from '@playwright/test'
 import { admin, createUser, deleteUser, expect, latestCode, signInContext, test } from './fixtures.ts'
 
-base('signs in with an emailed code and creates a herd', async ({ page }) => {
+test('an invited newcomer signs in with an emailed code and joins the herd', async ({ browser, herd }) => {
   const email = `newcomer-${crypto.randomUUID().slice(0, 8)}@example.test`
+  await admin.from('herd_invites').insert({ herd_id: herd.id, email })
+  // A fresh browser: the newcomer, not the owner.
+  const context = await browser.newContext()
+  const page = await context.newPage()
   try {
     await page.goto('/')
     await expect(page).toHaveURL(/\/login/)
@@ -16,16 +20,27 @@ base('signs in with an emailed code and creates a herd', async ({ page }) => {
     await page.getByLabel('pin input 1 of 6').click()
     await page.keyboard.type(await latestCode(email))
     await expect(page).toHaveURL(/\/welcome/)
-
-    await page.getByLabel('Herd or farm name').fill('Sunny Acres')
-    await page.getByRole('button', { name: 'Create herd' }).click()
+    await expect(page.getByText(`You're invited to ${herd.name}`)).toBeVisible()
+    await page.getByRole('button', { name: 'Join' }).click()
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
-    await expect(page.getByText('Owner of Sunny Acres')).toBeVisible()
   } finally {
-    const member = await admin.from('herd_members').select('user_id').eq('email', email).maybeSingle()
-    if (member.data) await deleteUser({ id: member.data.user_id } as never)
+    await context.close()
+    const { data } = await admin.auth.admin.listUsers()
+    const user = data.users.find((u) => u.email === email)
+    if (user) await deleteUser({ id: user.id } as never)
   }
+})
+
+base("an email that wasn't invited can't make an account", async ({ page }) => {
+  const email = `stranger-${crypto.randomUUID().slice(0, 8)}@example.test`
+  await page.goto('/login')
+  await page.getByLabel('Email').fill(email)
+  await page.getByRole('button', { name: 'Email me a code' }).click()
+  await expect(page.getByText("This email hasn't been invited. Ask a herd owner to invite you, then sign in with the same email.")).toBeVisible()
+  await expect(page.getByText('We sent a 6-digit code')).toHaveCount(0)
+  const { data } = await admin.auth.admin.listUsers()
+  expect(data.users.some((u) => u.email === email)).toBe(false)
 })
 
 test('an invited helper joins and gets a read-only view of herd settings', async ({ page, browser, herd }) => {
@@ -71,4 +86,22 @@ test('owner renames the herd and switches milk units', async ({ page, herd }) =>
 
   const saved = await admin.from('herds').select('name, weight_unit').eq('id', herd.id).single()
   expect(saved.data).toEqual({ name: `${herd.name} Renamed`, weight_unit: 'kg' })
+})
+
+base('someone with an account and no herd yet can start one', async ({ browser }) => {
+  const user = await createUser('founder')
+  const context = await browser.newContext()
+  try {
+    await signInContext(context, user)
+    const page = await context.newPage()
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/welcome/)
+    await page.getByLabel('Herd or farm name').fill('Sunny Acres')
+    await page.getByRole('button', { name: 'Create herd' }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByText('Owner of Sunny Acres')).toBeVisible()
+  } finally {
+    await context.close()
+    await deleteUser(user)
+  }
 })

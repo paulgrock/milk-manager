@@ -48,6 +48,8 @@ Every feature ships with three kinds of tests:
 - New tables get a `herd_id` and RLS policies using `is_herd_member(herd_id)` / `is_herd_owner(herd_id)`.
   See `supabase/migrations/20261021000000_herds_and_members.sql`.
 - Owners invite people by email from Settings. The invitee signs in with that email and accepts the invite.
+- Accounts are invite-only. A new account can only be made for an email with a pending invite (the
+  `before_user_created` auth hook). The first account on a new project is let through so someone can send invites.
 
 ## Deploying
 
@@ -55,6 +57,8 @@ Every feature ships with three kinds of tests:
 2. In the dashboard, under **Auth → Email Templates**, set the Magic Link and Confirm Signup templates to show `{{ .Token }}`
    (copy `supabase/templates/sign_in_code.html`). This makes sign-in use a code instead of a link, which works inside an installed iPhone app.
 3. Set up custom SMTP for real email delivery. Supabase's built-in sender is heavily rate-limited.
+   Turn on invite-only sign-up: Auth → Hooks → **Before User Created** → Postgres function `public.before_user_created`.
+   (Sign in yourself first, or rely on the first account being let through.)
 4. On Netlify, import the GitHub repo. `netlify.toml` sets the build, the single-page-app routing and cache headers.
    Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under Site configuration → Environment variables, then deploy.
 5. In Supabase, set Auth → URL Configuration → Site URL to the Netlify address.
