@@ -42,8 +42,13 @@ export async function deleteUser(user: TestUser) {
   // Herds they own go first; deleting the user then removes their memberships.
   const owned = await admin.from('herd_members').select('herd_id').eq('user_id', user.id).eq('role', 'owner')
   const herdIds = (owned.data ?? []).map((m) => m.herd_id)
-  if (herdIds.length) await admin.from('herds').delete().in('id', herdIds)
-  await admin.auth.admin.deleteUser(user.id)
+  // Fail loudly: a delete that quietly fails leaves test herds behind (it once did).
+  if (herdIds.length) {
+    const { error } = await admin.from('herds').delete().in('id', herdIds)
+    if (error) throw new Error(`Could not delete test herds: ${error.message}`)
+  }
+  const { error } = await admin.auth.admin.deleteUser(user.id)
+  if (error) throw new Error(`Could not delete test user: ${error.message}`)
 }
 
 /** Starts the browser already signed in as `user`, the same as returning to the app. */
