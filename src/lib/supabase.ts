@@ -1,12 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
+import { isLoopback, reachableUrl } from './localStack'
 
-const url = import.meta.env.VITE_SUPABASE_URL
+const configuredUrl = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
-if (!url || !key) {
+if (!configuredUrl || !key) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY. Copy .env.example to .env.local.')
 }
+const url = reachableUrl(configuredUrl, typeof window === 'undefined' ? undefined : window.location.hostname)
 
 export const supabase = createClient<Database>(url, key, {
   // Passkeys are experimental in Supabase Auth and must be switched on here.
@@ -22,8 +24,9 @@ export const passkeysSupported = typeof window !== 'undefined' && 'PublicKeyCred
  * hosted project.
  */
 export const localMailInbox: string | null = (() => {
+  if (!isLoopback(new URL(configuredUrl).hostname)) return null
   const { hostname, protocol } = new URL(url)
-  return hostname === '127.0.0.1' || hostname === 'localhost' ? `${protocol}//${hostname}:54324` : null
+  return `${protocol}//${hostname}:54324`
 })()
 
 /** Throws the Supabase error if there is one, otherwise returns the data. */
