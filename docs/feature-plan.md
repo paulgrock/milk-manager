@@ -68,6 +68,33 @@ Fields are modeled on the Bird's Eye Farm goat listings.
 - One shared herd with several logins (you plus family and helpers), so the app needs cloud sync.
 - Each entry records who made it ("milked by", "trimmed by").
 - Roles: owner (everything) and helper (enter milk and care records, no deleting goats or editing finances).
+- Accounts are invite-only: a new account needs a pending herd invite from an owner (built).
+- **P2: invite emails.** Today, adding an invite doesn't email anyone; the owner has to tell the person to sign in. Send one instead:
+  a Supabase Edge Function checks the owner owns the herd, records the invite, and calls Supabase Auth's invite-user email
+  (needs the secret key, so it can't run in the browser), with a branded "You've been invited to {herd} on Milk Manager" template
+  like the sign-in code one. Needs real email delivery (SMTP) on the hosted project. Supabase's invite email only works for people
+  without an account yet; existing users would see the invite the next time they open the app.
+
+## Going live: sign-in email (to do)
+The site runs on Netlify (https://bef-milk-manager.netlify.app) with the hosted Supabase project, and Bird's Eye Farm's data is
+copied there (`scripts/copy-herd.ts`). What's left is email: Supabase's built-in sender only delivers to people on the Supabase
+team and a couple of times an hour, so invited helpers would never get a sign-in code, and the code template can't be set
+without custom SMTP. Plan: send through **Resend** from the birdseyefarm.com domain (free for 3,000 emails a month).
+1. Sign up at resend.com and add **birdseyefarm.com** under Domains.
+2. Add the DNS records Resend shows (DKIM, SPF, and an MX record for bounces) wherever birdseyefarm.com's DNS is managed,
+   then click **Verify** in Resend. It can take a few minutes up to a few hours.
+3. Create an API key in Resend with sending access.
+4. Supabase → Authentication → Emails → SMTP Settings, turn on custom SMTP (or use Resend → Integrations → Supabase,
+   which fills these in):
+   - Sender email `milk@birdseyefarm.com`, sender name `Milk Manager`
+   - Host `smtp.resend.com`, port `465`, username `resend`, password: the Resend API key
+5. Supabase → Authentication → Emails → Templates: for **Magic Link** and **Confirm signup**, set the subject to
+   `Your Milk Manager sign-in code` and paste in `supabase/templates/sign_in_code.html`, so emails carry a 6-digit code.
+6. Supabase → Authentication → Rate Limits: raise emails per hour (e.g. to 30) so a few people signing in at once aren't blocked.
+7. Check it: invite a helper's email in Settings, have them sign in, and confirm the code arrives from milk@birdseyefarm.com.
+
+Stopgap if DNS has to wait: Gmail SMTP with an app password (2-step verification on, then host `smtp.gmail.com`, port `465`,
+the Gmail address as username, the app password as password). Codes come from that Gmail address; about 500 a day.
 
 ## Explicitly out of scope
 Meat, fiber and pack features. A marketplace or public farm page (could be added later).
