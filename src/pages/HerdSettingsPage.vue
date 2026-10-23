@@ -9,6 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
 import { useHerdMembers } from '@/composables/useHerdMembers'
 import PasskeysCard from '@/components/PasskeysCard.vue'
+import { squareImageDataUrl } from '@/lib/images'
 
 const router = useRouter()
 const toast = useToast()
@@ -48,6 +49,31 @@ const saveDetails = useMutation({
   },
   onError: onError('Could not save herd'),
 })
+
+// --- Logo ------------------------------------------------------------------
+
+// Shown in the header in place of the app icon.
+const LOGO_SIZE = 192
+const logoInput = ref<HTMLInputElement>()
+const saveLogo = useMutation({
+  mutationFn: async (logo: string | null) => unwrap(await supabase.from('herds').update({ logo }).eq('id', herdId.value)),
+  onSuccess: (_data, logo) => {
+    void refreshMemberships()
+    toast.add({ color: 'success', title: logo ? 'Logo updated' : 'Logo removed' })
+  },
+  onError: onError('Could not save logo'),
+})
+async function onLogoFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  try {
+    saveLogo.mutate(await squareImageDataUrl(file, LOGO_SIZE))
+  } catch {
+    toast.add({ color: 'error', title: 'Could not read that picture', description: 'Try a PNG or JPEG.' })
+  }
+}
 
 // --- Members ---------------------------------------------------------------
 
@@ -126,6 +152,24 @@ async function onSignOut() {
 
     <UCard>
       <template #header><h2 class="font-semibold">Herd</h2></template>
+      <div class="flex items-center gap-3 mb-4">
+        <img
+          :src="herd?.logo ?? '/favicon.svg'"
+          :alt="herd?.logo ? `${herd.name} logo` : ''"
+          class="size-14 rounded-[22%] object-cover bg-elevated"
+        />
+        <div class="space-y-1">
+          <p class="text-sm font-medium">Logo</p>
+          <div v-if="isOwner" class="flex gap-2">
+            <UButton size="sm" variant="soft" icon="i-lucide-image-up" :loading="saveLogo.isPending.value" @click="logoInput?.click()">
+              {{ herd?.logo ? 'Change' : 'Upload' }}
+            </UButton>
+            <UButton v-if="herd?.logo" size="sm" color="neutral" variant="ghost" @click="saveLogo.mutate(null)">Remove</UButton>
+            <input ref="logoInput" type="file" accept="image/*" class="hidden" aria-label="Logo file" @change="onLogoFile" />
+          </div>
+          <p class="text-xs text-muted">Shown at the top of the app. Square pictures work best.</p>
+        </div>
+      </div>
       <form class="space-y-4" @submit.prevent="saveDetails.mutate()">
         <UFormField label="Herd or farm name">
           <UInput v-model="details.name" :disabled="!isOwner" required maxlength="100" class="w-full" />

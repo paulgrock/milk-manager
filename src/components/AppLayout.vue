@@ -30,7 +30,11 @@ const herdOptions = computed(() =>
   <div class="min-h-dvh flex flex-col">
     <header class="sticky top-0 z-10 border-b border-default bg-default/90 backdrop-blur">
       <div class="mx-auto max-w-5xl px-4 h-14 flex items-center gap-3">
-        <img src="/favicon.svg" alt="" class="size-8" />
+        <img
+          :src="herd?.logo ?? '/favicon.svg'"
+          :alt="herd?.logo ? `${herd.name} logo` : ''"
+          class="size-8 rounded-[22%] object-cover"
+        />
         <USelect
           v-if="herdOptions.length > 1"
           :model-value="herdId"

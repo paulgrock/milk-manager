@@ -105,3 +105,44 @@ base('someone with an account and no herd yet can start one', async ({ browser }
     await deleteUser(user)
   }
 })
+
+test('an owner sets a herd logo for the header, and can remove it', async ({ page, browser, herd }) => {
+  await page.goto('/settings')
+  const header = page.locator('header img')
+  await expect(header).toHaveAttribute('src', '/favicon.svg')
+
+  // A wide picture: it's cropped to the middle square.
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas')
+    c.width = 600
+    c.height = 300
+    const g = c.getContext('2d')!
+    g.fillStyle = '#1d4ed8'
+    g.fillRect(0, 0, 600, 300)
+    return c.toDataURL('image/png').split(',')[1]!
+  })
+  await page.getByLabel('Logo file').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await expect(page.getByText('Logo updated').first()).toBeVisible()
+  const logo = page.getByRole('banner').getByRole('img', { name: `${herd.name} logo` })
+  await expect(logo).toHaveAttribute('src', /^data:image\/png;base64,/)
+  expect(await logo.evaluate((img: HTMLImageElement) => [img.naturalWidth, img.naturalHeight])).toEqual([192, 192])
+
+  // Helpers see it but can't change it.
+  const helper = await createUser('helper')
+  try {
+    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    const ctx = await browser.newContext()
+    await signInContext(ctx, helper)
+    const helperPage = await ctx.newPage()
+    await helperPage.goto('/settings')
+    await expect(helperPage.getByRole('banner').getByRole('img', { name: `${herd.name} logo` })).toBeVisible()
+    await expect(helperPage.getByRole('button', { name: 'Change' })).toHaveCount(0)
+    await ctx.close()
+  } finally {
+    await deleteUser(helper)
+  }
+
+  await page.getByRole('button', { name: 'Remove' }).click()
+  await expect(page.getByText('Logo removed').first()).toBeVisible()
+  await expect(header).toHaveAttribute('src', '/favicon.svg')
+})

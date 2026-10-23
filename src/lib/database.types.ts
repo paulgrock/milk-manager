@@ -281,14 +281,14 @@ isOneToOne: false
                   ]
                 },"herds": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"id": string,"name": string,"weight_unit": Database["public"]['Enums']["weight_unit"]
+                    "created_at": string,"created_by": string | null,"id": string,"logo": string | null,"name": string,"weight_unit": Database["public"]['Enums']["weight_unit"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"weight_unit"?: Database["public"]['Enums']["weight_unit"]
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"logo"?: string | null,"name": string,"weight_unit"?: Database["public"]['Enums']["weight_unit"]
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"weight_unit"?: Database["public"]['Enums']["weight_unit"]
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"logo"?: string | null,"name"?: string,"weight_unit"?: Database["public"]['Enums']["weight_unit"]
                   }
                   Relationships: [
                     
@@ -526,6 +526,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"before_user_created":
+{ Args: { "event": Json }; Returns: Json
+                           },
 "clear_milking":
 { Args: { "p_goat_id": string,"p_milked_on": string,"p_milking": number }; Returns: undefined
                            },
@@ -534,6 +537,7 @@ isOneToOne: false
               "created_at": string,
 "created_by": string | null,
 "id": string,
+"logo": string | null,
 "name": string,
 "weight_unit": Database["public"]['Enums']["weight_unit"]
             }
