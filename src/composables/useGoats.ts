@@ -54,8 +54,13 @@ export function useHerdGoats() {
   })
 
   const byId = computed(() => new Map((goats.data.value ?? []).map((g) => [g.id, g])))
+  const bySlug = computed(() => new Map((goats.data.value ?? []).map((g) => [g.slug, g])))
+  /** A goat from its page address: the slug, or the id that older links used. */
+  const find = (ref: string | undefined) => (ref ? (bySlug.value.get(ref) ?? byId.value.get(ref)) : undefined)
+  /** Her page, when only her id is to hand. */
+  const pathOf = (id: string) => `/goats/${byId.value.get(id)?.slug ?? id}`
 
-  return { herdId, goats, appraisals, photos, byId }
+  return { herdId, goats, appraisals, photos, byId, find, pathOf }
 }
 
 /** Short-lived signed URLs for private photo files. */

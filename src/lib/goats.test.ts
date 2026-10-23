@@ -19,6 +19,7 @@ function goat(overrides: Partial<Goat>): Goat {
   n += 1
   return {
     id: `g${n}`,
+    slug: `g${n}`,
     herd_id: 'h1',
     registered_name: null,
     barn_name: null,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
 import { formatDate } from '@/lib/dates'
@@ -32,15 +32,23 @@ import { todayISO } from '@/lib/dates'
 import { withdrawalOn } from '@/lib/health'
 
 const route = useRoute()
-const { goats, appraisals, photos, byId } = useHerdGoats()
+const { goats, appraisals, photos, byId, find } = useHerdGoats()
 
-const goat = computed(() => byId.value.get(route.params.id as string))
+const goat = computed(() => find(route.params.goat as string))
+const router = useRouter()
+// Links made with her id (older bookmarks, the add-goat form) end up at her name.
+watch(
+  goat,
+  (g) => {
+    if (g && route.params.goat !== g.slug) void router.replace({ path: `/goats/${g.slug}`, query: route.query })
+  },
+  { immediate: true },
+)
 const latest = computed(() => latestAppraisals(appraisals.data.value ?? []))
 const goatAppraisals = computed(() => (appraisals.data.value ?? []).filter((a) => a.goat_id === goat.value?.id))
 const goatPhotos = computed(() => (photos.data.value ?? []).filter((p) => p.goat_id === goat.value?.id))
 const primary = computed(() => goatPhotos.value.find((p) => p.is_primary))
 const primaryUrl = usePhotoUrls(() => (primary.value ? [primary.value.storage_path] : []))
-const router = useRouter()
 const { isOwner } = useHerd()
 // Arriving with ?recordSale=1 (just marked sold): offer to put the sale in the books.
 const saleOpen = computed({
@@ -103,7 +111,7 @@ const details = computed(() => {
           <UBadge v-if="latest.get(goat.id)" color="neutral" variant="outline">LA {{ latest.get(goat.id)!.final_score }}</UBadge>
         </div>
       </div>
-      <UButton :to="`/goats/${goat.id}/edit`" color="neutral" variant="outline" icon="i-lucide-pencil">
+      <UButton :to="`/goats/${goat.slug}/edit`" color="neutral" variant="outline" icon="i-lucide-pencil">
         <span class="hidden sm:inline">Edit</span>
       </UButton>
     </div>
@@ -176,7 +184,7 @@ const details = computed(() => {
           <p v-if="!kids.length" class="text-muted">None recorded.</p>
           <ul v-else class="divide-y divide-default -my-2">
             <li v-for="k in kids" :key="k.id">
-              <RouterLink :to="`/goats/${k.id}`" class="py-2 flex items-center gap-2 hover:underline">
+              <RouterLink :to="`/goats/${k.slug}`" class="py-2 flex items-center gap-2 hover:underline">
                 <span class="flex-1 truncate">{{ goatFullName(k) }}</span>
                 <span class="text-sm text-muted">{{ SEX_LABELS[k.sex] }}<template v-if="k.birth_date"> · {{ formatDate(k.birth_date) }}</template></span>
               </RouterLink>

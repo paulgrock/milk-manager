@@ -13,7 +13,7 @@ import TreatmentModal from '@/components/health/TreatmentModal.vue'
 const today = todayISO()
 const toast = useToast()
 const { isOwner } = useHerd()
-const { goats, byId } = useHerdGoats()
+const { goats, byId, pathOf } = useHerdGoats()
 const { query, data } = useHealthData()
 const { waitingCount } = useCareLog()
 const { saveCareType } = useHealthMutations()
@@ -106,7 +106,7 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
         </template>
         <ul class="divide-y divide-default">
           <li v-for="{ goat, withdrawal } in withheld" :key="goat.id">
-            <RouterLink :to="`/goats/${goat.id}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
+            <RouterLink :to="`/goats/${goat.slug}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
               <span class="font-medium flex-1">{{ name(goat) }}</span>
               <span class="text-sm text-muted">{{ withdrawal!.treatments.map((t) => t.medication).join(', ') }}</span>
               <span class="text-sm">through <strong>{{ formatDate(withdrawal!.through) }}</strong></span>
@@ -135,7 +135,7 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
           </div>
           <ul v-if="due.length" class="flex flex-wrap gap-2">
             <li v-for="{ goat, status } in due" :key="goat.id">
-              <RouterLink :to="`/goats/${goat.id}`">
+              <RouterLink :to="`/goats/${goat.slug}`">
                 <UBadge :color="status.state === 'overdue' ? 'warning' : 'neutral'" variant="subtle" :icon="status.state === 'overdue' ? 'i-lucide-alarm-clock' : undefined">
                   {{ name(goat) }} · {{ dueLabel(status) }}
                 </UBadge>
@@ -154,7 +154,7 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
         <p v-if="!recentTreatments.length" class="p-4 text-muted">None recorded.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="t in recentTreatments" :key="t.id">
-            <RouterLink :to="`/goats/${t.goat_id}`" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
+            <RouterLink :to="pathOf(t.goat_id)" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
               <span class="w-24 text-muted">{{ formatDate(t.started_on) }}</span>
               <span class="flex-1">{{ name(byId.get(t.goat_id)) }} · {{ t.medication }}</span>
             </RouterLink>

@@ -114,7 +114,7 @@ function clearFilters() {
       </p>
       <ul class="divide-y divide-default rounded-lg border border-default">
         <li v-for="g in filtered" :key="g.id">
-          <RouterLink :to="`/goats/${g.id}`" class="flex items-center gap-3 p-3 hover:bg-elevated/50">
+          <RouterLink :to="`/goats/${g.slug}`" class="flex items-center gap-3 p-3 hover:bg-elevated/50">
             <GoatAvatar :goat="g" :url="photoUrls[primaryPhotos.get(g.id) ?? '']" />
             <div class="flex-1 min-w-0">
               <p class="font-medium truncate">{{ goatFullName(g) }}</p>

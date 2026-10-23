@@ -147,7 +147,7 @@ const projectedCount = computed(() => producers.value.filter((p) => p.summary.pr
             <tbody>
               <tr v-for="p in producers" :key="p.goat.id" class="border-t border-default">
                 <td class="px-3 py-2">
-                  <RouterLink :to="`/goats/${p.goat.id}`" class="font-medium hover:underline">
+                  <RouterLink :to="`/goats/${p.goat.slug}`" class="font-medium hover:underline">
                     {{ p.goat.barn_name || goatName(p.goat) }}
                   </RouterLink>
                   <span class="block text-xs text-muted">Lactation {{ p.lactation.lactation_number }}</span>

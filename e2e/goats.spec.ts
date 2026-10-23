@@ -33,7 +33,8 @@ test('adds a goat with an outside sire and an in-herd dam, then sees her pedigre
   await page.getByRole('option', { name: 'Harley Hillside Dime Piece 4*M' }).click()
 
   await page.getByRole('button', { name: 'Add goat' }).click()
-  await expect(page).toHaveURL(/\/goats\/[0-9a-f-]{36}$/)
+  // Her page is at her barn name.
+  await expect(page).toHaveURL(/\/goats\/ina$/)
   await expect(page.getByRole('heading', { name: "Bird's Eye Farm Ina May 5*M" })).toBeVisible()
   await expect(page.getByText('R: BEF · L: K12')).toBeVisible()
 
@@ -177,4 +178,26 @@ test('an uploaded photo becomes her picture, as a rounded square like the app ic
   const listed = page.getByRole('img', { name: 'Ina May', exact: true })
   await expect(listed).toBeVisible()
   expect(await avatarRadius(listed)).toBe('22%')
+})
+
+test("a goat's page is at her name, and older links with her id still get there", async ({ page, owner, herd }) => {
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', registered_name: "Bird's Eye Farm Ina May", sex: 'doe' })
+  const other = await addGoat(owner, herd.id, { barn_name: 'Ina', registered_name: 'Other Farm Ina', sex: 'doe' })
+  const outside = await addGoat(owner, herd.id, { registered_name: 'Castle Rock Bugatti', sex: 'buck', status: 'reference' })
+
+  // No barn name: the registered name.
+  await page.goto(`/goats/${outside.id}`)
+  await expect(page).toHaveURL(/\/goats\/castle-rock-bugatti$/)
+
+  await page.goto(`/goats/${ina.id}`)
+  await expect(page).toHaveURL(/\/goats\/ina$/)
+  await expect(page.getByRole('heading', { name: "Bird's Eye Farm Ina May" })).toBeVisible()
+  await page.goto(`/goats/${other.id}`)
+  await expect(page).toHaveURL(/\/goats\/ina-2$/)
+
+  // Renaming her moves her page; editing goes through the same address.
+  await page.goto('/goats/ina-2/edit')
+  await page.getByLabel('Barn name').fill('Pearl')
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page).toHaveURL(/\/goats\/pearl$/)
 })

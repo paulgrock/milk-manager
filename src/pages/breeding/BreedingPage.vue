@@ -18,7 +18,7 @@ const HEAT_WITHIN_DAYS = 7
 const today = todayISO()
 const { herd } = useHerd()
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
-const { goats, byId } = useHerdGoats()
+const { goats, byId, pathOf } = useHerdGoats()
 const { query, data } = useBreedingData()
 const lactations = useLactations()
 
@@ -95,7 +95,7 @@ const breedingOpen = ref(false)
         <p v-if="!dueSoon.length" class="p-4 text-muted">Nobody is due in the next {{ DUE_WITHIN_DAYS }} days.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="{ goat, state, dryOffNow } in dueSoon" :key="goat.id">
-            <RouterLink :to="`/goats/${goat.id}`" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-elevated/50">
+            <RouterLink :to="`/goats/${goat.slug}`" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-elevated/50">
               <span class="font-medium min-w-24">{{ name(goat) }}</span>
               <UBadge :color="STATUS_COLOR[state.current.status]" variant="subtle" size="sm">
                 {{ STATUS_LABELS[state.current.status] }}
@@ -124,7 +124,7 @@ const breedingOpen = ref(false)
           <p v-if="!heatWatch.length" class="p-4 text-muted">No heats expected this week.</p>
           <ul v-else class="divide-y divide-default">
             <li v-for="{ goat, state } in heatWatch" :key="goat.id">
-              <RouterLink :to="`/goats/${goat.id}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
+              <RouterLink :to="`/goats/${goat.slug}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
                 <span class="font-medium flex-1">{{ name(goat) }}</span>
                 <span class="text-sm text-muted">{{ state.nextHeat!.reason === 'return' ? 'Did she settle?' : 'Cycle' }}</span>
                 <span class="text-end">
@@ -144,7 +144,7 @@ const breedingOpen = ref(false)
           <p v-if="!open.length" class="p-4 text-muted">Every doe is bred.</p>
           <ul v-else class="divide-y divide-default">
             <li v-for="{ goat, state } in open" :key="goat.id">
-              <RouterLink :to="`/goats/${goat.id}`" class="flex items-center gap-3 px-4 py-2 hover:bg-elevated/50">
+              <RouterLink :to="`/goats/${goat.slug}`" class="flex items-center gap-3 px-4 py-2 hover:bg-elevated/50">
                 <span class="flex-1">{{ name(goat) }}</span>
                 <span class="text-xs text-muted">
                   {{ state.lastKidding ? `Kidded ${formatDate(state.lastKidding.kidded_on)}` : 'No kiddings recorded' }}
@@ -161,14 +161,14 @@ const breedingOpen = ref(false)
         <ul v-else class="divide-y divide-default">
           <li v-for="{ kidding, doe, kids } in recentKiddings" :key="kidding.id" class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <RouterLink v-if="doe" :to="`/goats/${doe.id}`" class="font-medium hover:underline">{{ name(doe) }}</RouterLink>
+              <RouterLink v-if="doe" :to="`/goats/${doe.slug}`" class="font-medium hover:underline">{{ name(doe) }}</RouterLink>
               <span class="text-sm text-muted flex-1">{{ formatDate(kidding.kidded_on) }}</span>
               <span class="text-sm">{{ kids.length }} {{ kids.length === 1 ? 'kid' : 'kids' }}</span>
             </div>
             <ul class="mt-1 flex flex-wrap gap-2">
               <li v-for="kid in kids" :key="kid.id">
                 <UBadge :color="kid.outcome === 'alive' ? 'neutral' : 'error'" variant="outline" size="sm">
-                  <RouterLink v-if="kid.goat_id" :to="`/goats/${kid.goat_id}`" class="hover:underline">
+                  <RouterLink v-if="kid.goat_id" :to="pathOf(kid.goat_id)" class="hover:underline">
                     {{ byId.get(kid.goat_id) ? name(byId.get(kid.goat_id)!) : kid.sex === 'doe' ? 'Doeling' : 'Buckling' }}
                   </RouterLink>
                   <template v-else>{{ kid.sex === 'doe' ? 'Doeling' : 'Buckling' }}</template>

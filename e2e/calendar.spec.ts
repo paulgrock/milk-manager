@@ -23,7 +23,7 @@ test('Today lists what is overdue and what is coming up this week', async ({ pag
   await expect(page.getByRole('link', { name: 'Ina heat expected' })).toBeVisible()
 
   await page.getByRole('link', { name: /Hoof trim: Ina/ }).click()
-  await expect(page).toHaveURL(new RegExp(`/goats/${ina.id}$`))
+  await expect(page).toHaveURL(/\/goats\/ina$/)
 })
 
 test('logging the care clears it from Today', async ({ page, owner, herd }) => {

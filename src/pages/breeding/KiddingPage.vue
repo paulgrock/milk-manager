@@ -16,7 +16,7 @@ const router = useRouter()
 const toast = useToast()
 const { herd } = useHerd()
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
-const { byId } = useHerdGoats()
+const { byId, pathOf } = useHerdGoats()
 const { data } = useBreedingData()
 const { recordKidding } = useBreedingMutations()
 
@@ -107,7 +107,7 @@ async function submit() {
       startLactation: startLactation.value,
     })
     toast.add({ color: 'success', title: 'Kidding recorded' })
-    await router.replace(`/goats/${doeId.value}`)
+    await router.replace(pathOf(doeId.value!))
   } catch (e) {
     toast.add({ color: 'error', title: 'Could not record kidding', description: (e as Error).message })
   }

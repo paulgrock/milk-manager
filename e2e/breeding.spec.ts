@@ -83,7 +83,7 @@ test('records twins: kids become goats, the dam starts a new lactation and shows
   await page.getByRole('option', { name: 'Assisted', exact: true }).click()
   await page.getByRole('button', { name: 'Save kidding' }).click()
 
-  await expect(page).toHaveURL(new RegExp(`/goats/${ina.id}$`))
+  await expect(page).toHaveURL(/\/goats\/ina$/)
   await expect(page.getByText('Kidded · 3 kids')).toBeVisible()
   // The kids are linked as offspring.
   await expect(page.getByRole('link', { name: /Ivy/ })).toBeVisible()
@@ -147,7 +147,7 @@ test('a kidding saved with no signal waits, says so, and goes through once back 
   await expect(page.getByText('No signal. This kidding will save as soon as you are back online')).toBeVisible()
   await expect(page).toHaveURL(/\/breeding\/kidding/)
   await context.setOffline(false)
-  await expect(page).toHaveURL(new RegExp(`/goats/${ina.id}$`), { timeout: 20_000 })
+  await expect(page).toHaveURL(/\/goats\/ina$/, { timeout: 20_000 })
   const kiddings = await admin.from('kiddings').select('id').eq('doe_id', ina.id)
   expect(kiddings.data).toHaveLength(1)
 })

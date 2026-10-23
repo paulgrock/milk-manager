@@ -61,6 +61,7 @@ export interface CalendarInput {
 export function buildEvents(input: CalendarInput, from: string, to: string): CalendarEvent[] {
   const { today } = input
   const byId = new Map(input.goats.map((g) => [g.id, g]))
+  const pathOf = (id: string) => `/goats/${byId.get(id)?.slug ?? id}`
   const name = (id: string) => {
     const g = byId.get(id)
     return g ? g.barn_name || goatName(g) : 'Unknown goat'
@@ -77,7 +78,7 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
 
   for (const goat of herd.filter((g) => g.sex === 'doe')) {
     const state = doeBreedingState(goat.id, input.breeding, today)
-    const goatHref = `/goats/${goat.id}`
+    const goatHref = pathOf(goat.id)
     if (state.current) {
       const { due, breeding, status } = state.current
       add({
@@ -163,7 +164,7 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
         title: `${type.name}: ${name(goat.id)}`,
         done: false,
         overdue: s.state === 'overdue',
-        href: `/goats/${goat.id}`,
+        href: pathOf(goat.id),
       })
     }
   }
@@ -179,14 +180,14 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
       title: `${name(t.goat_id)}'s milk OK again`,
       detail: `Withdrawal for ${t.medication} ends`,
       done: false,
-      href: `/goats/${t.goat_id}`,
+      href: pathOf(t.goat_id),
     })
   }
 
   // --- Already happened -------------------------------------------------------------
 
   for (const k of input.breeding.kiddings) {
-    add({ date: k.kidded_on, kind: 'kidded', group: 'breeding', goatId: k.doe_id, title: `${name(k.doe_id)} kidded`, done: true, href: `/goats/${k.doe_id}` })
+    add({ date: k.kidded_on, kind: 'kidded', group: 'breeding', goatId: k.doe_id, title: `${name(k.doe_id)} kidded`, done: true, href: pathOf(k.doe_id) })
   }
   for (const b of input.breeding.breedings) {
     const buck = b.buck_id ? name(b.buck_id) : undefined
@@ -198,7 +199,7 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
       title: `${name(b.doe_id)} bred${buck ? ` to ${buck}` : ''}`,
       detail: breedingStatus(b, input.breeding, today) === 'kidded' ? undefined : `Due ${formatDate(dueWindow(b).expected)}`,
       done: true,
-      href: `/goats/${b.doe_id}`,
+      href: pathOf(b.doe_id),
     })
   }
   const typeNames = new Map(input.careTypes.map((t) => [t.id, t.name]))
@@ -222,7 +223,7 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
     })
   }
   for (const t of input.treatments) {
-    add({ date: t.started_on, kind: 'treated', group: 'health', goatId: t.goat_id, title: `${name(t.goat_id)}: ${t.medication}`, detail: t.reason ?? undefined, done: true, href: `/goats/${t.goat_id}` })
+    add({ date: t.started_on, kind: 'treated', group: 'health', goatId: t.goat_id, title: `${name(t.goat_id)}: ${t.medication}`, detail: t.reason ?? undefined, done: true, href: pathOf(t.goat_id) })
   }
   for (const t of input.tests) {
     add({ date: t.tested_on, kind: 'test-day', group: 'milk', title: 'Milk test day', done: true, href: `/milk/tests/${t.id}` })

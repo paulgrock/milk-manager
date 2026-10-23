@@ -41,11 +41,19 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const { isOwner } = useHerd()
-const { goats, byId } = useHerdGoats()
+const { goats, find } = useHerdGoats()
 const { saveGoat, deleteGoat } = useGoatMutations()
 
-const goatId = computed(() => (route.params.id as string | undefined) ?? undefined)
-const existing = computed(() => (goatId.value ? byId.value.get(goatId.value) : undefined))
+const goatRef = computed(() => route.params.goat as string | undefined)
+const existing = computed(() => find(goatRef.value))
+const goatId = computed(() => existing.value?.id)
+watch(
+  existing,
+  (g) => {
+    if (g && goatRef.value !== g.slug) void router.replace(`/goats/${g.slug}/edit`)
+  },
+  { immediate: true },
+)
 
 type FormState = {
   registered_name: string
@@ -169,7 +177,7 @@ async function submit() {
     const saved = await saveGoat.mutateAsync({ id: goatId.value, values: toValues() })
     // Just marked sold: the goat page offers to record the sale (owners only).
     const recordSale = saved.status === 'sold' && !wasSold && isOwner.value
-    await router.replace({ path: `/goats/${saved.id}`, query: recordSale ? { recordSale: '1' } : {} })
+    await router.replace({ path: `/goats/${saved.slug}`, query: recordSale ? { recordSale: '1' } : {} })
   } catch (e) {
     toast.add({ color: 'error', title: 'Could not save goat', description: (e as Error).message })
   }
@@ -195,7 +203,7 @@ async function remove() {
         color="neutral"
         variant="ghost"
         icon="i-lucide-arrow-left"
-        :to="goatId ? `/goats/${goatId}` : '/goats'"
+        :to="existing ? `/goats/${existing.slug}` : '/goats'"
         aria-label="Back"
       />
       <h1 class="text-2xl font-semibold truncate">
@@ -203,7 +211,7 @@ async function remove() {
       </h1>
     </div>
 
-    <UAlert v-if="goatId && !existing && !goats.isPending.value" color="error" variant="subtle" title="Goat not found" />
+    <UAlert v-if="goatRef && !existing && !goats.isPending.value" color="error" variant="subtle" title="Goat not found" />
 
     <form v-else class="space-y-4" @submit.prevent="submit">
       <UCard>
@@ -328,7 +336,7 @@ async function remove() {
         <UButton type="submit" size="lg" :loading="saveGoat.isPending.value">
           {{ existing ? 'Save changes' : 'Add goat' }}
         </UButton>
-        <UButton color="neutral" variant="ghost" size="lg" :to="goatId ? `/goats/${goatId}` : '/goats'">Cancel</UButton>
+        <UButton color="neutral" variant="ghost" size="lg" :to="existing ? `/goats/${existing.slug}` : '/goats'">Cancel</UButton>
         <UButton
           v-if="existing && isOwner"
           class="ms-auto"

@@ -39,7 +39,7 @@ const cells = computed(() => {
       >
         <p class="text-xs text-muted">{{ c.label }}</p>
         <template v-if="c.goat">
-          <RouterLink :to="`/goats/${c.goat.id}`" class="font-medium hover:underline break-words">
+          <RouterLink :to="`/goats/${c.goat.slug}`" class="font-medium hover:underline break-words">
             {{ goatFullName(c.goat) }}
           </RouterLink>
           <p v-if="latest.get(c.goat.id)" class="text-xs text-muted">{{ appraisalSummary(latest.get(c.goat.id)!) }}</p>
