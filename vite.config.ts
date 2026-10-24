@@ -12,6 +12,14 @@ export default defineConfig({
       ui: {
         colors: { primary: 'green', neutral: 'stone' },
       },
+      // Build every icon the app uses into the bundle (from @iconify-json/lucide),
+      // so they show in the barn with no signal instead of loading from the
+      // Iconify API. .ts files too: the navigation list names its icons there.
+      icon: {
+        clientBundle: {
+          scan: { globInclude: ['src/**/*.{vue,ts}'] },
+        },
+      },
     }),
     VitePWA({
       registerType: 'autoUpdate',

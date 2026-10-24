@@ -22,6 +22,10 @@ test('every page works under the Content Security Policy', async ({ page, owner,
     await route.fulfill({ response, headers: { ...response.headers(), 'content-security-policy': policy } })
   })
   const blocked: string[] = []
+  const iconFetches: string[] = []
+  page.on('request', (r) => {
+    if (/iconify|simplesvg|unisvg/.test(new URL(r.url()).hostname)) iconFetches.push(r.url())
+  })
   page.on('console', (m) => {
     if (/Content Security Policy|Refused to/i.test(m.text())) blocked.push(m.text())
   })
@@ -32,6 +36,7 @@ test('every page works under the Content Security Policy', async ({ page, owner,
     await page.waitForLoadState('networkidle')
   }
   expect(blocked).toEqual([])
-  // Icons come from the Iconify API, which the policy allows.
-  await expect(page.locator('header svg').first()).toBeVisible()
+  // Icons are built into the app, so they show with no signal: none are fetched.
+  expect(iconFetches).toEqual([])
+  await expect(page.getByRole('navigation').locator('svg').first()).toBeVisible()
 })

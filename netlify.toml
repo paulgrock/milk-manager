@@ -17,13 +17,13 @@
 
 # Security headers on every response. The Content Security Policy lets the
 # page run only its own scripts and talk only to this Supabase project (data,
-# sign-in, photos) and the Iconify API (icons), so an injected script couldn't
+# sign-in, photos); icons are built into the app. An injected script couldn't
 # load code from elsewhere or send data to another server. If the Supabase
 # project ever changes, update its address here too.
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://dofoputbvkufewcglkop.supabase.co; connect-src 'self' https://dofoputbvkufewcglkop.supabase.co wss://dofoputbvkufewcglkop.supabase.co https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://dofoputbvkufewcglkop.supabase.co; connect-src 'self' https://dofoputbvkufewcglkop.supabase.co wss://dofoputbvkufewcglkop.supabase.co; font-src 'self' data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
