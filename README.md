@@ -51,6 +51,14 @@ Every feature ships with three kinds of tests:
 - Accounts are invite-only. A new account can only be made for an email with a pending invite (the
   `before_user_created` auth hook). The first account on a new project is let through so someone can send invites.
 
+## Backups
+
+`npm run backup` saves the hosted project's database (SQL) and photos to `~/Documents/Milk Manager Backups/<date>`,
+checks them against the live project, and keeps the newest 30. Each folder has a `RESTORE.md`. It needs
+`npx supabase login` and Docker (started and quit again if it isn't running). `scripts/schedule-backup.sh` runs it
+nightly at 9 pm with launchd (`--remove` to stop); output goes to `~/Library/Logs/milk-manager-backup.log`. Rerun the
+schedule script after changing Node versions.
+
 ## Deploying
 
 1. Create a Supabase project, then run `npx supabase link` and `npx supabase db push`.
