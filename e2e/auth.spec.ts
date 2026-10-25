@@ -111,7 +111,7 @@ test('an owner sets a herd logo for the header, and can remove it', async ({ pag
   const header = page.locator('header img')
   await expect(header).toHaveAttribute('src', '/favicon.svg')
 
-  // A wide picture: it's cropped to the middle square.
+  // A wide picture: it's fitted inside the square.
   const png = await page.evaluate(() => {
     const c = document.createElement('canvas')
     c.width = 600
@@ -145,4 +145,31 @@ test('an owner sets a herd logo for the header, and can remove it', async ({ pag
   await page.getByRole('button', { name: 'Remove' }).click()
   await expect(page.getByText('Logo removed').first()).toBeVisible()
   await expect(header).toHaveAttribute('src', '/favicon.svg')
+})
+
+test('an SVG logo works too: empty margins trimmed, then fitted whole rather than cropped', async ({ page, herd }) => {
+  await page.goto('/settings')
+  // Portrait, with a viewBox but no width or height and empty space around the
+  // drawing (like most exported logos): purple at the top, green at the bottom.
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000"><rect x="100" y="100" width="600" height="400" fill="#7c3aed"/><rect x="100" y="500" width="600" height="400" fill="#16a34a"/></svg>'
+  await page.getByLabel('Logo file').setInputFiles({ name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) })
+  await expect(page.getByText('Logo updated').first()).toBeVisible()
+  const logo = page.getByRole('banner').getByRole('img', { name: `${herd.name} logo` })
+  await expect(logo).toHaveAttribute('src', /^data:image\/png;base64,/)
+
+  const pixels = await logo.evaluate(async (img: HTMLImageElement) => {
+    await img.decode()
+    const c = document.createElement('canvas')
+    c.width = img.naturalWidth
+    c.height = img.naturalHeight
+    const g = c.getContext('2d')!
+    g.drawImage(img, 0, 0)
+    const at = (x: number, y: number) => [...g.getImageData(x, y, 1, 1).data]
+    return { size: [c.width, c.height], side: at(2, 96), top: at(96, 4), bottom: at(96, 188) }
+  })
+  expect(pixels.size).toEqual([192, 192])
+  expect(pixels.side[3]).toBe(0) // see-through either side of a tall logo
+  // The empty margins are gone: the drawing reaches the top and bottom edges.
+  expect(pixels.top.slice(0, 3)).toEqual([124, 58, 237]) // the top of the drawing is kept…
+  expect(pixels.bottom.slice(0, 3)).toEqual([22, 163, 74]) // …and the bottom
 })

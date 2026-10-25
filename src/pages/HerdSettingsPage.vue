@@ -9,7 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
 import { useHerdMembers } from '@/composables/useHerdMembers'
 import PasskeysCard from '@/components/PasskeysCard.vue'
-import { squareImageDataUrl } from '@/lib/images'
+import { squareLogoDataUrl } from '@/lib/images'
 
 const router = useRouter()
 const toast = useToast()
@@ -69,7 +69,7 @@ async function onLogoFile(e: Event) {
   input.value = ''
   if (!file) return
   try {
-    saveLogo.mutate(await squareImageDataUrl(file, LOGO_SIZE))
+    saveLogo.mutate(await squareLogoDataUrl(file, LOGO_SIZE))
   } catch {
     toast.add({ color: 'error', title: 'Could not read that picture', description: 'Try a PNG or JPEG.' })
   }
