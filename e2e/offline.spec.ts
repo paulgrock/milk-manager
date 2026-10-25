@@ -101,3 +101,41 @@ test('a correction made offline lands after the original weight, not before', as
     .poll(() => milkRows(goat.id, today), { timeout: 30_000 })
     .toEqual([{ milking: 1, weight_g: ozToGrams(56), portions_g: null }])
 })
+
+test('goat photos seen once still show with no signal, and are cleared on sign-out', async ({ page, context, owner, herd }) => {
+  const { goat } = await addDoeInMilk(owner, herd.id, 'Ina')
+  await page.goto(`/goats/${goat.slug}`)
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 300
+    c.getContext('2d')!.fillRect(0, 0, 300, 300)
+    return c.toDataURL('image/png').split(',')[1]!
+  })
+  await page.locator('input[type=file]').setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  const shown = (p: typeof page) => p.getByRole('img', { name: 'Ina', exact: true })
+  await expect(shown(page)).toBeVisible()
+  await page.goto('/milk')
+  await expect(shown(page)).toBeVisible()
+  await page.evaluate(() => navigator.serviceWorker.ready)
+  await waitForSavedCache(page)
+
+  // No signal at all, and the app reopened.
+  await context.setOffline(true)
+  for (const path of ['/milk', '/goats', `/goats/${goat.slug}`]) {
+    await page.goto(path)
+    await expect(page.getByText('Offline')).toBeVisible()
+    const img = shown(page)
+    await expect(img).toBeVisible()
+    // The picture actually drew, from the copy saved on the device.
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0)
+    await expect(img).toHaveAttribute('src', /^blob:/)
+  }
+  // The gallery on her page too.
+  await expect(page.getByRole('img', { name: /^Ina, / })).toBeVisible()
+
+  await context.setOffline(false)
+  await page.goto('/settings')
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await expect(page).toHaveURL(/\/login/)
+  expect(await page.evaluate(() => caches.keys())).not.toContain('goat-photos-v1')
+})

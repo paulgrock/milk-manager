@@ -2,6 +2,7 @@ import { QueryClient, dehydrate, type QueryKey } from '@tanstack/vue-query'
 import { persistQueryClient, type PersistedClient } from '@tanstack/query-persist-client-core'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { del, get, set } from 'idb-keyval'
+import { clearPhotoCache } from './photoCache'
 
 const DAY = 24 * 60 * 60 * 1000
 // How long data stays cached on the device. Must stay under ~24.8 days:
@@ -110,8 +111,8 @@ export async function refreshQueries(queryKey: QueryKey): Promise<void> {
   await queryClient.invalidateQueries({ queryKey })
 }
 
-/** Drops everything cached on this device, e.g. on sign-out. */
+/** Drops everything cached on this device, e.g. on sign-out: records and saved photos. */
 export async function clearQueryCache() {
   queryClient.clear()
-  await del(CACHE_KEY)
+  await Promise.all([del(CACHE_KEY), clearPhotoCache()])
 }

@@ -1,8 +1,10 @@
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { useOnline } from '@vueuse/core'
 import { refreshQueries } from '@/lib/queryClient'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { supabase, unwrap } from '@/lib/supabase'
 import { resizeImage } from '@/lib/images'
+import { forgetPhoto, loadPhoto, photoUrl, savePhoto } from '@/lib/photoCache'
 import type { Appraisal, Goat, GoatInsert, GoatPhoto } from '@/lib/goats'
 import type { Database } from '@/lib/database.types'
 import { useHerd } from './useHerd'
@@ -16,7 +18,6 @@ export const goatKeys = {
   goats: (herdId: string) => ['goats', herdId] as const,
   appraisals: (herdId: string) => ['appraisals', herdId] as const,
   photos: (herdId: string) => ['goatPhotos', herdId] as const,
-  photoUrls: (paths: string[]) => ['photoUrls', ...paths] as const,
 }
 
 /** All goats, appraisals and photos for the current herd. A herd is small enough to load whole. */
@@ -63,22 +64,25 @@ export function useHerdGoats() {
   return { herdId, goats, appraisals, photos, byId, find, pathOf }
 }
 
-/** Short-lived signed URLs for private photo files. */
+const downloadPhoto = async (path: string) => unwrap(await supabase.storage.from(BUCKET).download(path))
+
+/**
+ * Displayable URLs for private photo files, by storage path. Photos are kept
+ * on the device once seen, so they show offline (see photoCache.ts); ones not
+ * saved yet load when there's signal.
+ */
 export function usePhotoUrls(paths: () => string[]) {
-  const sorted = computed(() => [...new Set(paths())].sort())
-  const urls = useQuery({
-    queryKey: computed(() => goatKeys.photoUrls(sorted.value)),
-    queryFn: async () => {
-      const rows = unwrap(await supabase.storage.from(BUCKET).createSignedUrls(sorted.value, 60 * 60))
-      const entries: [string, string][] = []
-      for (const r of rows) if (r.path && r.signedUrl) entries.push([r.path, r.signedUrl])
-      return Object.fromEntries(entries)
-    },
-    enabled: computed(() => sorted.value.length > 0),
-    staleTime: 50 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+  const online = useOnline()
+  const wanted = computed(() => [...new Set(paths())])
+  watch([wanted, online], () => wanted.value.forEach((p) => void loadPhoto(p, downloadPhoto)), { immediate: true })
+  return computed<Record<string, string>>(() => {
+    const out: Record<string, string> = {}
+    for (const p of wanted.value) {
+      const url = photoUrl(p)
+      if (url) out[p] = url
+    }
+    return out
   })
-  return computed<Record<string, string>>(() => urls.data.value ?? {})
 }
 
 export function useGoatMutations() {
@@ -137,6 +141,7 @@ export function useGoatMutations() {
       const id = crypto.randomUUID()
       const path = `${goat.herd_id}/${goat.id}/${id}.jpg`
       unwrap(await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg' }))
+      await savePhoto(path, blob)
       unwrap(
         await supabase
           .from('goat_photos')
@@ -150,6 +155,7 @@ export function useGoatMutations() {
     mutationFn: async (photo: GoatPhoto) => {
       unwrap(await supabase.storage.from(BUCKET).remove([photo.storage_path]))
       unwrap(await supabase.from('goat_photos').delete().eq('id', photo.id))
+      await forgetPhoto(photo.storage_path)
     },
     onSuccess: () => refresh(goatKeys.photos(herdId.value)),
   })
