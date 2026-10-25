@@ -29,7 +29,7 @@ export default defineConfig({
         short_name: 'Milk Manager',
         description: 'Dairy goat herd, milk and breeding records',
         theme_color: '#15803d',
-        background_color: '#fafaf9',
+        background_color: '#fbfae6',
         display: 'standalone',
         start_url: '/',
         icons: [
