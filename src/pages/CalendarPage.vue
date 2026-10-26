@@ -100,7 +100,7 @@ const dayLabel = (iso: string) => parseDate(iso).toLocaleDateString(undefined, {
               <li
                 v-for="e in (byDay.get(date) ?? []).slice(0, 3)"
                 :key="`${e.kind}-${e.title}`"
-                class="truncate rounded px-1"
+                class="break-words leading-snug rounded px-1 py-0.5"
                 :class="e.overdue ? 'bg-warning/15 text-warning' : e.done ? 'text-muted' : 'bg-elevated'"
               >
                 {{ e.title }}
