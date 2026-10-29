@@ -96,6 +96,21 @@ without custom SMTP. Plan: send through **Resend** from the birdseyefarm.com dom
 Stopgap if DNS has to wait: Gmail SMTP with an app password (2-step verification on, then host `smtp.gmail.com`, port `465`,
 the Gmail address as username, the app password as password). Codes come from that Gmail address; about 500 a day.
 
+## 11. Milk records and LA on the farm website (P3)
+Show each goat's appraisals and DHI milk records on birdseyefarm.com straight from the app, so they're never typed twice.
+The website is an Astro site built ahead of time from Sanity (`output: 'static'`) on Netlify.
+- **App:** one database function readable without signing in (the only thing visitors can reach) that returns, per goat:
+  registration number, name and titles; linear appraisals (date, codes, final score); DHI lactation records (lactation
+  number, days, milk/fat/protein lb, 305-day figures, milk stars); and the current lactation's to-date and projected
+  305-day figures from the latest test. No notes, health, finances, daily weights or people. A herd setting, "Share milk
+  records and appraisals on the website", off until switched on.
+- **Website:** at build time, fetch that list and match goats to their Sanity entries by registration number (already in
+  the ADGA pedigree link), then add a Milk records table and the LA line to each goat page. Visitors never contact the
+  app, so it can't slow or break the site.
+- **Freshness:** a nightly Netlify build hook, or have the app trigger a rebuild after a DHI test or appraisal is saved.
+- Considered instead: writing app notes back into Sanity. Not worth it: notes are private, the website's rich text
+  would be flattened, and it would need a secret Sanity token on a server.
+
 ## Explicitly out of scope
 Meat, fiber and pack features. A marketplace or public farm page (could be added later).
 
