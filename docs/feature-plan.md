@@ -96,7 +96,7 @@ without custom SMTP. Plan: send through **Resend** from the birdseyefarm.com dom
 Stopgap if DNS has to wait: Gmail SMTP with an app password (2-step verification on, then host `smtp.gmail.com`, port `465`,
 the Gmail address as username, the app password as password). Codes come from that Gmail address; about 500 a day.
 
-## 11. Milk records and LA on the farm website (P3)
+## 11. Milk records, LA and photos on the farm website (P3)
 Show each goat's appraisals and DHI milk records on birdseyefarm.com straight from the app, so they're never typed twice.
 The website is an Astro site built ahead of time from Sanity (`output: 'static'`) on Netlify.
 - **App:** one database function readable without signing in (the only thing visitors can reach) that returns, per goat:
@@ -107,7 +107,14 @@ The website is an Astro site built ahead of time from Sanity (`output: 'static'`
 - **Website:** at build time, fetch that list and match goats to their Sanity entries by registration number (already in
   the ADGA pedigree link), then add a Milk records table and the LA line to each goat page. Visitors never contact the
   app, so it can't slow or break the site.
-- **Freshness:** a nightly Netlify build hook, or have the app trigger a rebuild after a DHI test or appraisal is saved.
+- **Photos:** manage goat photos in the app instead of Sanity, so there's one copy (most are taken on a phone in the
+  barn). Each photo gets a "Show on website" switch, off by default since many are record shots (udders, hooves, kids
+  at birth), plus a choice of the goat's main website photo and alt text. The bucket stays private: the public list
+  includes short-lived links only for photos switched on, the website build downloads them once, and Astro serves
+  resized copies from Netlify, so visitors never reach Supabase storage. Sanity keeps the rest of each goat page
+  (description, layout, sale status). Trade-off: no Sanity focal-point cropping or captions unless the app adds them.
+- **Freshness:** a nightly Netlify build hook, or have the app trigger a rebuild after a DHI test, appraisal or website
+  photo change is saved.
 - Considered instead: writing app notes back into Sanity. Not worth it: notes are private, the website's rich text
   would be flattened, and it would need a secret Sanity token on a server.
 
