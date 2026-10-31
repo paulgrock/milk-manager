@@ -1,0 +1,3 @@
+# Milk Manager is a private herd app: nothing here is for search engines.
+User-agent: *
+Disallow: /
