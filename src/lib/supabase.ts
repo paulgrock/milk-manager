@@ -10,9 +10,12 @@ if (!configuredUrl || !key) {
 }
 const url = reachableUrl(configuredUrl, typeof window === 'undefined' ? undefined : window.location.hostname)
 
+/** Where the session is saved on the device: Supabase's own default, spelled out so the app can read it at startup. */
+export const authStorageKey = `sb-${new URL(url).hostname.split('.')[0]}-auth-token`
+
 export const supabase = createClient<Database>(url, key, {
   // Passkeys are experimental in Supabase Auth and must be switched on here.
-  auth: { experimental: { passkey: true } },
+  auth: { storageKey: authStorageKey, experimental: { passkey: true } },
 })
 
 /** Whether this browser can use passkeys at all. */

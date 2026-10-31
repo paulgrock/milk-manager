@@ -173,3 +173,73 @@ test('an SVG logo works too: empty margins trimmed, then fitted whole rather tha
   expect(pixels.top.slice(0, 3)).toEqual([124, 58, 237]) // the top of the drawing is kept…
   expect(pixels.bottom.slice(0, 3)).toEqual([22, 163, 74]) // …and the bottom
 })
+
+// Opening the app after a while away: its sign-in token has expired (they last an hour).
+async function expireToken(page: import('@playwright/test').Page, refreshToken?: string) {
+  await page.evaluate((refresh) => {
+    const key = Object.keys(localStorage).find((k) => k.endsWith('-auth-token'))!
+    const s = JSON.parse(localStorage.getItem(key)!)
+    s.expires_at = Math.floor(Date.now() / 1000) - 60
+    if (refresh) s.refresh_token = refresh
+    localStorage.setItem(key, JSON.stringify(s))
+  }, refreshToken)
+}
+
+test("an expired sign-in doesn't hold up opening the app: it's renewed in the background", async ({ page, herd }) => {
+  void herd
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  // The herd is saved on the device (at most once a second), as it always is by the next opening.
+  await page.waitForTimeout(1500)
+  await expireToken(page)
+
+  // Shaky signal: the renewal takes 5 seconds.
+  let renewed = false
+  await page.route('**/auth/v1/token*', async (route) => {
+    await new Promise((r) => setTimeout(r, 5000))
+    renewed = true
+    await route.continue()
+  })
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible({ timeout: 2000 })
+  expect(renewed).toBe(false)
+  await expect.poll(() => renewed, { timeout: 10_000 }).toBe(true)
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('if renewing finds the sign-in no longer valid, it goes to sign-in and clears the saved data', async ({ page, herd }) => {
+  void herd
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await expireToken(page, 'revoked-refresh-token')
+  await page.reload()
+  await expect(page).toHaveURL(/\/login/)
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<unknown>((resolve) => {
+            const open = indexedDB.open('keyval-store')
+            open.onsuccess = () => {
+              const get = open.result.transaction('keyval').objectStore('keyval').get('milk-manager-cache')
+              get.onsuccess = () => resolve(get.result ?? null)
+            }
+          }),
+      ),
+    )
+    .toBeNull()
+})
+
+test('with no signal and an expired sign-in, the app still opens', async ({ page, context, herd }) => {
+  void herd
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await page.evaluate(() => navigator.serviceWorker.ready)
+  await page.waitForTimeout(1500)
+  await expireToken(page)
+  await context.setOffline(true)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await page.waitForTimeout(2000)
+  await expect(page).toHaveURL(/\/$/)
+})

@@ -1,19 +1,46 @@
 import { computed, ref } from 'vue'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { authStorageKey, supabase } from '@/lib/supabase'
 import { clearQueryCache } from '@/lib/queryClient'
 
 const session = ref<Session | null>(null)
 let ready: Promise<void> | undefined
 
-/** Loads the saved session (works offline) and keeps it current. */
+/** The session saved on this device, read without any network. */
+function savedSession(): Session | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(authStorageKey) ?? 'null') as Session | null
+    return saved?.user?.id && saved.refresh_token ? saved : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Loads the session and keeps it current. With one saved on the device the
+ * app starts at once: getSession() would first renew an expired token over
+ * the network (after an hour away, every opening waited on that). Supabase
+ * renews it in the background instead, and data requests wait for the fresh
+ * token themselves. Only a real sign-out ends the session here, not a renewal
+ * that failed for want of signal, so the app still opens offline.
+ */
 export function initAuth(): Promise<void> {
-  ready ??= supabase.auth.getSession().then(({ data }) => {
-    session.value = data.session
-    supabase.auth.onAuthStateChange((_event, next) => {
-      session.value = next
+  if (!ready) {
+    session.value = savedSession()
+    supabase.auth.onAuthStateChange((event, next) => {
+      if (next) session.value = next
+      else if (event === 'SIGNED_OUT') {
+        // Signed out here or elsewhere, or access removed: drop this herd's data from the device.
+        session.value = null
+        void clearQueryCache()
+      }
     })
-  })
+    ready = session.value
+      ? Promise.resolve()
+      : supabase.auth.getSession().then(({ data }) => {
+          session.value = data.session
+        })
+  }
   return ready
 }
 
