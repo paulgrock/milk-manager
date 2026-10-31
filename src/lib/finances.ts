@@ -8,6 +8,7 @@ export type FinanceKind = Database['public']['Enums']['finance_kind']
 export const CATEGORIES: Record<FinanceKind, Record<string, string>> = {
   income: {
     milk: 'Milk sales',
+    cheese_sale: 'Cheese sales',
     kid_sale: 'Kid sales',
     goat_sale: 'Goat sales',
     stud_service: 'Stud service',

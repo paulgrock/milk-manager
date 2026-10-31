@@ -27,10 +27,12 @@ const pickedMonth = computed({
   set: (m: string) => router.replace({ query: m === today.slice(0, 7) ? {} : { month: m } }),
 })
 
-const groups = useLocalStorage<EventGroup[]>('calendar.groups', ['breeding', 'health', 'milk'])
+// The filters switched off, so a filter added later (like Cheese) starts on.
+const hiddenGroups = useLocalStorage<EventGroup[]>('calendar.hiddenGroups', [])
+const groups = computed(() => (Object.keys(GROUP_LABELS) as EventGroup[]).filter((g) => !hiddenGroups.value.includes(g)))
 const showDone = useLocalStorage('calendar.showDone', true)
 function toggle(g: EventGroup) {
-  groups.value = groups.value.includes(g) ? groups.value.filter((x) => x !== g) : [...groups.value, g]
+  hiddenGroups.value = hiddenGroups.value.includes(g) ? hiddenGroups.value.filter((x) => x !== g) : [...hiddenGroups.value, g]
 }
 
 const { events, loading } = useCalendarEvents(first, last)

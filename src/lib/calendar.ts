@@ -8,6 +8,7 @@ import { STANDARD_DAYS } from './lactation'
 import { lactationOn, type Lactation } from './milk'
 import { CURRENT_STATUSES, goatName, type Goat } from './goats'
 import type { MilkTest } from './dhia'
+import type { CheeseMake, CheeseType } from './cheese'
 import { formatDate } from './dates'
 
 export type EventKind =
@@ -23,8 +24,9 @@ export type EventKind =
   | 'care-done'
   | 'treated'
   | 'test-day'
+  | 'cheese-ready'
 
-export type EventGroup = 'breeding' | 'health' | 'milk'
+export type EventGroup = 'breeding' | 'health' | 'milk' | 'cheese'
 
 export interface CalendarEvent {
   date: string
@@ -40,7 +42,7 @@ export interface CalendarEvent {
   href: string
 }
 
-export const GROUP_LABELS: Record<EventGroup, string> = { breeding: 'Breeding', health: 'Health', milk: 'Milk' }
+export const GROUP_LABELS: Record<EventGroup, string> = { breeding: 'Breeding', health: 'Health', milk: 'Milk', cheese: 'Cheese' }
 
 /** A blood test is reliable about 30 days after breeding. */
 export const PREG_CHECK_AFTER_DAYS = 30
@@ -54,6 +56,8 @@ export interface CalendarInput {
   treatments: Treatment[]
   lactations: Lactation[]
   tests: MilkTest[]
+  cheeseTypes?: CheeseType[]
+  cheeseMakes?: CheeseMake[]
   today: string
 }
 
@@ -227,6 +231,20 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
   }
   for (const t of input.tests) {
     add({ date: t.tested_on, kind: 'test-day', group: 'milk', title: 'Milk test day', done: true, href: `/milk/tests/${t.id}` })
+  }
+
+  // Cheese coming ready. One that's been ready a while isn't a job to chase, so past dates are records, not overdue.
+  const cheeseNames = new Map((input.cheeseTypes ?? []).map((t) => [t.id, t.name]))
+  for (const m of input.cheeseMakes ?? []) {
+    if (m.finished_on) continue
+    add({
+      date: m.ready_on,
+      kind: 'cheese-ready',
+      group: 'cheese',
+      title: `${cheeseNames.get(m.cheese_type_id) ?? 'Cheese'} (${formatDate(m.made_on)}) ready`,
+      done: m.ready_on < today,
+      href: '/cheese',
+    })
   }
 
   return events.sort((a, b) => a.date.localeCompare(b.date) || Number(b.overdue ?? false) - Number(a.overdue ?? false) || a.title.localeCompare(b.title))

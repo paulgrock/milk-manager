@@ -118,6 +118,23 @@ The website is an Astro site built ahead of time from Sanity (`output: 'static'`
 - Considered instead: writing app notes back into Sanity. Not worth it: notes are private, the website's rich text
   would be flattened, and it would need a secret Sanity token on a server.
 
+## 12. Cheese (built, not live yet)
+A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese type made on one day, with its ready date
+(from the type's aging time, editable), optional gallons of milk, pieces and pounds, notes, and a Finished mark. The farm
+keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
+filter) and Today; Finances has a Cheese sales category. Terms are in `GLOSSARY.md`.
+To go live: push the cheese migration to the hosted database first, then push the code.
+
+## After Cheese is live: whole-app review
+Once Cheese is live, review the whole app for tech debt and optimizations before adding more. Known starting points:
+- Unused tables left from earlier changes: `health_observations` and `disease_tests` (empty; dropping them needs an OK).
+- The main JavaScript bundle is large (Vite warns about chunk size); check what loads on first open and split by page.
+- Repeated patterns that could share code: care types and cheese types (per-herd lists owners manage), the several
+  "loads a herd's records, saves online" composables, and the import/copy/backup scripts' Supabase setup.
+- Which saves work offline (milk, care) and which don't (cheese, treatments, breeding): decide if more should.
+- Test suite speed and the one-off test setup failures; dependency updates (Supabase CLI, npm audit).
+- Settings vs page placement of owner-managed lists, and other UI consistency.
+
 ## Explicitly out of scope
 Meat, fiber and pack features. A marketplace or public farm page (could be added later).
 

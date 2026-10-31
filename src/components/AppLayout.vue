@@ -11,6 +11,7 @@ const allNav: NavigationMenuItem[] = [
   { label: 'Today', icon: 'i-lucide-sun', to: '/', exact: true },
   { label: 'Goats', icon: 'i-lucide-list', to: '/goats' },
   { label: 'Milk', icon: 'i-lucide-milk', to: '/milk' },
+  { label: 'Cheese', icon: 'i-lucide-cylinder', to: '/cheese' },
   { label: 'Breeding', icon: 'i-lucide-heart', to: '/breeding' },
   { label: 'Health', icon: 'i-lucide-stethoscope', to: '/health' },
   { label: 'Calendar', icon: 'i-lucide-calendar', to: '/calendar' },

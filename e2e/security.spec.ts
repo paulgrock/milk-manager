@@ -30,7 +30,7 @@ test('every page works under the Content Security Policy', async ({ page, owner,
     if (/Content Security Policy|Refused to/i.test(m.text())) blocked.push(m.text())
   })
 
-  for (const path of ['/', '/goats', `/goats/${goat.slug}`, '/milk', '/milk/production', '/milk/tests', '/breeding', '/health', '/calendar', '/finances', '/settings']) {
+  for (const path of ['/', '/goats', `/goats/${goat.slug}`, '/milk', '/cheese', '/milk/production', '/milk/tests', '/breeding', '/health', '/calendar', '/finances', '/settings']) {
     await page.goto(path)
     await expect(page.getByRole('main')).toBeVisible()
     await page.waitForLoadState('networkidle')

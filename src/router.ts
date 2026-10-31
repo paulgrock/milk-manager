@@ -27,6 +27,7 @@ export const router = createRouter({
         { path: 'goats/:goat', component: () => import('@/pages/goats/GoatDetailPage.vue') },
         { path: 'goats/:goat/edit', component: () => import('@/pages/goats/GoatFormPage.vue') },
         { path: 'milk', component: () => import('@/pages/milk/MilkPage.vue') },
+        { path: 'cheese', component: () => import('@/pages/CheesePage.vue') },
         { path: 'milk/history', component: () => import('@/pages/milk/MilkHistoryPage.vue') },
         { path: 'milk/production', component: () => import('@/pages/milk/ProductionPage.vue') },
         { path: 'milk/tests', component: () => import('@/pages/milk/MilkTestsPage.vue') },

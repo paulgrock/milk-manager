@@ -30,6 +30,7 @@ declare module 'vue' {
     LactationModal: typeof import('./src/components/milk/LactationModal.vue')['default']
     LactationSection: typeof import('./src/components/milk/LactationSection.vue')['default']
     LogCareModal: typeof import('./src/components/health/LogCareModal.vue')['default']
+    MakeModal: typeof import('./src/components/cheese/MakeModal.vue')['default']
     MilkDayEditor: typeof import('./src/components/milk/MilkDayEditor.vue')['default']
     MilkEntryRow: typeof import('./src/components/milk/MilkEntryRow.vue')['default']
     MilkTestsCard: typeof import('./src/components/milk/MilkTestsCard.vue')['default']

@@ -95,6 +95,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cheese_makes": {
+                  Row: {
+                    "cheese_type_id": string,"cheese_weight_g": number | null,"created_at": string,"created_by": string | null,"finished_on": string | null,"herd_id": string,"id": string,"made_on": string,"milk_gallons": number | null,"notes": string | null,"pieces": number | null,"ready_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cheese_type_id": string,"cheese_weight_g"?: number | null,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id": string,"id"?: string,"made_on": string,"milk_gallons"?: number | null,"notes"?: string | null,"pieces"?: number | null,"ready_on": string
+                  }
+                  Update: {
+                    "cheese_type_id"?: string,"cheese_weight_g"?: number | null,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id"?: string,"id"?: string,"made_on"?: string,"milk_gallons"?: number | null,"notes"?: string | null,"pieces"?: number | null,"ready_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cheese_makes_cheese_type_id_herd_id_fkey"
+      columns: ["cheese_type_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "cheese_types"
+      referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"cheese_types": {
+                  Row: {
+                    "aging_months": number,"created_at": string,"created_by": string | null,"herd_id": string,"hidden": boolean,"id": string,"name": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aging_months"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id": string,"hidden"?: boolean,"id"?: string,"name": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "aging_months"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"hidden"?: boolean,"id"?: string,"name"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cheese_types_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"disease_tests": {
                   Row: {
                     "created_at": string,"created_by": string | null,"disease": string,"goat_id": string,"herd_id": string,"id": string,"lab": string | null,"notes": string | null,"result": Database["public"]['Enums']["test_result"],"tested_on": string
