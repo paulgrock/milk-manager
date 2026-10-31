@@ -97,14 +97,14 @@ isOneToOne: false
                   ]
                 },"cheese_makes": {
                   Row: {
-                    "cheese_type_id": string,"cheese_weight_g": number | null,"created_at": string,"created_by": string | null,"finished_on": string | null,"herd_id": string,"id": string,"made_on": string,"milk_gallons": number | null,"notes": string | null,"pieces": number | null,"ready_on": string
+                    "cheese_type_id": string,"created_at": string,"created_by": string | null,"finished_on": string | null,"herd_id": string,"id": string,"made_on": string,"milk_gallons": number | null,"notes": string | null,"ready_on": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "cheese_type_id": string,"cheese_weight_g"?: number | null,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id": string,"id"?: string,"made_on": string,"milk_gallons"?: number | null,"notes"?: string | null,"pieces"?: number | null,"ready_on": string
+                    "cheese_type_id": string,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id": string,"id"?: string,"made_on": string,"milk_gallons"?: number | null,"notes"?: string | null,"ready_on": string
                   }
                   Update: {
-                    "cheese_type_id"?: string,"cheese_weight_g"?: number | null,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id"?: string,"id"?: string,"made_on"?: string,"milk_gallons"?: number | null,"notes"?: string | null,"pieces"?: number | null,"ready_on"?: string
+                    "cheese_type_id"?: string,"created_at"?: string,"created_by"?: string | null,"finished_on"?: string | null,"herd_id"?: string,"id"?: string,"made_on"?: string,"milk_gallons"?: number | null,"notes"?: string | null,"ready_on"?: string
                   }
                   Relationships: [
                     {
@@ -113,6 +113,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "cheese_types"
       referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "cheese_makes_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
     }
                   ]
                 },"cheese_types": {

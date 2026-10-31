@@ -1,4 +1,4 @@
-// Cheese makes: ready dates, status, yield and monthly totals.
+// Cheese makes: ready dates, status and monthly totals.
 import type { Database } from './database.types'
 import { addMonths } from './dates'
 
@@ -8,7 +8,6 @@ export type CheeseMake = Tables['cheese_makes']['Row']
 
 /** Goat milk weighs about this much per US gallon. */
 export const LB_PER_GALLON = 8.6
-const GRAMS_PER_LB = 453.59237
 
 /** The made date plus the type's aging time; fresh cheese (0 months) is ready the same day. */
 export function readyDate(madeOn: string, agingMonths: number): string {
@@ -24,13 +23,6 @@ export function makeStatus(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, t
 
 export const STATUS_LABELS: Record<MakeStatus, string> = { aging: 'Aging', ready: 'Ready', finished: 'Finished' }
 
-/** Pounds of cheese per gallon of milk, when both were recorded. */
-export function yieldPerGallon(make: Pick<CheeseMake, 'milk_gallons' | 'cheese_weight_g'>): number | null {
-  const gallons = Number(make.milk_gallons)
-  if (!make.cheese_weight_g || !gallons) return null
-  return make.cheese_weight_g / GRAMS_PER_LB / gallons
-}
-
 export interface MonthTotal {
   /** 'YYYY-MM' */
   month: string
@@ -38,18 +30,16 @@ export interface MonthTotal {
   gallons: number
   /** Rough pounds of milk, from the gallons. */
   milkLb: number
-  cheeseLb: number
 }
 
 /** Makes per month (by made date), newest month first. */
-export function monthlyTotals(makes: Pick<CheeseMake, 'made_on' | 'milk_gallons' | 'cheese_weight_g'>[]): MonthTotal[] {
+export function monthlyTotals(makes: Pick<CheeseMake, 'made_on' | 'milk_gallons'>[]): MonthTotal[] {
   const months = new Map<string, MonthTotal>()
   for (const m of makes) {
     const month = m.made_on.slice(0, 7)
-    const t = months.get(month) ?? { month, makes: 0, gallons: 0, milkLb: 0, cheeseLb: 0 }
+    const t = months.get(month) ?? { month, makes: 0, gallons: 0, milkLb: 0 }
     t.makes += 1
     t.gallons += Number(m.milk_gallons ?? 0)
-    t.cheeseLb += (m.cheese_weight_g ?? 0) / GRAMS_PER_LB
     months.set(month, t)
   }
   for (const t of months.values()) t.milkLb = t.gallons * LB_PER_GALLON

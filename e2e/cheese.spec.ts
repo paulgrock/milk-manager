@@ -2,8 +2,6 @@ import { addMonths } from '../src/lib/dates.ts'
 import { admin, createUser, deleteUser, expect, signInContext, test } from './fixtures.ts'
 import { isoDate } from './seed.ts'
 
-const lbToGrams = (lb: number) => Math.round(lb * 453.59237)
-
 async function typeId(herdId: string, name: string) {
   const { data } = await admin.from('cheese_types').select('id').eq('herd_id', herdId).eq('name', name).single()
   return data!.id
@@ -11,7 +9,7 @@ async function typeId(herdId: string, name: string) {
 async function makes(herdId: string) {
   const { data } = await admin
     .from('cheese_makes')
-    .select('made_on, ready_on, milk_gallons, pieces, cheese_weight_g, notes, finished_on, cheese_types(name)')
+    .select('made_on, ready_on, milk_gallons, notes, finished_on, cheese_types(name)')
     .eq('herd_id', herdId)
   return data ?? []
 }
@@ -26,15 +24,13 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
   // Tomme ages 4 months.
   await expect(dialog.getByLabel('Ready')).toHaveValue(addMonths(isoDate(), 4))
   await dialog.getByLabel('Milk used').fill('2.5')
-  await dialog.getByRole('spinbutton', { name: 'Wheels or pieces' }).fill('4')
-  await dialog.getByLabel('Cheese weight').fill('2.5')
   await dialog.getByLabel('Notes').fill('First tomme of fall')
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
 
   await expect(page.getByRole('heading', { name: 'Aging (1)' })).toBeVisible()
   const make = page.getByRole('button', { name: /Tomme · made/ })
-  await expect(make).toContainText('2.5 gal · 4 pieces · 2.5 lb · 1.00 lb/gal')
+  await expect(make).toContainText('2.5 gal of milk')
   await expect(make).toContainText(/Ready in \d+ days/)
   await expect(page.getByRole('row', { name: /2\.5 gal ≈ 22 lb/ })).toBeVisible()
 
@@ -43,8 +39,6 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
       made_on: isoDate(),
       ready_on: addMonths(isoDate(), 4),
       milk_gallons: 2.5,
-      pieces: 4,
-      cheese_weight_g: lbToGrams(2.5),
       notes: 'First tomme of fall',
       finished_on: null,
       cheese_types: { name: 'Tomme' },

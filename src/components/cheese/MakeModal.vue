@@ -4,7 +4,6 @@ import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
 import { parseGallons, readyDate, type CheeseMake, type CheeseType } from '@/lib/cheese'
-import { formatWeight, parseWeightInput } from '@/lib/milk'
 
 const props = defineProps<{ make?: CheeseMake }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -17,8 +16,6 @@ const form = reactive({
   madeOn: todayISO(),
   readyOn: todayISO(),
   gallons: '',
-  pieces: undefined as number | undefined,
-  weight: '',
   notes: '',
   finished: false,
 })
@@ -33,8 +30,6 @@ watch(open, (isOpen) => {
     madeOn: m?.made_on ?? todayISO(),
     readyOn: m?.ready_on ?? todayISO(),
     gallons: m?.milk_gallons != null ? String(Number(m.milk_gallons)) : '',
-    pieces: m?.pieces ?? undefined,
-    weight: m?.cheese_weight_g ? formatWeight(m.cheese_weight_g, 'lb') : '',
     notes: m?.notes ?? '',
     finished: !!m?.finished_on,
   })
@@ -78,8 +73,6 @@ async function submit() {
   if (form.readyOn < form.madeOn) return toast.add({ color: 'error', title: 'Ready date can’t be before the day it was made' })
   const gallons = parseGallons(form.gallons)
   if (!gallons.ok) return toast.add({ color: 'error', title: gallons.message })
-  const weight = parseWeightInput(form.weight, 'lb', { grams: 1_000_000, message: 'That is more cheese than one make' })
-  if (weight.kind === 'invalid') return toast.add({ color: 'error', title: 'Cheese weight should be in pounds, like 2.5' })
   try {
     await saveMake.mutateAsync({
       id: props.make?.id,
@@ -88,8 +81,6 @@ async function submit() {
         made_on: form.madeOn,
         ready_on: form.readyOn,
         milk_gallons: gallons.value,
-        pieces: form.pieces || null,
-        cheese_weight_g: weight.kind === 'ok' ? weight.grams : null,
         notes: form.notes.trim() || null,
         finished_on: form.finished ? (props.make?.finished_on ?? todayISO()) : null,
       },
@@ -143,14 +134,6 @@ async function onDelete() {
           <UFormField label="Milk used" hint="Optional">
             <UInput v-model="form.gallons" inputmode="decimal" class="w-full">
               <template #trailing><span class="text-xs text-muted">gal</span></template>
-            </UInput>
-          </UFormField>
-          <UFormField label="Wheels or pieces" hint="Optional">
-            <UInputNumber v-model="form.pieces" :min="1" :max="1000" class="w-full" />
-          </UFormField>
-          <UFormField label="Cheese weight" hint="Optional">
-            <UInput v-model="form.weight" inputmode="decimal" class="w-full">
-              <template #trailing><span class="text-xs text-muted">lb</span></template>
             </UInput>
           </UFormField>
         </div>

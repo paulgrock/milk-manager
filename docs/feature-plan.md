@@ -120,7 +120,7 @@ The website is an Astro site built ahead of time from Sanity (`output: 'static'`
 
 ## 12. Cheese (built, not live yet)
 A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese type made on one day, with its ready date
-(from the type's aging time, editable), optional gallons of milk, pieces and pounds, notes, and a Finished mark. The farm
+(from the type's aging time, editable), optional gallons of milk, notes, and a Finished mark. The farm
 keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
 filter) and Today; Finances has a Cheese sales category. Terms are in `GLOSSARY.md`.
 To go live: push the cheese migration to the hosted database first, then push the code.

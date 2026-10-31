@@ -34,8 +34,8 @@ update cheese_types set aging_months = 12, hidden = true where name = 'Gouda';
 select is((select aging_months::int from cheese_types where name = 'Gouda'), 3, 'only owners change a cheese');
 
 select lives_ok($$
-  insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_gallons, pieces, cheese_weight_g)
-  select herd_id, id, '2026-10-30', '2027-02-28', 2.5, 4, 1134 from cheese_types where name = 'Tomme'
+  insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_gallons)
+  select herd_id, id, '2026-10-30', '2027-02-28', 2.5 from cheese_types where name = 'Tomme'
 $$, 'a helper records a make');
 select throws_ok($$
   insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on)

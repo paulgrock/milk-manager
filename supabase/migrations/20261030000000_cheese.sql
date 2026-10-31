@@ -25,9 +25,6 @@ create table public.cheese_makes (
   made_on date not null,
   ready_on date not null,
   milk_gallons numeric(6, 2) check (milk_gallons > 0 and milk_gallons <= 1000),
-  -- Wheels or pieces, and total weight; either, both or neither.
-  pieces smallint check (pieces between 1 and 1000),
-  cheese_weight_g integer check (cheese_weight_g between 1 and 1000000),
   notes text check (length(notes) <= 2000),
   -- All eaten, sold or given away.
   finished_on date,

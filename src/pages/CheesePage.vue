@@ -5,8 +5,7 @@ import { useHerd } from '@/composables/useHerd'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { daysBetween } from '@/lib/breeding'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
-import { STATUS_LABELS, makeStatus, monthlyTotals, yieldPerGallon, type CheeseMake, type CheeseType } from '@/lib/cheese'
-import { formatWeight } from '@/lib/milk'
+import { STATUS_LABELS, makeStatus, monthlyTotals, type CheeseMake, type CheeseType } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 
 const today = todayISO()
@@ -29,17 +28,7 @@ function readyLabel(make: CheeseMake) {
   if (days > 0) return `Ready ${relativeDays(days)}`
   return days === 0 ? 'Ready today' : `Ready since ${formatDate(make.ready_on)}`
 }
-function amounts(make: CheeseMake) {
-  const y = yieldPerGallon(make)
-  return [
-    make.milk_gallons != null && `${Number(make.milk_gallons)} gal`,
-    make.pieces && `${make.pieces} ${make.pieces === 1 ? 'piece' : 'pieces'}`,
-    make.cheese_weight_g && formatWeight(make.cheese_weight_g, 'lb', true),
-    y !== null && `${y.toFixed(2)} lb/gal`,
-  ]
-    .filter(Boolean)
-    .join(' · ')
-}
+const amounts = (make: CheeseMake) => (make.milk_gallons != null ? `${Number(make.milk_gallons)} gal of milk` : '')
 const monthLabel = (m: string) => new Date(Number(m.slice(0, 4)), Number(m.slice(5)) - 1, 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
 
 const modal = ref<{ open: boolean; make?: CheeseMake }>({ open: false })
@@ -110,22 +99,20 @@ function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'ag
             <tr>
               <th class="px-4 py-2 text-start font-normal">Month</th>
               <th class="px-2 py-2 text-end font-normal">Makes</th>
-              <th class="px-2 py-2 text-end font-normal">Milk</th>
-              <th class="px-4 py-2 text-end font-normal">Cheese</th>
+              <th class="px-4 py-2 text-end font-normal">Milk</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-default">
             <tr v-for="m in months" :key="m.month">
               <td class="px-4 py-2 whitespace-nowrap">{{ monthLabel(m.month) }}</td>
               <td class="px-2 py-2 text-end tabular-nums">{{ m.makes }}</td>
-              <td class="px-2 py-2 text-end tabular-nums">
+              <td class="px-4 py-2 text-end tabular-nums">
                 <template v-if="m.gallons">
                   <span class="whitespace-nowrap">{{ +m.gallons.toFixed(2) }} gal</span>
                   <span class="block text-xs text-muted whitespace-nowrap">≈ {{ Math.round(m.milkLb) }} lb</span>
                 </template>
                 <span v-else class="text-muted">—</span>
               </td>
-              <td class="px-4 py-2 text-end tabular-nums">{{ m.cheeseLb ? `${+m.cheeseLb.toFixed(1)} lb` : '—' }}</td>
             </tr>
           </tbody>
         </table>

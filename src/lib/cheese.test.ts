@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { makeStatus, monthlyTotals, parseGallons, readyDate, yieldPerGallon } from './cheese'
-
-const lb = (n: number) => Math.round(n * 453.59237)
+import { makeStatus, monthlyTotals, parseGallons, readyDate } from './cheese'
 
 describe('readyDate', () => {
   it('adds the aging time in months', () => {
@@ -28,27 +26,17 @@ describe('makeStatus', () => {
   })
 })
 
-describe('yieldPerGallon', () => {
-  it('is pounds of cheese per gallon of milk', () => {
-    expect(yieldPerGallon({ milk_gallons: 4, cheese_weight_g: lb(4) })).toBeCloseTo(1, 3)
-  })
-  it('needs both the milk and the cheese', () => {
-    expect(yieldPerGallon({ milk_gallons: null, cheese_weight_g: lb(4) })).toBeNull()
-    expect(yieldPerGallon({ milk_gallons: 4, cheese_weight_g: null })).toBeNull()
-  })
-})
-
 describe('monthlyTotals', () => {
   it('adds up each month, newest first, with a rough pounds of milk', () => {
     const totals = monthlyTotals([
-      { made_on: '2026-09-12', milk_gallons: 2, cheese_weight_g: lb(1.5) },
-      { made_on: '2026-10-02', milk_gallons: 3, cheese_weight_g: null },
-      { made_on: '2026-10-20', milk_gallons: 2.5, cheese_weight_g: lb(2.5) },
+      { made_on: '2026-09-12', milk_gallons: 2 },
+      { made_on: '2026-10-02', milk_gallons: 3 },
+      { made_on: '2026-10-20', milk_gallons: 2.5 },
+      { made_on: '2026-10-25', milk_gallons: null },
     ])
     expect(totals.map((t) => t.month)).toEqual(['2026-10', '2026-09'])
-    expect(totals[0]).toMatchObject({ makes: 2, gallons: 5.5 })
+    expect(totals[0]).toMatchObject({ makes: 3, gallons: 5.5 })
     expect(totals[0]!.milkLb).toBeCloseTo(47.3, 1)
-    expect(totals[0]!.cheeseLb).toBeCloseTo(2.5, 3)
   })
 })
 
