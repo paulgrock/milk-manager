@@ -195,14 +195,14 @@ isOneToOne: false
                   ]
                 },"goat_photos": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null
+                    "created_at": string,"created_by": string | null,"goat_id": string,"herd_id": string,"id": string,"is_primary": boolean,"kind": string,"storage_path": string,"taken_on": string | null,"thumb_path": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"goat_id": string,"herd_id": string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path": string,"taken_on"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"goat_id": string,"herd_id": string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path": string,"taken_on"?: string | null,"thumb_path"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path"?: string,"taken_on"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"is_primary"?: boolean,"kind"?: string,"storage_path"?: string,"taken_on"?: string | null,"thumb_path"?: string | null
                   }
                   Relationships: [
                     {

@@ -14,7 +14,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { chmodSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, hostedTarget } from './lib/supabase.ts'
 
 const KEEP = 30
 const BUCKET = 'goat-photos'
@@ -79,10 +79,7 @@ for (const block of data.matchAll(/^COPY "(\w+)"\."(\w+)"[^\n]*\n([\s\S]*?)^\\\.
 // --- Photos --------------------------------------------------------------------------------
 
 // The secret key is fetched for this run only and never written to disk.
-const keys = JSON.parse(supabase('projects', 'api-keys', '--project-ref', ref, '--reveal', '-o', 'json')) as { type: string; api_key: string }[]
-const secret = keys.find((k) => k.type === 'secret')?.api_key
-if (!secret) throw new Error('No secret API key found for the project')
-const db = createClient(`https://${ref}.supabase.co`, secret, { auth: { persistSession: false } })
+const db = adminClient(hostedTarget())
 
 async function listFiles(prefix: string): Promise<string[]> {
   const files: string[] = []

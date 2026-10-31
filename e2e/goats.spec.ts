@@ -168,6 +168,12 @@ test('an uploaded photo becomes her picture, as a rounded square like the app ic
   await page.locator('input[type=file]').setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await expect(page.getByRole('img', { name: /Ina May, / })).toBeVisible()
 
+  // A small copy is saved alongside, for icons and tiles: the full photo isn't downloaded just to show it small.
+  const { data: saved } = await admin.from('goat_photos').select('storage_path, thumb_path').eq('goat_id', ina.id).single()
+  expect(saved!.thumb_path).toBe(saved!.storage_path.replace('.jpg', '-thumb.jpg'))
+  const { data: small } = await admin.storage.from('goat-photos').download(saved!.thumb_path!)
+  expect(small!.size).toBeLessThan(60_000)
+
   // The first photo is her main one, shown at the top of her page and on the goat list.
   const avatarRadius = (img: import('@playwright/test').Locator) => img.evaluate((el) => getComputedStyle(el.parentElement!).borderTopLeftRadius)
   const header = page.getByRole('img', { name: 'Ina May', exact: true })

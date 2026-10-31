@@ -26,7 +26,7 @@ import GoatFinanceCard from '@/components/finances/GoatFinanceCard.vue'
 import EntryModal from '@/components/finances/EntryModal.vue'
 import { useHerd } from '@/composables/useHerd'
 import { useRouter } from 'vue-router'
-import { ageInYears } from '@/lib/goats'
+import { ageInYears, iconPath } from '@/lib/goats'
 import { useHealthData } from '@/composables/useHealth'
 import { todayISO } from '@/lib/dates'
 import { withdrawalOn } from '@/lib/health'
@@ -48,7 +48,7 @@ const latest = computed(() => latestAppraisals(appraisals.data.value ?? []))
 const goatAppraisals = computed(() => (appraisals.data.value ?? []).filter((a) => a.goat_id === goat.value?.id))
 const goatPhotos = computed(() => (photos.data.value ?? []).filter((p) => p.goat_id === goat.value?.id))
 const primary = computed(() => goatPhotos.value.find((p) => p.is_primary))
-const primaryUrl = usePhotoUrls(() => (primary.value ? [primary.value.storage_path] : []))
+const primaryUrl = usePhotoUrls(() => (primary.value ? [iconPath(primary.value)] : []))
 const { isOwner } = useHerd()
 // Arriving with ?recordSale=1 (just marked sold): offer to put the sale in the books.
 const saleOpen = computed({
@@ -101,7 +101,7 @@ const details = computed(() => {
 
   <div v-else class="space-y-4">
     <div class="flex items-start gap-4">
-      <GoatAvatar :goat="goat" :url="primary ? primaryUrl[primary.storage_path] : undefined" size="3xl" />
+      <GoatAvatar :goat="goat" :url="primary ? primaryUrl[iconPath(primary)] : undefined" size="3xl" />
       <div class="flex-1 min-w-0">
         <h1 class="text-xl sm:text-2xl font-semibold break-words">{{ goatFullName(goat) }}</h1>
         <p v-if="goat.barn_name && goat.registered_name" class="text-muted">"{{ goat.barn_name }}"</p>

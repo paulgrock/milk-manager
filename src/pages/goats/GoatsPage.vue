@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
 import {
+  iconPath,
   CURRENT_STATUSES,
   SEX_LABELS,
   STATUS_LABELS,
@@ -56,7 +57,7 @@ const filtered = computed(() => {
 
 const latest = computed(() => latestAppraisals(appraisals.data.value ?? []))
 const primaryPhotos = computed(
-  () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, p.storage_path])),
+  () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, iconPath(p)])),
 )
 const photoUrls = usePhotoUrls(() => filtered.value.map((g) => primaryPhotos.value.get(g.id)).filter((p): p is string => !!p))
 

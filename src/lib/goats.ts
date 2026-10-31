@@ -6,6 +6,12 @@ export type Goat = Tables['goats']['Row']
 export type GoatInsert = Tables['goats']['Insert']
 export type Appraisal = Tables['linear_appraisals']['Row']
 export type GoatPhoto = Tables['goat_photos']['Row']
+
+/** Longest side of a photo's small copy, used for icons and gallery tiles. */
+export const THUMB_SIZE = 384
+
+/** The file to show a photo small: its small copy, or the photo itself if it has none yet. */
+export const iconPath = (photo: Pick<GoatPhoto, 'storage_path' | 'thumb_path'>) => photo.thumb_path ?? photo.storage_path
 export type GoatSex = Database['public']['Enums']['goat_sex']
 export type GoatStatus = Database['public']['Enums']['goat_status']
 export type HornStatus = Database['public']['Enums']['horn_status']

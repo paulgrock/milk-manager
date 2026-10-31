@@ -11,8 +11,8 @@
 // sign in there with an emailed code as usual. Refuses to run if the herd is
 // already on the target.
 
-import { execSync } from 'node:child_process'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { adminClient, scriptTarget } from './lib/supabase.ts'
 
 const args = process.argv.slice(2)
 const arg = (name: string) => {
@@ -26,15 +26,9 @@ if (!herdId || !process.env.TARGET_SUPABASE_URL || !process.env.TARGET_SUPABASE_
   process.exit(1)
 }
 
-function localSupabase() {
-  const out = execSync('npx supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-  const get = (k: string) => out.match(new RegExp(`^${k}="?(.*?)"?$`, 'm'))?.[1]
-  return { url: get('API_URL')!, key: get('SECRET_KEY')! }
-}
-const source = process.env.SUPABASE_URL ? { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY! } : localSupabase()
-const noSession = { auth: { persistSession: false } }
-const from = createClient(source.url, source.key, noSession)
-const to = createClient(process.env.TARGET_SUPABASE_URL, process.env.TARGET_SUPABASE_SECRET_KEY, noSession)
+const source = scriptTarget()
+const from = adminClient(source)
+const to = adminClient({ url: process.env.TARGET_SUPABASE_URL, key: process.env.TARGET_SUPABASE_SECRET_KEY })
 
 // Parents before children. Goats go in without their sire and dam, which are
 // linked once every goat is there.
@@ -98,7 +92,7 @@ console.log(`\nCopying "${herd.name}" from ${source.url} to ${process.env.TARGET
 for (const table of TABLES) console.log(`  ${table.padEnd(20)} ${data.get(table)!.length}`)
 const members = data.get('herd_members')!
 const photos = data.get('goat_photos')!
-console.log(`  ${'photo files'.padEnd(20)} ${photos.length}`)
+console.log(`  ${'photo files'.padEnd(20)} ${photos.length + photos.filter((p) => p.thumb_path).length}`)
 console.log(`  accounts: ${members.map((m) => m.email).join(', ')}`)
 
 if (!apply) {
@@ -166,14 +160,15 @@ for (const table of TABLES) {
 
 // --- Photo files ---------------------------------------------------------------------------
 
-for (const p of photos) {
-  const path = p.storage_path as string
+// Each photo and its small copy, if it has one.
+const files = photos.flatMap((p) => [p.storage_path as string, ...(p.thumb_path ? [p.thumb_path as string] : [])])
+for (const path of files) {
   const { data: file, error } = await from.storage.from('goat-photos').download(path)
   if (error) throw new Error(`Download ${path}: ${error.message}`)
   const { error: upError } = await to.storage.from('goat-photos').upload(path, file, { contentType: file.type, upsert: true })
   if (upError) throw new Error(`Upload ${path}: ${upError.message}`)
 }
-console.log(`  copied ${photos.length} photo files`)
+console.log(`  copied ${files.length} photo files`)
 
 // --- Check ---------------------------------------------------------------------------------
 

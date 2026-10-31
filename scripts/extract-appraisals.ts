@@ -7,8 +7,7 @@
 // set SUPABASE_URL and SUPABASE_SECRET_KEY for a hosted project. A goat that
 // already has the same score on that date isn't given a second one.
 
-import { execSync } from 'node:child_process'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, scriptTarget } from './lib/supabase.ts'
 import { splitAppraisal } from '../src/lib/appraisalText.ts'
 
 const args = process.argv.slice(2)
@@ -24,13 +23,8 @@ if (!herdId || !appraisedOn || !/^\d{4}-\d{2}-\d{2}$/.test(appraisedOn)) {
   process.exit(1)
 }
 
-function localSupabase() {
-  const out = execSync('npx supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-  const get = (k: string) => out.match(new RegExp(`^${k}="?(.*?)"?$`, 'm'))?.[1]
-  return { url: get('API_URL')!, key: get('SECRET_KEY')! }
-}
-const target = process.env.SUPABASE_URL ? { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY! } : localSupabase()
-const db = createClient(target.url, target.key, { auth: { persistSession: false } })
+const target = scriptTarget()
+const db = adminClient(target)
 
 const { data: goats, error } = await db
   .from('goats')

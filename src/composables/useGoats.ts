@@ -2,10 +2,10 @@ import { computed, watch } from 'vue'
 import { useOnline } from '@vueuse/core'
 import { refreshQueries } from '@/lib/queryClient'
 import { useMutation, useQuery } from '@tanstack/vue-query'
-import { supabase, unwrap } from '@/lib/supabase'
+import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { resizeImage } from '@/lib/images'
 import { forgetPhoto, loadPhoto, photoUrl, savePhoto } from '@/lib/photoCache'
-import type { Appraisal, Goat, GoatInsert, GoatPhoto } from '@/lib/goats'
+import { THUMB_SIZE, type Appraisal, type Goat, type GoatInsert, type GoatPhoto } from '@/lib/goats'
 import type { Database } from '@/lib/database.types'
 import { useHerd } from './useHerd'
 
@@ -27,29 +27,32 @@ export function useHerdGoats() {
 
   const goats = useQuery({
     queryKey: computed(() => goatKeys.goats(herdId.value)),
-    queryFn: async (): Promise<Goat[]> =>
-      unwrap(await supabase.from('goats').select('*').eq('herd_id', herdId.value)),
+    // Paged, like every list: reference goats from pedigree imports add up past Supabase's 1,000-row limit.
+    queryFn: () =>
+      fetchAll<Goat>((from, to) => supabase.from('goats').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
     enabled,
   })
 
   const appraisals = useQuery({
     queryKey: computed(() => goatKeys.appraisals(herdId.value)),
-    queryFn: async (): Promise<Appraisal[]> =>
-      unwrap(
-        await supabase
+    queryFn: () =>
+      fetchAll<Appraisal>((from, to) =>
+        supabase
           .from('linear_appraisals')
           .select('*')
           .eq('herd_id', herdId.value)
-          .order('appraised_on', { ascending: false }),
+          .order('appraised_on', { ascending: false })
+          .order('id')
+          .range(from, to),
       ),
     enabled,
   })
 
   const photos = useQuery({
     queryKey: computed(() => goatKeys.photos(herdId.value)),
-    queryFn: async (): Promise<GoatPhoto[]> =>
-      unwrap(
-        await supabase.from('goat_photos').select('*').eq('herd_id', herdId.value).order('created_at'),
+    queryFn: () =>
+      fetchAll<GoatPhoto>((from, to) =>
+        supabase.from('goat_photos').select('*').eq('herd_id', herdId.value).order('created_at').order('id').range(from, to),
       ),
     enabled,
   })
@@ -137,15 +140,23 @@ export function useGoatMutations() {
 
   const uploadPhoto = useMutation({
     mutationFn: async ({ goat, file, kind, makePrimary }: { goat: Goat; file: File; kind: PhotoKind; makePrimary: boolean }) => {
-      const blob = await resizeImage(file, 1600)
+      const [blob, thumb] = await Promise.all([resizeImage(file, 1600), resizeImage(file, THUMB_SIZE, 0.8)])
       const id = crypto.randomUUID()
       const path = `${goat.herd_id}/${goat.id}/${id}.jpg`
+      const thumbPath = `${goat.herd_id}/${goat.id}/${id}-thumb.jpg`
       unwrap(await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg' }))
-      await savePhoto(path, blob)
+      unwrap(await supabase.storage.from(BUCKET).upload(thumbPath, thumb, { contentType: 'image/jpeg' }))
+      await Promise.all([savePhoto(path, blob), savePhoto(thumbPath, thumb)])
       unwrap(
-        await supabase
-          .from('goat_photos')
-          .insert({ id, herd_id: goat.herd_id, goat_id: goat.id, storage_path: path, kind, is_primary: makePrimary }),
+        await supabase.from('goat_photos').insert({
+          id,
+          herd_id: goat.herd_id,
+          goat_id: goat.id,
+          storage_path: path,
+          thumb_path: thumbPath,
+          kind,
+          is_primary: makePrimary,
+        }),
       )
     },
     onSuccess: () => refresh(goatKeys.photos(herdId.value)),
@@ -153,9 +164,10 @@ export function useGoatMutations() {
 
   const deletePhoto = useMutation({
     mutationFn: async (photo: GoatPhoto) => {
-      unwrap(await supabase.storage.from(BUCKET).remove([photo.storage_path]))
+      const files = [photo.storage_path, ...(photo.thumb_path ? [photo.thumb_path] : [])]
+      unwrap(await supabase.storage.from(BUCKET).remove(files))
       unwrap(await supabase.from('goat_photos').delete().eq('id', photo.id))
-      await forgetPhoto(photo.storage_path)
+      await Promise.all(files.map(forgetPhoto))
     },
     onSuccess: () => refresh(goatKeys.photos(herdId.value)),
   })

@@ -7,7 +7,7 @@ import { useHerd } from '@/composables/useHerd'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
 import { shiftDate, useLactations, useMilkDay, useMilkSaves, useMilkUnits } from '@/composables/useMilk'
 import { formatDate, todayISO } from '@/lib/dates'
-import { goatName, inHerdOn, type Goat } from '@/lib/goats'
+import { goatName, iconPath, inHerdOn, type Goat } from '@/lib/goats'
 import {
   AM,
   DAY_TOTAL,
@@ -103,7 +103,7 @@ const withheldG = computed(() =>
 )
 
 const primaryPhotos = computed(
-  () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, p.storage_path])),
+  () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, iconPath(p)])),
 )
 const photoUrls = usePhotoUrls(() => line.value.map((x) => primaryPhotos.value.get(x.goat.id)).filter((p): p is string => !!p))
 

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useGoatMutations, usePhotoUrls } from '@/composables/useGoats'
-import { goatName, type Goat, type GoatPhoto } from '@/lib/goats'
+import { goatName, iconPath, type Goat, type GoatPhoto } from '@/lib/goats'
 
 const props = defineProps<{ goat: Goat; photos: GoatPhoto[] }>()
 
@@ -12,11 +12,12 @@ const kindOptions = Object.entries(KIND_LABELS).map(([value, label]) => ({ label
 
 const toast = useToast()
 const { uploadPhoto, deletePhoto, setPrimaryPhoto } = useGoatMutations()
-const urls = usePhotoUrls(() => props.photos.map((p) => p.storage_path))
 
 const kind = ref<Kind>('conformation')
 const fileInput = ref<HTMLInputElement>()
 const viewing = ref<GoatPhoto>()
+// Tiles use the small copies; the full photo loads only when one is opened.
+const urls = usePhotoUrls(() => [...props.photos.map(iconPath), ...(viewing.value ? [viewing.value.storage_path] : [])])
 const viewerOpen = computed({
   get: () => !!viewing.value,
   set: (open) => {
@@ -70,7 +71,7 @@ async function remove(photo: GoatPhoto) {
         class="relative aspect-square rounded-md overflow-hidden bg-elevated"
         @click="viewing = p"
       >
-        <img v-if="urls[p.storage_path]" :src="urls[p.storage_path]" :alt="`${goatName(goat)}, ${KIND_LABELS[p.kind as Kind]}`" class="size-full object-cover" />
+        <img v-if="urls[iconPath(p)]" :src="urls[iconPath(p)]" :alt="`${goatName(goat)}, ${KIND_LABELS[p.kind as Kind]}`" class="size-full object-cover" />
         <span class="absolute bottom-1 left-1 text-xs bg-black/60 text-white rounded px-1">{{ KIND_LABELS[p.kind as Kind] }}</span>
         <UIcon v-if="p.is_primary" name="i-lucide-star" class="absolute top-1 right-1 text-yellow-400 size-5" />
       </button>

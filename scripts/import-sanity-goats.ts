@@ -16,11 +16,11 @@
 // A linear appraisal score in a name ("5*M VVEV 88 (@ 2 yo)") becomes an
 // appraisal record dated --appraised-on (today if not given), not a title.
 
-import { execFileSync, execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, scriptTarget } from './lib/supabase.ts'
 import { splitAppraisal } from '../src/lib/appraisalText.ts'
 
 type Node = { name?: string; link?: string; sire?: Node; dam?: Node }
@@ -56,15 +56,8 @@ if (!exportDir || !herdId) {
   process.exit(1)
 }
 
-function localSupabase() {
-  const out = execSync('npx supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-  const get = (k: string) => out.match(new RegExp(`^${k}="?(.*?)"?$`, 'm'))?.[1]
-  return { url: get('API_URL')!, key: get('SECRET_KEY')! }
-}
-const target = process.env.SUPABASE_URL
-  ? { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY! }
-  : localSupabase()
-const db = createClient(target.url, target.key, { auth: { persistSession: false } })
+const target = scriptTarget()
+const db = adminClient(target)
 
 // --- Names ----------------------------------------------------------------------------
 

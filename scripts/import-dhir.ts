@@ -19,9 +19,8 @@
 // Lactation-to-date and projected 305-day figures are stored as printed, and
 // are what the app shows; a re-run updates them from the file.
 
-import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, scriptTarget } from './lib/supabase.ts'
 
 type Report = {
   lab?: string
@@ -54,13 +53,8 @@ if (!file || !herdId) {
   process.exit(1)
 }
 
-function localSupabase() {
-  const out = execSync('npx supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-  const get = (k: string) => out.match(new RegExp(`^${k}="?(.*?)"?$`, 'm'))?.[1]
-  return { url: get('API_URL')!, key: get('SECRET_KEY')! }
-}
-const target = process.env.SUPABASE_URL ? { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY! } : localSupabase()
-const db = createClient(target.url, target.key, { auth: { persistSession: false } })
+const target = scriptTarget()
+const db = adminClient(target)
 
 const GRAMS_PER_LB = 453.59237
 const lbToG = (lb: number | null | undefined) => (lb === null || lb === undefined ? null : Math.round(lb * GRAMS_PER_LB))
