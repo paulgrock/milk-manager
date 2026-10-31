@@ -45,7 +45,11 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // The app never uses live updates; this drops about 55 KB from the first load.
+      '@supabase/realtime-js': fileURLToPath(new URL('./src/lib/realtimeStub.ts', import.meta.url)),
+    },
   },
   test: {
     include: ['src/**/*.test.ts'],

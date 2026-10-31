@@ -118,22 +118,46 @@ The website is an Astro site built ahead of time from Sanity (`output: 'static'`
 - Considered instead: writing app notes back into Sanity. Not worth it: notes are private, the website's rich text
   would be flattened, and it would need a secret Sanity token on a server.
 
-## 12. Cheese (built, not live yet)
+## 12. Cheese (live)
 A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese type made on one day, with its ready date
 (from the type's aging time, editable), optional gallons of milk, notes, and a Finished mark. The farm
 keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
 filter) and Today; Finances has a Cheese sales category. Terms are in `GLOSSARY.md`.
-To go live: push the cheese migration to the hosted database first, then push the code.
 
-## After Cheese is live: whole-app review
-Once Cheese is live, review the whole app for tech debt and optimizations before adding more. Known starting points:
-- Unused tables left from earlier changes: `health_observations` and `disease_tests` (empty; dropping them needs an OK).
-- The main JavaScript bundle is large (Vite warns about chunk size); check what loads on first open and split by page.
-- Repeated patterns that could share code: care types and cheese types (per-herd lists owners manage), the several
-  "loads a herd's records, saves online" composables, and the import/copy/backup scripts' Supabase setup.
-- Which saves work offline (milk, care) and which don't (cheese, treatments, breeding): decide if more should.
-- Test suite speed and the one-off test setup failures; dependency updates (Supabase CLI, npm audit).
-- Settings vs page placement of owner-managed lists, and other UI consistency.
+## Whole-app review (2026-10-31)
+Reviewed after Cheese went live: bundle sizes, unused code and packages, repeated code, data loading, offline
+behavior, tests and tooling. Security was audited separately on 2026-10-23.
+
+**Worth doing, most valuable first**
+1. **Done:** **Small photo copies for icons.** The goat list, milk line and goat page header show photos as small icons but
+   download the full photo (average 372 KB, up to 1.4 MB): about 5 MB the first time a phone opens the goat list,
+   often on barn signal. Save a ~256 px copy at upload, backfill existing photos with a script, and use it for icons.
+2. **Run the tests automatically on every push** (GitHub Actions: typecheck, unit, database and Playwright tests
+   against a local Supabase). Today Netlify only typechecks before deploying, so a broken change can go live.
+3. **Done:** **Safer `db:types`.** It writes straight into `src/lib/database.types.ts`, so with the database down it replaces
+   the types with an error message. Write to a temporary file and only move it into place when it worked.
+4. **One shared save/delete helper** for the data composables. Six of them repeat the same code (Health and Breeding
+   share a copy that skips type checking with `as never` casts; Finances, Cheese and Milk tests each write their own).
+5. **Done:** **One shared local-Supabase setup for the scripts** (copied into four scripts).
+6. **Done:** **Page the goat list** like every other list: it's fetched in one request, so it would stop at Supabase's
+   1,000-row limit (reference goats from pedigree imports add up).
+7. **Drop the unused `health_observations` and `disease_tests` tables** (empty since health checks were removed).
+
+**Smaller or optional**
+- Package updates: all a minor version behind. The audit warnings are in test and build tools only, not shipped code.
+- Offline saves: milk and care work with no signal; treatments, breeding, cheese, goats and photos need signal.
+  Decide whether any of those should work offline too.
+- **Done:** opening the app downloaded 575 KB of JavaScript (180 KB compressed). Supabase's unused live-updates
+  module is now replaced by a stand-in, bringing it to 521 KB (164 KB compressed). The rest is Vue, the router,
+  sign-in and the UI kit; going much smaller would mean replacing one of those.
+- About 40 exported values and types are only used in their own file; harmless tidiness.
+- No linter. ESLint's Vue rules would catch some mistakes earlier; optional.
+
+**Checked and fine**
+- The chart library is already trimmed to what's used and only loads on the lactation and production pages.
+- Milk data loads by date range (one day for entry, a window for history and production, one goat for her curves).
+- No unused files, components or packages; no file over about 370 lines.
+- Owner-managed lists sit on the page they're used on (care routine on Health, cheeses on Cheese), consistently.
 
 ## Explicitly out of scope
 Meat, fiber and pack features. A marketplace or public farm page (could be added later).
