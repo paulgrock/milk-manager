@@ -1,4 +1,4 @@
-// Everything with a date, gathered from breeding, health and milk records.
+// Everything with a date, gathered from breeding, health, milk, cheese and chore records.
 // Nothing here is stored: upcoming events are worked out from the records,
 // so recording a kidding or a hoof trim updates the calendar by itself.
 
@@ -9,6 +9,7 @@ import { lactationOn, type Lactation } from './milk'
 import { CURRENT_STATUSES, goatName, type Goat } from './goats'
 import type { MilkTest } from './dhia'
 import type { CheeseMake, CheeseType } from './cheese'
+import { choreStatus, type Chore, type ChoreDone } from './chores'
 import { formatDate } from './dates'
 
 export type EventKind =
@@ -25,8 +26,10 @@ export type EventKind =
   | 'treated'
   | 'test-day'
   | 'cheese-ready'
+  | 'chore-due'
+  | 'chore-done'
 
-export type EventGroup = 'breeding' | 'health' | 'milk' | 'cheese'
+export type EventGroup = 'breeding' | 'health' | 'milk' | 'cheese' | 'chores'
 
 export interface CalendarEvent {
   date: string
@@ -42,7 +45,7 @@ export interface CalendarEvent {
   href: string
 }
 
-export const GROUP_LABELS: Record<EventGroup, string> = { breeding: 'Breeding', health: 'Health', milk: 'Milk', cheese: 'Cheese' }
+export const GROUP_LABELS: Record<EventGroup, string> = { breeding: 'Breeding', health: 'Health', milk: 'Milk', cheese: 'Cheese', chores: 'Chores' }
 
 /** A blood test is reliable about 30 days after breeding. */
 export const PREG_CHECK_AFTER_DAYS = 30
@@ -58,6 +61,8 @@ export interface CalendarInput {
   tests: MilkTest[]
   cheeseTypes?: CheeseType[]
   cheeseMakes?: CheeseMake[]
+  chores?: Chore[]
+  choresDone?: ChoreDone[]
   today: string
 }
 
@@ -245,6 +250,17 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
       done: m.ready_on < today,
       href: '/cheese',
     })
+  }
+
+  // Chores: next due for each one done before (one never recorded has no due date yet), and each time one was done.
+  const choreNames = new Map((input.chores ?? []).map((c) => [c.id, c.name]))
+  for (const chore of (input.chores ?? []).filter((c) => !c.hidden)) {
+    const s = choreStatus(chore, input.choresDone ?? [], today)
+    if (!s.nextDue) continue
+    add({ date: s.nextDue, kind: 'chore-due', group: 'chores', title: chore.name, done: false, overdue: s.state === 'overdue', href: '/chores' })
+  }
+  for (const d of input.choresDone ?? []) {
+    add({ date: d.done_on, kind: 'chore-done', group: 'chores', title: `${choreNames.get(d.chore_id) ?? 'Chore'} done`, detail: d.notes ?? undefined, done: true, href: '/chores' })
   }
 
   return events.sort((a, b) => a.date.localeCompare(b.date) || Number(b.overdue ?? false) - Number(a.overdue ?? false) || a.title.localeCompare(b.title))

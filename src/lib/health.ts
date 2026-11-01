@@ -8,8 +8,18 @@ export type CareEvent = Tables['care_events']['Row']
 export type Treatment = Tables['treatments']['Row']
 export type TreatmentRoute = Database['public']['Enums']['treatment_route']
 
-/** Care coming up within this many days counts as "due". */
-export const DUE_SOON_DAYS = 7
+/**
+ * How many days ahead something counts as "due soon": a quarter of how often
+ * it repeats, never more than a week. A weekly chore isn't always due soon.
+ */
+export function dueSoonDays(intervalDays: number): number {
+  return Math.min(7, Math.floor(intervalDays / 4))
+}
+
+/** Overdue, due soon, or fine, from the days until it's due (negative when overdue). */
+export function dueState(daysUntilDue: number, intervalDays: number): 'overdue' | 'due' | 'ok' {
+  return daysUntilDue < 0 ? 'overdue' : daysUntilDue <= dueSoonDays(intervalDays) ? 'due' : 'ok'
+}
 
 export const ROUTE_LABELS: Record<TreatmentRoute, string> = {
   oral: 'Oral',
@@ -40,8 +50,7 @@ export function careStatus(goatId: string, type: CareType, events: CareEvent[], 
   if (!last) return { type, state: 'never' }
   const nextDue = addDays(last.done_on, type.interval_days)
   const daysUntilDue = daysBetween(today, nextDue)
-  const state: CareState = daysUntilDue < 0 ? 'overdue' : daysUntilDue <= DUE_SOON_DAYS ? 'due' : 'ok'
-  return { type, last, nextDue, daysUntilDue, state }
+  return { type, last, nextDue, daysUntilDue, state: dueState(daysUntilDue, type.interval_days) }
 }
 
 /** Last day milk must be withheld: the last dose plus the withdrawal days. Null if there's no withdrawal. */

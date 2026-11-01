@@ -83,4 +83,19 @@ describe('buildEvents', () => {
     const careEvents = [{ id: 'c', herd_id: 'h', goat_id: 'Sold', care_type_id: 'hoof', done_on: '2026-10-01', dose: null, notes: null, created_by: null, created_at: '' }]
     expect(buildEvents({ ...base, careEvents }, '2026-10-02', '2027-01-01').filter((e) => e.kind === 'care-due')).toEqual([])
   })
+
+  it('shows chores coming due and done, but not ones never recorded or hidden', () => {
+    const chore = (id: string, name: string, interval_days: number, hidden = false) =>
+      ({ id, herd_id: 'h', name, interval_days, hidden, sort_order: 1, created_by: null, created_at: '' })
+    const done = (chore_id: string, done_on: string) => ({ id: `${chore_id}-${done_on}`, herd_id: 'h', chore_id, done_on, notes: null, created_by: null, created_at: '' })
+    const input = {
+      ...base,
+      chores: [chore('water', 'Fill waterers', 14), chore('coop', 'Clean coop', 30), chore('stalls', 'Clean stalls', 30), chore('old', 'Old chore', 7, true)],
+      choresDone: [done('water', '2026-10-01'), done('stalls', '2026-10-20'), done('old', '2026-10-01')],
+    }
+    const events = buildEvents(input, '2026-10-21', '2026-11-30')
+    expect(summary(events)).toEqual(['2026-10-21 chore-due Fill waterers (overdue)', '2026-11-19 chore-due Clean stalls'])
+    expect(events.every((e) => e.group === 'chores' && e.href === '/chores')).toBe(true)
+    expect(summary(buildEvents(input, '2026-10-20', '2026-10-20'))).toEqual(['2026-10-20 chore-done Clean stalls done'])
+  })
 })

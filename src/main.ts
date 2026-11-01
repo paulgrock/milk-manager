@@ -8,6 +8,7 @@ import { router } from './router'
 import { queryClient, restoreQueryCache } from './lib/queryClient'
 import './lib/milkSync'
 import './lib/healthSync'
+import './lib/choresSync'
 
 // Mount even if the saved cache can't be read; it just means a cold start.
 restoreQueryCache()

@@ -124,6 +124,15 @@ A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese t
 keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
 filter) and Today; Finances has a Cheese sales category. Terms are in `GLOSSARY.md`.
 
+## 13. Chores (built, not live yet)
+A Chores tab for farm tasks that repeat and belong to the farm, not a goat. It starts with clean milking equipment
+(weekly), fill waterers and refill mineral feeder (every other week), and clean stalls and clean coop (every 30 days).
+A chore is due its repeat time after it was last done. "Done today" is one tap (with undo); a past date and a note
+go through the chore's history, which also shows who did each one. It works with no signal, like care logs. Anyone
+adds chores; owners rename, re-time or hide them. A chore not recorded yet stays off Today and the calendar. Overdue
+chores show on Today, and all due dates on the calendar under a Chores filter. **Due soon** is now a quarter of the
+repeat time, at most 7 days, for care as well as chores.
+
 ## Whole-app review (2026-10-31)
 Reviewed after Cheese went live: bundle sizes, unused code and packages, repeated code, data loading, offline
 behavior, tests and tooling. Security was audited separately on 2026-10-23.

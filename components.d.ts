@@ -17,6 +17,7 @@ declare module 'vue' {
     BreedingModal: typeof import('./src/components/breeding/BreedingModal.vue')['default']
     CalendarEventItem: typeof import('./src/components/CalendarEventItem.vue')['default']
     CheckModal: typeof import('./src/components/breeding/CheckModal.vue')['default']
+    ChoreDoneModal: typeof import('./src/components/chores/ChoreDoneModal.vue')['default']
     EntryModal: typeof import('./src/components/finances/EntryModal.vue')['default']
     GoatAvatar: typeof import('./src/components/goats/GoatAvatar.vue')['default']
     GoatFinanceCard: typeof import('./src/components/finances/GoatFinanceCard.vue')['default']

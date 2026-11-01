@@ -31,7 +31,7 @@ const withheld = computed(() =>
     .sort((a, b) => a.withdrawal!.through.localeCompare(b.withdrawal!.through)),
 )
 
-// Per care type: goats overdue or due within a week, and how many have never had it.
+// Per care type: goats overdue or due soon, and how many have never had it.
 const careDue = computed(() =>
   activeTypes.value
     .filter((t) => t.interval_days)
@@ -118,7 +118,7 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
           <h2 class="font-semibold">Care due</h2>
-          <p class="text-sm text-muted">Overdue, or due in the next week</p>
+          <p class="text-sm text-muted">Overdue, or due soon</p>
         </template>
         <p v-if="!careDue.length" class="p-4 text-muted">Everyone is up to date.</p>
         <div v-for="{ type, due, never } in careDue" :key="type.id" class="border-t border-default first:border-0 px-4 py-3 space-y-2">

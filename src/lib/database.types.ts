@@ -141,6 +141,52 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"chores": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"herd_id": string,"hidden": boolean,"id": string,"interval_days": number,"name": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"hidden"?: boolean,"id"?: string,"interval_days": number,"name": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"hidden"?: boolean,"id"?: string,"interval_days"?: number,"name"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "chores_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"chores_done": {
+                  Row: {
+                    "chore_id": string,"created_at": string,"created_by": string | null,"done_on": string,"herd_id": string,"id": string,"notes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "chore_id": string,"created_at"?: string,"created_by"?: string | null,"done_on": string,"herd_id": string,"id"?: string,"notes"?: string | null
+                  }
+                  Update: {
+                    "chore_id"?: string,"created_at"?: string,"created_by"?: string | null,"done_on"?: string,"herd_id"?: string,"id"?: string,"notes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "chores_done_chore_id_herd_id_fkey"
+      columns: ["chore_id","herd_id"]
+isOneToOne: false
+      referencedRelation: "chores"
+      referencedColumns: ["id","herd_id"]
+    },{
+      foreignKeyName: "chores_done_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"disease_tests": {
                   Row: {
                     "created_at": string,"created_by": string | null,"disease": string,"goat_id": string,"herd_id": string,"id": string,"lab": string | null,"notes": string | null,"result": Database["public"]['Enums']["test_result"],"tested_on": string

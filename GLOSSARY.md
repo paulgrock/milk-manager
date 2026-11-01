@@ -25,3 +25,23 @@ _Avoid_: Done date, due date
 **Finished**:
 A make that has all been eaten, sold or given away.
 _Avoid_: Closed, archived, used up
+
+### Chores
+
+**Chore**:
+A farm task that repeats every so many days and belongs to the farm rather than to a goat, such as cleaning stalls or filling waterers.
+_Avoid_: Task, job, to-do
+
+**Chore done**:
+One time a chore was done: the date, who did it, and an optional note. A chore is next due its repeat time after the last one.
+_Avoid_: Completion, check-off
+
+**Not recorded yet**:
+A chore with no chore done on record, so it has no due date. It stays off Today and the calendar until a date is entered.
+_Avoid_: Never done, overdue
+
+### Reminders
+
+**Due soon**:
+Coming due within a quarter of its repeat time, and never more than 7 days ahead. Applies to care and chores alike.
+_Avoid_: Upcoming, almost due

@@ -17,6 +17,8 @@ const ICONS: Record<EventKind, string> = {
   treated: 'i-lucide-pill',
   'test-day': 'i-lucide-flask-conical',
   'cheese-ready': 'i-lucide-cylinder',
+  'chore-due': 'i-lucide-list-checks',
+  'chore-done': 'i-lucide-check',
 }
 </script>
 

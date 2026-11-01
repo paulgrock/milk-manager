@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { careStatus, withdrawalOn, withholdThrough, type CareEvent, type CareType, type Treatment } from './health'
+import { careStatus, dueSoonDays, withdrawalOn, withholdThrough, type CareEvent, type CareType, type Treatment } from './health'
 
 const type = (over: Partial<CareType> = {}): CareType => ({
   id: 'hoof',
@@ -64,6 +64,22 @@ describe('careStatus', () => {
 
   it('has no due date for as-needed care', () => {
     expect(careStatus('ina', type({ interval_days: null }), [event('2026-10-01')], '2026-10-20')).toMatchObject({ state: 'as-needed' })
+  })
+})
+
+describe('dueSoonDays', () => {
+  it('is a quarter of the repeat time, at most a week', () => {
+    expect(dueSoonDays(7)).toBe(1)
+    expect(dueSoonDays(14)).toBe(3)
+    expect(dueSoonDays(30)).toBe(7)
+    expect(dueSoonDays(180)).toBe(7)
+    expect(dueSoonDays(3)).toBe(0)
+  })
+
+  it('makes fortnightly care due soon 3 days ahead, not 7', () => {
+    const fortnightly = type({ interval_days: 14 })
+    expect(careStatus('ina', fortnightly, [event('2026-10-10')], '2026-10-20').state).toBe('ok')
+    expect(careStatus('ina', fortnightly, [event('2026-10-10')], '2026-10-21').state).toBe('due')
   })
 })
 
