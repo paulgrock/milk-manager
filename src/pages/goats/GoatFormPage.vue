@@ -324,10 +324,10 @@ async function remove() {
             <USelect v-model="form.status" :items="statusOptions" class="w-full sm:w-60" />
           </UFormField>
           <div v-if="leftHerd" class="grid sm:grid-cols-2 gap-3">
-            <UFormField :label="form.status === 'sold' ? 'Date sold' : 'Date died'">
+            <UFormField :label="form.status === 'sold' ? 'Date adopted' : 'Date died'">
               <UInput v-model="form.left_herd_on" type="date" class="w-full" />
             </UFormField>
-            <UFormField :label="form.status === 'sold' ? 'Sold to / notes' : 'Cause'">
+            <UFormField :label="form.status === 'sold' ? 'Adopted by / notes' : 'Cause'">
               <UInput v-model="form.left_herd_reason" class="w-full" maxlength="500" />
             </UFormField>
           </div>
@@ -359,7 +359,7 @@ async function remove() {
     <UModal
       v-model:open="confirmDelete"
       :title="`Delete ${existing ? goatFullName(existing) : 'goat'}?`"
-      description="This removes the goat, its appraisals and photos. Offspring keep their records but lose the link to this parent. To keep the history, set the status to Sold or Deceased instead."
+      description="This removes the goat, its appraisals and photos. Offspring keep their records but lose the link to this parent. To keep the history, set the status to Adopted or Deceased instead."
     >
       <template #footer>
         <div class="flex justify-end gap-2 w-full">

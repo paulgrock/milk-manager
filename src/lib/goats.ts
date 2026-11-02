@@ -20,8 +20,8 @@ export const SEX_LABELS: Record<GoatSex, string> = { doe: 'Doe', buck: 'Buck', w
 
 export const STATUS_LABELS: Record<GoatStatus, string> = {
   active: 'In herd',
-  for_sale: 'For sale',
-  sold: 'Sold',
+  for_sale: 'Available',
+  sold: 'Adopted',
   deceased: 'Deceased',
   reference: 'Reference',
 }
@@ -160,7 +160,7 @@ export function offspringOf(goatId: string, goats: Goat[]): Goat[] {
 }
 
 /**
- * Whether a goat was part of the herd on a date: in the herd or for sale, or
+ * Whether a goat was part of the herd on a date: in the herd or available, or
  * sold/died on or after that date (so past milk days still show her).
  */
 export function inHerdOn(goat: Pick<Goat, 'status' | 'left_herd_on'>, date: string): boolean {

@@ -112,6 +112,13 @@ test('adopting out a goat from the herd marks it sold and books a goat sale', as
   expect(await finances(herd.id)).toEqual([{ category: 'goat_sale', amount_cents: 60000, party: 'Pat Jones', description: 'Adoption' }])
   const { data: goat } = await admin.from('goats').select('status, left_herd_on, left_herd_reason').eq('id', rosie.id).single()
   expect(goat).toEqual({ status: 'sold', left_herd_on: isoDate(), left_herd_reason: 'Adopted by Pat Jones' })
+  await page.goto(`/goats/${rosie.id}`)
+  await expect(page.getByText(/^Adopted \w{3} \d+, \d{4}$/)).toBeVisible()
+  await page.goto('/goats')
+  await page.getByRole('combobox').filter({ hasText: 'Current herd' }).click()
+  await expect(page.getByRole('option', { name: 'Adopted' })).toBeVisible()
+  await expect(page.getByRole('option', { name: 'Sold' })).toHaveCount(0)
+  await expect(page.getByRole('option', { name: 'Available' })).toBeVisible()
 })
 
 test('helpers don’t see adoptions', async ({ browser, herd }) => {

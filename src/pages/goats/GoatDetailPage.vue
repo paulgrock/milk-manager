@@ -65,7 +65,7 @@ const saleDraft = computed(() => {
     kind: 'income' as const,
     category: young ? 'kid_sale' : 'goat_sale',
     occurred_on: g.left_herd_on ?? todayISO(),
-    description: `Sold ${g.barn_name || g.registered_name || ''}`.trim(),
+    description: `Adopted ${g.barn_name || g.registered_name || ''}`.trim(),
     goat_id: g.id,
   }
 })
@@ -121,7 +121,7 @@ const details = computed(() => {
       color="neutral"
       variant="subtle"
       :icon="goat.status === 'deceased' ? 'i-lucide-flower-2' : 'i-lucide-hand-coins'"
-      :title="`${goat.status === 'deceased' ? 'Died' : 'Sold'}${goat.left_herd_on ? ` ${formatDate(goat.left_herd_on)}` : ''}`"
+      :title="`${goat.status === 'deceased' ? 'Died' : 'Adopted'}${goat.left_herd_on ? ` ${formatDate(goat.left_herd_on)}` : ''}`"
       :description="goat.left_herd_reason ?? undefined"
     />
 

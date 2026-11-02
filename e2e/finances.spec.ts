@@ -92,12 +92,12 @@ test('a stud fee typed on a breeding can go in the books once', async ({ page, o
   expect(entry.data).toEqual({ category: 'stud_fee', amount_cents: 7500, breeding_id: b!.id, goat_id: ina.id })
 })
 
-test('marking a goat sold offers to record the sale', async ({ page, owner, herd }) => {
+test('marking a goat adopted offers to record the sale', async ({ page, owner, herd }) => {
   const kid = await addGoat(owner, herd.id, { barn_name: 'Ivy', sex: 'doe', birth_date: isoDate(-90) })
   await page.goto(`/goats/${kid.id}/edit`)
   await page.getByRole('combobox', { name: 'Status' }).click()
-  await page.getByRole('option', { name: 'Sold' }).click()
-  await page.getByLabel('Date sold').fill(isoDate())
+  await page.getByRole('option', { name: 'Adopted' }).click()
+  await page.getByLabel('Date adopted').fill(isoDate())
   await page.getByRole('button', { name: 'Save changes' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'Add income' })
