@@ -122,7 +122,7 @@ function move(line: Reservation[], index: number, by: number) {
   setLineOrder.mutate(ids, { onError: (e) => toast.add({ color: 'error', title: 'Could not reorder', description: e.message }) })
 }
 
-// Kids count toward the season they were born in, whenever they're sold; other goats by the year sold.
+// Kids count toward the season they were born in, whenever they're adopted; other goats by the year adopted.
 const seasonSales = computed(() =>
   data.value.sales
     .filter((s) => s.sold_on && (s.kid_id ? kidById.value.has(s.kid_id) : s.sold_on.startsWith(`${season.value}-`)))
@@ -139,12 +139,13 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
 </script>
 
 <template>
-  <UAlert v-if="!isOwner" color="neutral" variant="subtle" icon="i-lucide-lock" title="Only owners can see sales." />
+  <UAlert v-if="!isOwner" color="neutral" variant="subtle" icon="i-lucide-lock" title="Only owners can see adoptions." />
   <div v-else class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
-      <h1 class="text-2xl font-semibold flex-1">Sales</h1>
+      <UButton to="/breeding" color="neutral" variant="ghost" icon="i-lucide-arrow-left" aria-label="Back to breeding" />
+      <h1 class="text-2xl font-semibold flex-1">Adoptions</h1>
       <UButton icon="i-lucide-plus" @click="reservationModal = { open: true }">New reservation</UButton>
-      <UButton variant="soft" icon="i-lucide-handshake" @click="saleModal = { open: true }">Record a sale</UButton>
+      <UButton variant="soft" icon="i-lucide-heart-handshake" @click="saleModal = { open: true }">Record an adoption</UButton>
     </div>
 
     <div class="flex items-center gap-1">
@@ -198,11 +199,11 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
                 <span class="flex-1">{{ saleLabel(s) }}</span>
                 <template v-if="s.sold_on">
                   <button type="button" class="text-muted hover:underline" @click="saleModal = { open: true, sale: s }">
-                    Sold {{ formatDate(s.sold_on) }} · {{ formatMoney(s.price_cents ?? 0) }}
+                    Adopted {{ formatDate(s.sold_on) }} · {{ formatMoney(s.price_cents ?? 0) }}
                   </button>
                 </template>
                 <template v-else>
-                  <UButton size="xs" @click="saleModal = { open: true, sale: s }">Sell</UButton>
+                  <UButton size="xs" @click="saleModal = { open: true, sale: s }">Mark adopted</UButton>
                   <UButton size="xs" color="neutral" variant="ghost" :aria-label="`Unmatch ${saleLabel(s)}`" icon="i-lucide-x" @click="unmatch(s)" />
                 </template>
               </li>
@@ -211,7 +212,7 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
           <li v-for="k in g.unreserved" :key="k.kid.id" class="px-4 py-2 flex items-center gap-3 text-sm">
             <span class="w-5" />
             <span class="flex-1 text-muted">{{ k.label }} · not matched yet</span>
-            <UButton size="xs" variant="soft" @click="saleModal = { open: true, kid: k }">Sell</UButton>
+            <UButton size="xs" variant="soft" @click="saleModal = { open: true, kid: k }">Mark adopted</UButton>
           </li>
         </ol>
         <div v-if="g.doeId" class="px-4 py-2 border-t border-default">
@@ -237,11 +238,11 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
           <div class="flex items-baseline">
-            <h2 class="font-semibold flex-1">Sold this season</h2>
+            <h2 class="font-semibold flex-1">Adopted this season</h2>
             <span v-if="seasonSales.length" class="text-sm text-muted tabular-nums">{{ formatMoney(seasonTotal) }}</span>
           </div>
         </template>
-        <p v-if="!seasonSales.length" class="p-4 text-muted">Nothing sold yet.</p>
+        <p v-if="!seasonSales.length" class="p-4 text-muted">No adoptions yet.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="s in seasonSales" :key="s.id">
             <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50 flex flex-wrap gap-x-3" @click="saleModal = { open: true, sale: s }">
@@ -267,7 +268,7 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
             <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50" @click="buyerModal = { open: true, buyer: b }">
               <span class="font-medium">{{ b.name }}</span>
               <span v-if="b.town" class="text-muted"> · {{ b.town }}</span>
-              <span v-if="purchases(b)" class="text-muted"> · bought {{ purchases(b) }}</span>
+              <span v-if="purchases(b)" class="text-muted"> · adopted {{ purchases(b) }}</span>
               <span class="block text-xs text-muted">{{ [b.phone, b.email].filter(Boolean).join(' · ') }}</span>
             </button>
           </li>

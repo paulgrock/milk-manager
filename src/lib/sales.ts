@@ -13,7 +13,7 @@ export type Wants = 'doeling' | 'buckling' | 'wether' | 'any'
 export type DepositStatus = 'held' | 'applied' | 'refunded' | 'kept'
 
 export const WANTS_LABELS: Record<Wants, string> = { doeling: 'Doeling', buckling: 'Buckling', wether: 'Wether', any: 'Either' }
-export const DEPOSIT_LABELS: Record<DepositStatus, string> = { held: 'held', applied: 'used on a sale', refunded: 'refunded', kept: 'kept' }
+export const DEPOSIT_LABELS: Record<DepositStatus, string> = { held: 'held', applied: 'used on an adoption', refunded: 'refunded', kept: 'kept' }
 
 /** A wether is a buckling, wethered. */
 export function kidFits(kid: Pick<Kid, 'sex'>, wants: string): boolean {

@@ -16,7 +16,7 @@ const DUE_WITHIN_DAYS = 60
 const HEAT_WITHIN_DAYS = 7
 
 const today = todayISO()
-const { herd } = useHerd()
+const { herd, isOwner } = useHerd()
 const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 const { goats, byId, pathOf } = useHerdGoats()
 const { query, data } = useBreedingData()
@@ -75,6 +75,7 @@ const breedingOpen = ref(false)
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
       <h1 class="text-2xl font-semibold flex-1">Breeding</h1>
+      <UButton v-if="isOwner" to="/breeding/adoptions" color="neutral" variant="ghost" icon="i-lucide-heart-handshake">Adoptions</UButton>
       <UButton variant="soft" icon="i-lucide-flame" @click="heatOpen = true">Log heat</UButton>
       <UButton variant="soft" icon="i-lucide-heart" @click="breedingOpen = true">Record breeding</UButton>
       <UButton icon="i-lucide-baby" to="/breeding/kidding">Record kidding</UButton>

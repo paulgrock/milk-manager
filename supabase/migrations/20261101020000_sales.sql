@@ -1,4 +1,4 @@
--- Buyers, kid reservations and sales. Owners only, like Finances: these hold
+-- Buyers, kid reservations and adoptions (the farm's word for a sale). Owners only, like Finances: these hold
 -- money and customers' contact details.
 --
 -- A reservation holds a buyer's place in line for a doe's kids in a kidding
@@ -213,7 +213,7 @@ begin
       -- A kid is under a year old; a kid with no goat record always is.
       case when new.kid_id is not null or v_birth > new.sold_on - interval '1 year' then 'kid_sale' else 'goat_sale' end,
       new.sold_on, v_balance,
-      case when new.deposit_applied_cents > 0 then 'Sale, less deposit' else 'Sale' end,
+      case when new.deposit_applied_cents > 0 then 'Adoption, less deposit' else 'Adoption' end,
       v_buyer, v_goat, new.id
     )
     on conflict (sale_id) where sale_id is not null do update
@@ -226,7 +226,7 @@ begin
   if v_goat is not null then
     if new.sold_on is not null then
       update public.goats
-      set status = 'sold', left_herd_on = coalesce(new.pickup_on, new.sold_on), left_herd_reason = 'Sold to ' || v_buyer
+      set status = 'sold', left_herd_on = coalesce(new.pickup_on, new.sold_on), left_herd_reason = 'Adopted by ' || v_buyer
       where id = v_goat;
     elsif tg_op = 'UPDATE' and old.sold_on is not null then
       update public.goats set status = 'active', left_herd_on = null, left_herd_reason = null where id = v_goat and status = 'sold';

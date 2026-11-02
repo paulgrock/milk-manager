@@ -52,10 +52,10 @@ _Avoid_: Upcoming, almost due
 The order does come onto the milking stand. Milk entry lists them that way, so typing follows the barn.
 _Avoid_: Sort order, line order
 
-### Kid sales
+### Adoptions
 
 **Buyer**:
-A person who reserves or buys a kid or goat from the farm. The farm keeps them from year to year.
+A person who reserves or adopts a kid or goat from the farm. The farm keeps them from year to year.
 _Avoid_: Customer, client, contact
 
 **Kidding season**:
@@ -71,13 +71,13 @@ Where a reservation stands among others for the same doe's kids that season. Fir
 _Avoid_: Priority, rank, queue position
 
 **Deposit**:
-Money a buyer pays to hold a reservation. It comes off the price when they buy; otherwise it's refunded, kept, or moved to another doe or season.
+Money a buyer pays to hold a reservation. It comes off the price when they adopt; otherwise it's refunded, kept, or moved to another doe or season.
 _Avoid_: Down payment, hold fee
 
 **Match**:
-Pairing a kid that's been born with a reservation, before it's sold.
+Pairing a kid that's been born with a reservation, before it's adopted.
 _Avoid_: Assign, allocate
 
-**Sale**:
-One kid or goat going to a buyer for a price, with an optional pickup date. The goat leaves the herd on pickup.
-_Avoid_: Order, transaction
+**Adoption**:
+One kid or goat going to a buyer for a price, with an optional pickup date. The goat leaves the herd on pickup. The books still count it as a kid or goat sale.
+_Avoid_: Sale, purchase, order

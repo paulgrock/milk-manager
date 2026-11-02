@@ -35,7 +35,7 @@ async function remove() {
     open.value = false
   } catch (e) {
     const message = (e as Error).message
-    toast.add({ color: 'error', title: 'Could not delete', description: message.includes('foreign key') ? 'They have reservations or sales.' : message })
+    toast.add({ color: 'error', title: 'Could not delete', description: message.includes('foreign key') ? 'They have reservations or adoptions.' : message })
   }
 }
 </script>

@@ -43,13 +43,13 @@ select is((select count(*)::int from finance_entries), 1, 'matching a kid isn''t
 update sales set price_cents = 45000, sold_on = '2027-04-01', pickup_on = '2027-04-20';
 select results_eq(
   $$ select category, occurred_on, amount_cents, description from finance_entries where sale_id is not null $$,
-  $$ values ('kid_sale', '2027-04-01'::date, 35000, 'Sale, less deposit') $$,
+  $$ values ('kid_sale', '2027-04-01'::date, 35000, 'Adoption, less deposit') $$,
   'a sale puts the price less the deposit into Finances'
 );
 select is((select deposit_status from reservations), 'applied', 'the deposit is used up');
 select results_eq(
   $$ select status::text, left_herd_on, left_herd_reason from goats where barn_name = 'Clover kid' $$,
-  $$ values ('sold', '2027-04-20'::date, 'Sold to Jo Smith') $$,
+  $$ values ('sold', '2027-04-20'::date, 'Adopted by Jo Smith') $$,
   'the kid''s goat record is marked sold, leaving on pickup day'
 );
 

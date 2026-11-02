@@ -8,7 +8,7 @@ import type { Sale, SeasonKid } from '@/lib/sales'
 import BuyerPicker from './BuyerPicker.vue'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
 
-/** Records a sale: a matched kid being sold, an unreserved kid, or a goat from the herd. */
+/** Records an adoption: a matched kid going home, an unmatched kid, or a goat from the herd. */
 const props = defineProps<{ sale?: Sale; kid?: SeasonKid; kids?: SeasonKid[] }>()
 const open = defineModel<boolean>('open', { required: true })
 
@@ -85,11 +85,11 @@ async function submit() {
     })
     open.value = false
   } catch (e) {
-    toast.add({ color: 'error', title: 'Could not save sale', description: (e as Error).message })
+    toast.add({ color: 'error', title: 'Could not save adoption', description: (e as Error).message })
   }
 }
 
-// A sale from a reservation goes back to matched; any other sale is removed.
+// An adoption from a reservation goes back to matched; any other is removed.
 async function undo() {
   const s = props.sale!
   try {
@@ -103,7 +103,7 @@ async function undo() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="sale?.sold_on ? 'Edit sale' : 'Record a sale'">
+  <UModal v-model:open="open" :title="sale?.sold_on ? 'Edit adoption' : 'Record an adoption'">
     <template #body>
       <form id="sale-form" class="space-y-3" @submit.prevent="submit">
         <UFormField label="Buyer" required>
@@ -125,7 +125,7 @@ async function undo() {
               <template #leading><span class="text-muted">$</span></template>
             </UInput>
           </UFormField>
-          <UFormField label="Sold on" required>
+          <UFormField label="Adopted on" required>
             <UInput v-model="form.sold_on" type="date" required class="w-full" />
           </UFormField>
           <UFormField label="Pickup">
@@ -143,9 +143,9 @@ async function undo() {
     </template>
     <template #footer>
       <div class="flex gap-2 w-full">
-        <UButton v-if="sale?.sold_on" color="error" variant="ghost" @click="undo">{{ sale.reservation_id ? 'Not sold' : 'Delete sale' }}</UButton>
+        <UButton v-if="sale?.sold_on" color="error" variant="ghost" @click="undo">{{ sale.reservation_id ? 'Not adopted' : 'Delete adoption' }}</UButton>
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>
-        <UButton type="submit" form="sale-form" :loading="saveSale.isPending.value">Save sale</UButton>
+        <UButton type="submit" form="sale-form" :loading="saveSale.isPending.value">Save adoption</UButton>
       </div>
     </template>
   </UModal>

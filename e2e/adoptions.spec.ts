@@ -15,7 +15,11 @@ async function kidOf(herdId: string, doeId: string, sexes: ('doe' | 'buck')[]) {
 
 test('a reservation with a new buyer and a deposit puts the deposit in Finances', async ({ page, owner, herd }) => {
   await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe' })
-  await page.goto(`/sales?season=${season}`)
+  // Under Breeding, for owners.
+  await page.goto('/breeding')
+  await page.getByRole('link', { name: 'Adoptions' }).click()
+  await expect(page.getByRole('heading', { name: 'Adoptions' })).toBeVisible()
+  await page.goto(`/breeding/adoptions?season=${season}`)
   await page.getByRole('button', { name: 'New reservation' }).click()
   const dialog = page.getByRole('dialog', { name: 'New reservation' })
   await dialog.getByRole('combobox', { name: 'Buyer' }).fill('Jo Smith')
@@ -39,11 +43,11 @@ test('a reservation with a new buyer and a deposit puts the deposit in Finances'
   // It's in the books, but changed from Sales.
   await page.goto(`/finances?year=${isoDate().slice(0, 4)}`)
   await page.getByText(`Deposit for ${season} kids from Clover`).click()
-  await expect(page.getByRole('dialog').getByText('Recorded from Sales')).toBeVisible()
+  await expect(page.getByRole('dialog').getByText('Recorded from Adoptions')).toBeVisible()
   await expect(page.getByRole('dialog').getByRole('button', { name: 'Delete' })).toHaveCount(0)
 })
 
-test('kids are matched to the line in order, sold less the deposit, and leave the herd', async ({ page, owner, herd }) => {
+test('kids are matched to the line in order, adopted less the deposit, and leave the herd', async ({ page, owner, herd }) => {
   const clover = await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe' })
   const { data: buyers } = await admin.from('buyers').insert([{ herd_id: herd.id, name: 'Jo Smith' }, { herd_id: herd.id, name: 'Sam Lee' }]).select()
   const [jo, sam] = [buyers!.find((b) => b.name === 'Jo Smith')!, buyers!.find((b) => b.name === 'Sam Lee')!]
@@ -53,7 +57,7 @@ test('kids are matched to the line in order, sold less the deposit, and leave th
   ])
   await kidOf(herd.id, clover.id, ['doe', 'buck'])
 
-  await page.goto(`/sales?season=${season}`)
+  await page.goto(`/breeding/adoptions?season=${season}`)
   await expect(page.getByText(/Kidded .* · 1 doeling, 1 buckling/)).toBeVisible()
   const order = () => page.getByRole('button', { name: /^(Jo Smith|Sam Lee) · 1 (doeling|kid)/ }).allTextContents()
   await expect.poll(order).toEqual([expect.stringContaining('Jo Smith'), expect.stringContaining('Sam Lee')])
@@ -68,49 +72,49 @@ test('kids are matched to the line in order, sold less the deposit, and leave th
   await expect(joRow.getByText(/Clover's doeling/)).toBeVisible()
   expect(await finances(herd.id)).toHaveLength(1)
 
-  await joRow.getByRole('button', { name: 'Sell' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Record a sale' })
+  await joRow.getByRole('button', { name: 'Mark adopted' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Record an adoption' })
   await dialog.getByLabel('Price').fill('450')
   await expect(dialog.getByText('Less the $100.00 deposit: $350.00 goes into Finances.')).toBeVisible()
   await dialog.getByLabel('Pickup').fill(isoDate(30))
-  await dialog.getByRole('button', { name: 'Save sale' }).click()
+  await dialog.getByRole('button', { name: 'Save adoption' }).click()
   await expect(dialog).toBeHidden()
-  await expect(joRow).toContainText('$100.00 deposit used on a sale')
+  await expect(joRow).toContainText('$100.00 deposit used on an adoption')
   await expect(page.getByRole('button', { name: /Clover's doeling .* to Jo Smith/ })).toContainText('$450.00')
-  expect((await finances(herd.id)).map((f) => [f.amount_cents, f.description])).toEqual([[10000, `Deposit for ${season} kids from Clover`], [35000, 'Sale, less deposit']])
+  expect((await finances(herd.id)).map((f) => [f.amount_cents, f.description])).toEqual([[10000, `Deposit for ${season} kids from Clover`], [35000, 'Adoption, less deposit']])
 
   // The buckling nobody matched can be sold on its own.
-  await page.getByRole('listitem').filter({ hasText: 'not matched yet' }).getByRole('button', { name: 'Sell' }).click()
-  const second = page.getByRole('dialog', { name: 'Record a sale' })
+  await page.getByRole('listitem').filter({ hasText: 'not matched yet' }).getByRole('button', { name: 'Mark adopted' }).click()
+  const second = page.getByRole('dialog', { name: 'Record an adoption' })
   await second.getByRole('combobox', { name: 'Buyer' }).click()
   await page.getByRole('option', { name: 'Sam Lee' }).click()
   await second.getByLabel('Price').fill('300')
-  await second.getByRole('button', { name: 'Save sale' }).click()
+  await second.getByRole('button', { name: 'Save adoption' }).click()
   await expect(second).toBeHidden()
-  await expect(page.getByRole('heading', { name: 'Sold this season' }).locator('..')).toContainText('$750.00')
+  await expect(page.getByRole('heading', { name: 'Adopted this season' }).locator('..')).toContainText('$750.00')
 })
 
-test('selling a goat from the herd marks it sold and books a goat sale', async ({ page, owner, herd }) => {
+test('adopting out a goat from the herd marks it sold and books a goat sale', async ({ page, owner, herd }) => {
   const rosie = await addGoat(owner, herd.id, { barn_name: 'Rosie', sex: 'doe', birth_date: '2022-04-01' })
   await admin.from('buyers').insert({ herd_id: herd.id, name: 'Pat Jones' })
-  await page.goto('/sales')
-  await page.getByRole('button', { name: 'Record a sale' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Record a sale' })
+  await page.goto('/breeding/adoptions')
+  await page.getByRole('button', { name: 'Record an adoption' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Record an adoption' })
   await dialog.getByRole('combobox', { name: 'Buyer' }).click()
   await page.getByRole('option', { name: 'Pat Jones' }).click()
   await dialog.getByRole('tab', { name: 'A goat' }).click()
   await dialog.getByPlaceholder('Search goats…').fill('Rosie')
   await page.getByRole('option', { name: /Rosie/ }).click()
   await dialog.getByLabel('Price').fill('600')
-  await dialog.getByRole('button', { name: 'Save sale' }).click()
+  await dialog.getByRole('button', { name: 'Save adoption' }).click()
   await expect(dialog).toBeHidden()
 
-  expect(await finances(herd.id)).toEqual([{ category: 'goat_sale', amount_cents: 60000, party: 'Pat Jones', description: 'Sale' }])
+  expect(await finances(herd.id)).toEqual([{ category: 'goat_sale', amount_cents: 60000, party: 'Pat Jones', description: 'Adoption' }])
   const { data: goat } = await admin.from('goats').select('status, left_herd_on, left_herd_reason').eq('id', rosie.id).single()
-  expect(goat).toEqual({ status: 'sold', left_herd_on: isoDate(), left_herd_reason: 'Sold to Pat Jones' })
+  expect(goat).toEqual({ status: 'sold', left_herd_on: isoDate(), left_herd_reason: 'Adopted by Pat Jones' })
 })
 
-test('helpers don’t see sales', async ({ browser, herd }) => {
+test('helpers don’t see adoptions', async ({ browser, herd }) => {
   const helper = await createUser('helper')
   try {
     await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
@@ -119,9 +123,11 @@ test('helpers don’t see sales', async ({ browser, herd }) => {
     const page = await ctx.newPage()
     await page.goto('/')
     await expect(page.getByRole('link', { name: 'Health' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Sales' })).toHaveCount(0)
-    await page.goto('/sales')
-    await expect(page.getByText('Only owners can see sales.')).toBeVisible()
+    await page.goto('/breeding')
+    await expect(page.getByRole('heading', { name: 'Breeding' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Adoptions' })).toHaveCount(0)
+    await page.goto('/breeding/adoptions')
+    await expect(page.getByText('Only owners can see adoptions.')).toBeVisible()
     await ctx.close()
   } finally {
     await deleteUser(helper)

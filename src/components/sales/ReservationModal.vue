@@ -58,7 +58,7 @@ watch(
 )
 
 const wantsOptions = Object.entries(WANTS_LABELS).map(([value, label]) => ({ label, value }))
-// Once a sale has used the deposit, it's settled there.
+// Once an adoption has used the deposit, it's settled there.
 const depositLocked = computed(() => props.reservation?.deposit_status === 'applied')
 const statusOptions = (['held', 'refunded', 'kept'] as const).map((value) => ({ label: DEPOSIT_LABELS[value], value }))
 const progress = computed(() => (props.reservation ? reservationProgress(props.reservation, data.value.sales) : undefined))
@@ -124,7 +124,7 @@ async function remove() {
             <UInputNumber v-model="form.kid_count" :min="1" :max="10" class="w-full" />
           </UFormField>
         </div>
-        <p v-if="depositLocked" class="text-sm text-muted">The deposit has been taken off a sale's price.</p>
+        <p v-if="depositLocked" class="text-sm text-muted">The deposit has been taken off an adoption's price.</p>
         <div v-else class="grid grid-cols-3 gap-3">
           <UFormField label="Deposit">
             <UInput v-model="form.deposit" inputmode="decimal" class="w-full">
@@ -143,7 +143,7 @@ async function remove() {
         </UFormField>
         <UCheckbox v-if="reservation" v-model="form.cancelled" label="Cancelled" />
         <p v-if="progress?.matched" class="text-xs text-muted">
-          {{ progress.matched }} {{ progress.matched === 1 ? 'kid' : 'kids' }} matched, {{ progress.sold }} sold.
+          {{ progress.matched }} {{ progress.matched === 1 ? 'kid' : 'kids' }} matched, {{ progress.sold }} adopted.
         </p>
       </form>
     </template>

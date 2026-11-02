@@ -13,7 +13,6 @@ const allNav: NavigationMenuItem[] = [
   { label: 'Milk', icon: 'i-lucide-milk', to: '/milk' },
   { label: 'Cheese', icon: 'i-lucide-cylinder', to: '/cheese' },
   { label: 'Breeding', icon: 'i-lucide-heart', to: '/breeding' },
-  { label: 'Sales', icon: 'i-lucide-handshake', to: '/sales' },
   { label: 'Health', icon: 'i-lucide-stethoscope', to: '/health' },
   { label: 'Chores', icon: 'i-lucide-list-checks', to: '/chores' },
   { label: 'Calendar', icon: 'i-lucide-calendar', to: '/calendar' },
@@ -21,9 +20,8 @@ const allNav: NavigationMenuItem[] = [
   { label: 'Settings', icon: 'i-lucide-settings', to: '/settings' },
 ]
 
-// Finances and sales are owners-only, so helpers don't get those menu items.
-const OWNERS_ONLY = ['/finances', '/sales']
-const nav = computed(() => allNav.filter((item) => !OWNERS_ONLY.includes(item.to as string) || isOwner.value))
+// Finances are owners-only, so helpers don't get the menu item.
+const nav = computed(() => allNav.filter((item) => item.to !== '/finances' || isOwner.value))
 
 const herdOptions = computed(() =>
   (memberships.data.value ?? []).map((m) => ({ label: m.herd.name, value: m.herd.id })),

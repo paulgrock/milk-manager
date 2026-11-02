@@ -52,7 +52,7 @@ function fill(isOpen: boolean) {
   })
 }
 
-// Deposits and sales are kept in step with the Sales tab by the database.
+// Deposits and adoptions are kept in step with Adoptions by the database.
 const fromSales = computed(() => !!props.entry?.reservation_id || !!props.entry?.sale_id)
 
 const kindOptions = [
@@ -106,8 +106,8 @@ async function onDelete() {
         color="neutral"
         variant="subtle"
         icon="i-lucide-handshake"
-        title="Recorded from Sales"
-        description="This is a deposit or sale. Change it on the Sales tab, so the two stay in step."
+        title="Recorded from Adoptions"
+        description="This is a deposit or adoption. Change it under Breeding, Adoptions, so the two stay in step."
       />
       <form id="entry-form" class="space-y-3" @submit.prevent="submit">
         <fieldset :disabled="fromSales" class="space-y-3">
@@ -148,7 +148,7 @@ async function onDelete() {
       <div class="flex gap-2 w-full">
         <UButton v-if="entry && !fromSales" color="error" variant="ghost" @click="onDelete">Delete</UButton>
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>
-        <UButton v-if="fromSales" to="/sales">Go to Sales</UButton>
+        <UButton v-if="fromSales" to="/breeding/adoptions">Go to Adoptions</UButton>
         <UButton v-else type="submit" form="entry-form" :loading="save.isPending.value">Save</UButton>
       </div>
     </template>
