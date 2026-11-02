@@ -43,9 +43,9 @@ test('logging the care clears it from Today', async ({ page, owner, herd }) => {
 test('the calendar moves between months and filters by kind', async ({ page, owner, herd }) => {
   const rex = await addGoat(owner, herd.id, { barn_name: 'Rex', sex: 'buck' })
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
-  // Bred 10 days ago: due in about 140 days, a few months out.
-  await admin.from('breedings').insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate(-10) })
-  const due = isoDate(140)
+  // Bred today, so it's on this month's page whatever the date: due in about 150 days, a few months out.
+  await admin.from('breedings').insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate() })
+  const due = isoDate(150)
 
   await page.goto('/calendar')
   await expect(page.getByRole('link', { name: /Ina bred to Rex/ })).toBeVisible()
