@@ -26,7 +26,7 @@ async function submit() {
     })
     open.value = false
   } catch (e) {
-    toast.add({ color: 'error', title: 'Could not save buyer', description: (e as Error).message })
+    toast.add({ color: 'error', title: 'Could not save adopter', description: (e as Error).message })
   }
 }
 async function remove() {
@@ -41,7 +41,7 @@ async function remove() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="buyer ? 'Edit buyer' : 'New buyer'">
+  <UModal v-model:open="open" :title="buyer ? 'Edit adopter' : 'New adopter'">
     <template #body>
       <form id="buyer-form" class="space-y-3" @submit.prevent="submit">
         <UFormField label="Name" required><UInput v-model="form.name" maxlength="100" class="w-full" /></UFormField>

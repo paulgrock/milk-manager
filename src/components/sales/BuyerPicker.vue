@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useSalesData, useSalesMutations } from '@/composables/useSales'
 
-/** Picks a buyer, or adds one by typing a new name. */
+/** Picks an adopter, or adds one by typing a new name. */
 const model = defineModel<string | null>({ required: true })
 const toast = useToast()
 const { data } = useSalesData()
@@ -11,7 +11,7 @@ const { saveBuyer } = useSalesMutations()
 
 const items = computed(() => data.value.buyers.map((b) => ({ label: b.town ? `${b.name} (${b.town})` : b.name, value: b.id })))
 
-// A new buyer typed in: name now, contact details optional.
+// A new adopter typed in: name now, contact details optional.
 const draft = ref<{ name: string; phone: string; email: string }>()
 async function add() {
   if (!draft.value?.name.trim()) return
@@ -22,7 +22,7 @@ async function add() {
     model.value = buyer.id
     draft.value = undefined
   } catch (e) {
-    toast.add({ color: 'error', title: 'Could not add buyer', description: (e as Error).message })
+    toast.add({ color: 'error', title: 'Could not add adopter', description: (e as Error).message })
   }
 }
 </script>
@@ -33,23 +33,23 @@ async function add() {
       :model-value="model ?? undefined"
       :items="items"
       value-key="value"
-      placeholder="Search or add a buyer…"
+      placeholder="Search or add an adopter…"
       create-item
       open-on-click
       class="w-full"
-      aria-label="Buyer"
+      aria-label="Adopter"
       @update:model-value="(v: unknown) => (model = (v as string) ?? null)"
       @create="(name: string) => (draft = { name: name.trim(), phone: '', email: '' })"
     />
     <div v-if="draft" class="rounded-md border border-default p-3 space-y-2">
-      <p class="text-sm font-medium">New buyer: {{ draft.name }}</p>
+      <p class="text-sm font-medium">New adopter: {{ draft.name }}</p>
       <div class="grid grid-cols-2 gap-2">
-        <UInput v-model="draft.phone" type="tel" placeholder="Phone" aria-label="New buyer phone" />
-        <UInput v-model="draft.email" type="email" placeholder="Email" aria-label="New buyer email" />
+        <UInput v-model="draft.phone" type="tel" placeholder="Phone" aria-label="New adopter phone" />
+        <UInput v-model="draft.email" type="email" placeholder="Email" aria-label="New adopter email" />
       </div>
       <div class="flex gap-2 justify-end">
         <UButton size="xs" color="neutral" variant="ghost" @click="draft = undefined">Cancel</UButton>
-        <UButton size="xs" :loading="saveBuyer.isPending.value" @click="add">Add buyer</UButton>
+        <UButton size="xs" :loading="saveBuyer.isPending.value" @click="add">Add adopter</UButton>
       </div>
     </div>
   </div>

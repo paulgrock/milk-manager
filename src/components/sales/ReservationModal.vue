@@ -64,7 +64,7 @@ const statusOptions = (['held', 'refunded', 'kept'] as const).map((value) => ({ 
 const progress = computed(() => (props.reservation ? reservationProgress(props.reservation, data.value.sales) : undefined))
 
 async function submit() {
-  if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick a buyer' })
+  if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick an adopter' })
   const deposit = parseMoney(form.deposit)
   if (deposit === 'invalid') return toast.add({ color: 'error', title: 'Deposit must be an amount like 100 or 100.00' })
   // A new reservation goes to the end of its doe's line.
@@ -109,7 +109,7 @@ async function remove() {
   <UModal v-model:open="open" :title="reservation ? 'Edit reservation' : 'New reservation'">
     <template #body>
       <form id="reservation-form" class="space-y-3" @submit.prevent="submit">
-        <UFormField label="Buyer" required><BuyerPicker v-model="form.buyer_id" /></UFormField>
+        <UFormField label="Adopter" required><BuyerPicker v-model="form.buyer_id" /></UFormField>
         <UFormField label="Kids from" hint="Leave empty for any doe">
           <HerdGoatPicker v-model="form.doe_id" placeholder="Any doe" />
         </UFormField>
@@ -124,7 +124,7 @@ async function remove() {
             <UInputNumber v-model="form.kid_count" :min="1" :max="10" class="w-full" />
           </UFormField>
         </div>
-        <p v-if="depositLocked" class="text-sm text-muted">The deposit has been taken off an adoption's price.</p>
+        <p v-if="depositLocked" class="text-sm text-muted">The deposit has been taken off the adoption fee.</p>
         <div v-else class="grid grid-cols-3 gap-3">
           <UFormField label="Deposit">
             <UInput v-model="form.deposit" inputmode="decimal" class="w-full">

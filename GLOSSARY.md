@@ -54,16 +54,16 @@ _Avoid_: Sort order, line order
 
 ### Adoptions
 
-**Buyer**:
+**Adopter**:
 A person who reserves or adopts a kid or goat from the farm. The farm keeps them from year to year.
-_Avoid_: Customer, client, contact
+_Avoid_: Buyer, customer, client
 
 **Kidding season**:
 The year a doe's kids are born. A reservation is for one season.
 _Avoid_: Year, kidding year
 
 **Reservation**:
-A buyer's place in line for kids in a kidding season: from one doe or any doe, of the sex they want, and how many.
+An adopter's place in line for kids in a kidding season: from one doe or any doe, of the sex they want, and how many.
 _Avoid_: Waitlist entry, hold, booking
 
 **Place in line**:
@@ -71,7 +71,7 @@ Where a reservation stands among others for the same doe's kids that season. Fir
 _Avoid_: Priority, rank, queue position
 
 **Deposit**:
-Money a buyer pays to hold a reservation. It comes off the price when they adopt; otherwise it's refunded, kept, or moved to another doe or season.
+Money an adopter pays to hold a reservation. It comes off the adoption fee when they adopt; otherwise it's refunded, kept, or moved to another doe or season.
 _Avoid_: Down payment, hold fee
 
 **Match**:
@@ -79,5 +79,9 @@ Pairing a kid that's been born with a reservation, before it's adopted.
 _Avoid_: Assign, allocate
 
 **Adoption**:
-One kid or goat going to a buyer for a price, with an optional pickup date. The goat leaves the herd on pickup. The books still count it as a kid or goat sale.
+One kid or goat going to an adopter for an adoption fee, with an optional pickup date. The goat leaves the herd on pickup. The books still count it as a kid or goat sale.
 _Avoid_: Sale, purchase, order
+
+**Adoption fee**:
+What an adopter pays for a kid or goat, before any deposit comes off.
+_Avoid_: Price, sale price

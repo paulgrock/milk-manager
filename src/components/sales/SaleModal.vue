@@ -53,7 +53,7 @@ const whatOptions = [
 const reservation = computed(() => data.value.reservations.find((r) => r.id === props.sale?.reservation_id))
 const buyerFixed = computed(() => !!reservation.value)
 
-// The deposit comes off the price: either already (this sale used it) or when it's saved.
+// The deposit comes off the adoption fee: either already (this sale used it) or when it's saved.
 const deposit = computed(() => {
   if (props.sale?.deposit_applied_cents) return props.sale.deposit_applied_cents
   return reservation.value?.deposit_status === 'held' ? (reservation.value.deposit_cents ?? 0) : 0
@@ -62,8 +62,8 @@ const price = computed(() => parseMoney(form.price))
 const balance = computed(() => (typeof price.value === 'number' ? Math.max(0, price.value - Math.min(deposit.value, price.value)) : null))
 
 async function submit() {
-  if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick a buyer' })
-  if (typeof price.value !== 'number') return toast.add({ color: 'error', title: 'Enter the price, like 450 or 450.00' })
+  if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick an adopter' })
+  if (typeof price.value !== 'number') return toast.add({ color: 'error', title: 'Enter the adoption fee, like 450 or 450.00' })
   const kid = (props.kids ?? []).find((k) => k.kid.id === form.kid_id) ?? props.kid
   const values =
     form.what === 'kid' || props.sale?.kid_id
@@ -106,7 +106,7 @@ async function undo() {
   <UModal v-model:open="open" :title="sale?.sold_on ? 'Edit adoption' : 'Record an adoption'">
     <template #body>
       <form id="sale-form" class="space-y-3" @submit.prevent="submit">
-        <UFormField label="Buyer" required>
+        <UFormField label="Adopter" required>
           <BuyerPicker v-if="!buyerFixed" v-model="form.buyer_id" />
           <p v-else class="text-sm">{{ data.buyers.find((b) => b.id === form.buyer_id)?.name }} (from their reservation)</p>
         </UFormField>
@@ -120,7 +120,7 @@ async function undo() {
           </UFormField>
         </template>
         <div class="grid grid-cols-3 gap-3">
-          <UFormField label="Price" required>
+          <UFormField label="Adoption fee" required>
             <UInput v-model="form.price" inputmode="decimal" class="w-full">
               <template #leading><span class="text-muted">$</span></template>
             </UInput>

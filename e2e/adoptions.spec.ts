@@ -13,7 +13,7 @@ async function kidOf(herdId: string, doeId: string, sexes: ('doe' | 'buck')[]) {
   await admin.from('kids').insert(sexes.map((sex) => ({ herd_id: herdId, kidding_id: kidding!.id, sex })))
 }
 
-test('a reservation with a new buyer and a deposit puts the deposit in Finances', async ({ page, owner, herd }) => {
+test('a reservation with a new adopter and a deposit puts the deposit in Finances', async ({ page, owner, herd }) => {
   await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe' })
   // Under Breeding, for owners.
   await page.goto('/breeding')
@@ -22,11 +22,11 @@ test('a reservation with a new buyer and a deposit puts the deposit in Finances'
   await page.goto(`/breeding/adoptions?season=${season}`)
   await page.getByRole('button', { name: 'New reservation' }).click()
   const dialog = page.getByRole('dialog', { name: 'New reservation' })
-  await dialog.getByRole('combobox', { name: 'Buyer' }).fill('Jo Smith')
+  await dialog.getByRole('combobox', { name: 'Adopter' }).fill('Jo Smith')
   await page.getByRole('option', { name: /Create "Jo Smith"/ }).click()
-  await dialog.getByLabel('New buyer phone').fill('555-0100')
-  await dialog.getByRole('button', { name: 'Add buyer' }).click()
-  await expect(dialog.getByRole('combobox', { name: 'Buyer' })).toHaveValue('Jo Smith')
+  await dialog.getByLabel('New adopter phone').fill('555-0100')
+  await dialog.getByRole('button', { name: 'Add adopter' }).click()
+  await expect(dialog.getByRole('combobox', { name: 'Adopter' })).toHaveValue('Jo Smith')
   await dialog.getByPlaceholder('Any doe').fill('Clov')
   await page.getByRole('option', { name: /Clover/ }).click()
   await dialog.getByRole('combobox', { name: 'Wants' }).click()
@@ -74,7 +74,7 @@ test('kids are matched to the line in order, adopted less the deposit, and leave
 
   await joRow.getByRole('button', { name: 'Mark adopted' }).click()
   const dialog = page.getByRole('dialog', { name: 'Record an adoption' })
-  await dialog.getByLabel('Price').fill('450')
+  await dialog.getByLabel('Adoption fee').fill('450')
   await expect(dialog.getByText('Less the $100.00 deposit: $350.00 goes into Finances.')).toBeVisible()
   await dialog.getByLabel('Pickup').fill(isoDate(30))
   await dialog.getByRole('button', { name: 'Save adoption' }).click()
@@ -86,9 +86,9 @@ test('kids are matched to the line in order, adopted less the deposit, and leave
   // The buckling nobody matched can be sold on its own.
   await page.getByRole('listitem').filter({ hasText: 'not matched yet' }).getByRole('button', { name: 'Mark adopted' }).click()
   const second = page.getByRole('dialog', { name: 'Record an adoption' })
-  await second.getByRole('combobox', { name: 'Buyer' }).click()
+  await second.getByRole('combobox', { name: 'Adopter' }).click()
   await page.getByRole('option', { name: 'Sam Lee' }).click()
-  await second.getByLabel('Price').fill('300')
+  await second.getByLabel('Adoption fee').fill('300')
   await second.getByRole('button', { name: 'Save adoption' }).click()
   await expect(second).toBeHidden()
   await expect(page.getByRole('heading', { name: 'Adopted this season' }).locator('..')).toContainText('$750.00')
@@ -100,12 +100,12 @@ test('adopting out a goat from the herd marks it sold and books a goat sale', as
   await page.goto('/breeding/adoptions')
   await page.getByRole('button', { name: 'Record an adoption' }).click()
   const dialog = page.getByRole('dialog', { name: 'Record an adoption' })
-  await dialog.getByRole('combobox', { name: 'Buyer' }).click()
+  await dialog.getByRole('combobox', { name: 'Adopter' }).click()
   await page.getByRole('option', { name: 'Pat Jones' }).click()
   await dialog.getByRole('tab', { name: 'A goat' }).click()
   await dialog.getByPlaceholder('Search goats…').fill('Rosie')
   await page.getByRole('option', { name: /Rosie/ }).click()
-  await dialog.getByLabel('Price').fill('600')
+  await dialog.getByLabel('Adoption fee').fill('600')
   await dialog.getByRole('button', { name: 'Save adoption' }).click()
   await expect(dialog).toBeHidden()
 

@@ -134,11 +134,11 @@ chores show on Today, and all due dates on the calendar under a Chores filter. *
 repeat time, at most 7 days, for care as well as chores.
 
 ## 14. Adoptions: kid reservations (built, not live yet)
-An Adoptions page under Breeding, owners only. **Buyers** are kept year to year. A **reservation** holds a buyer's
+An Adoptions page under Breeding, owners only. **Adopters** are kept year to year. A **reservation** holds an adopter's
 place in line for one doe's kids (or any doe's) in a kidding season: the sex wanted (doeling, buckling, wether or
 either) and how many. Its **deposit** goes into Finances the day it's received; marking it refunded takes it back out,
 and it can be kept or moved to another doe or season. Once a doe kids, each reservation is **matched** to a kid that
-fits, in line order; marking it **adopted** puts the price less the deposit into Finances (Kid sales, or Goat sales for
+fits, in line order; marking it **adopted** puts the adoption fee less the deposit into Finances (Kid sales, or Goat sales for
 an adult) and marks the goat sold, leaving on the pickup date. Unmatched kids and goats from the herd can be adopted
 out the same way. Finance entries made this way are changed from Adoptions. Not yet: default prices by sex,
 reservations on the doe's page, and registration-transfer paperwork.

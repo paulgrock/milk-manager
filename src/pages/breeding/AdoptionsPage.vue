@@ -47,7 +47,7 @@ const doeName = (id: string) => {
   const g = byId.value.get(id)
   return g ? g.barn_name || goatName(g) : 'Unknown doe'
 }
-const buyerName = (id: string) => data.value.buyers.find((b) => b.id === id)?.name ?? 'Unknown buyer'
+const buyerName = (id: string) => data.value.buyers.find((b) => b.id === id)?.name ?? 'Unknown adopter'
 
 const kids = computed(() => seasonKids(breeding.value.kiddings, breeding.value.kids, byId.value, season.value))
 const kidById = computed(() => new Map(kids.value.map((k) => [k.kid.id, k])))
@@ -258,11 +258,11 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
           <div class="flex items-center">
-            <h2 class="font-semibold flex-1">Buyers</h2>
-            <UButton size="xs" variant="soft" icon="i-lucide-plus" @click="buyerModal = { open: true }">Add buyer</UButton>
+            <h2 class="font-semibold flex-1">Adopters</h2>
+            <UButton size="xs" variant="soft" icon="i-lucide-plus" @click="buyerModal = { open: true }">Add adopter</UButton>
           </div>
         </template>
-        <p v-if="!data.buyers.length" class="p-4 text-muted">No buyers yet.</p>
+        <p v-if="!data.buyers.length" class="p-4 text-muted">No adopters yet.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="b in data.buyers" :key="b.id">
             <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50" @click="buyerModal = { open: true, buyer: b }">
