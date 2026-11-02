@@ -45,3 +45,39 @@ _Avoid_: Never done, overdue
 **Due soon**:
 Coming due within a quarter of its repeat time, and never more than 7 days ahead. Applies to care and chores alike.
 _Avoid_: Upcoming, almost due
+
+### Milk
+
+**Milking order**:
+The order does come onto the milking stand. Milk entry lists them that way, so typing follows the barn.
+_Avoid_: Sort order, line order
+
+### Kid sales
+
+**Buyer**:
+A person who reserves or buys a kid or goat from the farm. The farm keeps them from year to year.
+_Avoid_: Customer, client, contact
+
+**Kidding season**:
+The year a doe's kids are born. A reservation is for one season.
+_Avoid_: Year, kidding year
+
+**Reservation**:
+A buyer's place in line for kids in a kidding season: from one doe or any doe, of the sex they want, and how many.
+_Avoid_: Waitlist entry, hold, booking
+
+**Place in line**:
+Where a reservation stands among others for the same doe's kids that season. First in line gets first pick.
+_Avoid_: Priority, rank, queue position
+
+**Deposit**:
+Money a buyer pays to hold a reservation. It comes off the price when they buy; otherwise it's refunded, kept, or moved to another doe or season.
+_Avoid_: Down payment, hold fee
+
+**Match**:
+Pairing a kid that's been born with a reservation, before it's sold.
+_Avoid_: Assign, allocate
+
+**Sale**:
+One kid or goat going to a buyer for a price, with an optional pickup date. The goat leaves the herd on pickup.
+_Avoid_: Order, transaction

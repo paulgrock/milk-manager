@@ -10,6 +10,8 @@ const entry = (over: Partial<FinanceEntry>): FinanceEntry => ({
   amount_cents: 2500,
   description: null,
   party: null,
+  reservation_id: null,
+  sale_id: null,
   goat_id: null,
   breeding_id: null,
   notes: null,

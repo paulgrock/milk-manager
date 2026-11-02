@@ -52,6 +52,9 @@ function fill(isOpen: boolean) {
   })
 }
 
+// Deposits and sales are kept in step with the Sales tab by the database.
+const fromSales = computed(() => !!props.entry?.reservation_id || !!props.entry?.sale_id)
+
 const kindOptions = [
   { label: 'Expense', value: 'expense' },
   { label: 'Income', value: 'income' },
@@ -97,7 +100,17 @@ async function onDelete() {
 <template>
   <UModal v-model:open="open" :title="entry ? 'Edit entry' : form.kind === 'income' ? 'Add income' : 'Add expense'">
     <template #body>
+      <UAlert
+        v-if="fromSales"
+        class="mb-3"
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-handshake"
+        title="Recorded from Sales"
+        description="This is a deposit or sale. Change it on the Sales tab, so the two stay in step."
+      />
       <form id="entry-form" class="space-y-3" @submit.prevent="submit">
+        <fieldset :disabled="fromSales" class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <UFormField label="Type">
             <USelect v-model="form.kind" :items="kindOptions" class="w-full" />
@@ -128,13 +141,15 @@ async function onDelete() {
         <UFormField label="Notes">
           <UTextarea v-model="form.notes" :rows="2" autoresize class="w-full" />
         </UFormField>
+        </fieldset>
       </form>
     </template>
     <template #footer>
       <div class="flex gap-2 w-full">
-        <UButton v-if="entry" color="error" variant="ghost" @click="onDelete">Delete</UButton>
+        <UButton v-if="entry && !fromSales" color="error" variant="ghost" @click="onDelete">Delete</UButton>
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>
-        <UButton type="submit" form="entry-form" :loading="save.isPending.value">Save</UButton>
+        <UButton v-if="fromSales" to="/sales">Go to Sales</UButton>
+        <UButton v-else type="submit" form="entry-form" :loading="save.isPending.value">Save</UButton>
       </div>
     </template>
   </UModal>

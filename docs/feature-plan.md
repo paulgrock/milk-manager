@@ -133,6 +133,18 @@ adds chores; owners rename, re-time or hide them. A chore not recorded yet stays
 chores show on Today, and all due dates on the calendar under a Chores filter. **Due soon** is now a quarter of the
 repeat time, at most 7 days, for care as well as chores.
 
+## 14. Kid reservations and sales (built, not live yet)
+A Sales tab, owners only. **Buyers** are kept year to year. A **reservation** holds a buyer's place in line for one
+doe's kids (or any doe's) in a kidding season: the sex wanted (doeling, buckling, wether or either) and how many.
+Its **deposit** goes into Finances the day it's received; marking it refunded takes it back out, and it can be kept
+or moved to another doe or season. Once a doe kids, each reservation is **matched** to a kid that fits, in line
+order; selling it puts the price less the deposit into Finances (Kid sales, or Goat sales for an adult) and marks the
+goat sold, leaving on the pickup date. Unmatched kids and goats from the herd can be sold the same way. Finance
+entries made this way are changed from the Sales tab. Not yet: default prices by sex, reservations on the doe's page,
+and registration-transfer paperwork.
+
+Milk entry also has a **milking order**, set by anyone in the herd, so the list follows the milking stand.
+
 ## Whole-app review (2026-10-31)
 Reviewed after Cheese went live: bundle sizes, unused code and packages, repeated code, data loading, offline
 behavior, tests and tooling. Security was audited separately on 2026-10-23.
