@@ -61,6 +61,12 @@ export function goatName(goat: Named): string {
   return goat.registered_name?.trim() || goat.barn_name?.trim() || 'Unnamed'
 }
 
+/** The milk line's order: as set on the milk page, then by barn name for does not placed yet. */
+export function byMilkingOrder(a: Goat, b: Goat): number {
+  const pos = (g: Goat) => g.milking_position ?? Number.MAX_SAFE_INTEGER
+  return pos(a) - pos(b) || (a.barn_name || goatName(a)).localeCompare(b.barn_name || goatName(b))
+}
+
 /** Name with titles, the way it's written on a pedigree: "GCH Some Farm Ocean Flower 6*M *D". */
 export function goatFullName(goat: Titled): string {
   return [goat.title_prefix, goatName(goat), goat.title_suffix]

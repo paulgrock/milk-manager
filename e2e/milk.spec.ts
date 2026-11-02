@@ -147,3 +147,31 @@ test('flags a past day with only one milking', async ({ page, owner, herd }) => 
   await page.goto('/milk/history')
   await expect(page.getByText('Missing a milking: Clover')).toBeVisible()
 })
+
+test('the milk line can be put in milking order, and Enter follows it', async ({ page, owner, herd }) => {
+  for (const name of ['Apple', 'Clover', 'Pepper']) await addDoeInMilk(owner, herd.id, name)
+  const lineOrder = () => page.getByLabel(/^\w+ AM$/).evaluateAll((inputs) => inputs.map((i) => i.getAttribute('aria-label')))
+
+  await page.goto('/milk')
+  await page.getByRole('tab', { name: 'AM' }).click()
+  await expect.poll(lineOrder).toEqual(['Apple AM', 'Clover AM', 'Pepper AM'])
+
+  await page.getByRole('button', { name: 'Order' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Milking order' })
+  await dialog.getByRole('button', { name: 'Move Pepper up' }).click()
+  await dialog.getByRole('button', { name: 'Move Pepper up' }).click()
+  await dialog.getByRole('button', { name: 'Save order' }).click()
+  await expect.poll(lineOrder).toEqual(['Pepper AM', 'Apple AM', 'Clover AM'])
+
+  await page.getByLabel('Pepper AM').fill('40')
+  await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Apple AM')).toBeFocused()
+
+  // It's kept for the herd, not just this phone.
+  await expect
+    .poll(async () => (await admin.from('goats').select('barn_name').eq('herd_id', herd.id).order('milking_position')).data?.map((g) => g.barn_name))
+    .toEqual(['Pepper', 'Apple', 'Clover'])
+  await page.reload()
+  await page.getByRole('tab', { name: 'AM' }).click()
+  await expect.poll(lineOrder).toEqual(['Pepper AM', 'Apple AM', 'Clover AM'])
+})

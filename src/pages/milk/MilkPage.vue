@@ -7,7 +7,7 @@ import { useHerd } from '@/composables/useHerd'
 import { useHerdGoats, usePhotoUrls } from '@/composables/useGoats'
 import { shiftDate, useLactations, useMilkDay, useMilkSaves, useMilkUnits } from '@/composables/useMilk'
 import { formatDate, todayISO } from '@/lib/dates'
-import { goatName, iconPath, inHerdOn, type Goat } from '@/lib/goats'
+import { byMilkingOrder, goatName, iconPath, inHerdOn, type Goat } from '@/lib/goats'
 import {
   AM,
   DAY_TOTAL,
@@ -25,6 +25,7 @@ import {
 import MilkEntryRow from '@/components/milk/MilkEntryRow.vue'
 import MilkDayEditor from '@/components/milk/MilkDayEditor.vue'
 import LactationModal from '@/components/milk/LactationModal.vue'
+import MilkOrderModal from '@/components/milk/MilkOrderModal.vue'
 import { useHealthData } from '@/composables/useHealth'
 import { withdrawalOn } from '@/lib/health'
 
@@ -61,13 +62,13 @@ const entryUnitOptions = [
 ]
 const day = useMilkDay(date)
 
-// The milk line: does in milk on this date, by barn name.
+// The milk line: does in milk on this date, in the order they're milked.
 const line = computed(() =>
   (goats.data.value ?? [])
     .filter((goat) => inHerdOn(goat, date.value))
     .map((goat) => ({ goat, lactation: lactationOn(lactations.data.value ?? [], goat.id, date.value) }))
     .filter((x): x is { goat: Goat; lactation: Lactation } => !!x.lactation)
-    .sort((a, b) => (a.goat.barn_name || goatName(a.goat)).localeCompare(b.goat.barn_name || goatName(b.goat))),
+    .sort((a, b) => byMilkingOrder(a.goat, b.goat)),
 )
 
 const rowsByGoat = computed(() => {
@@ -151,10 +152,16 @@ function save(goat: Goat, text: string) {
   })
 }
 
-const rowRefs = ref<InstanceType<typeof MilkEntryRow>[]>([])
+// By goat, not an array of refs: Vue doesn't keep that in list order once the line is reordered.
+const rowRefs = new Map<string, InstanceType<typeof MilkEntryRow>>()
+function setRowRef(goatId: string, row: unknown) {
+  if (row) rowRefs.set(goatId, row as InstanceType<typeof MilkEntryRow>)
+  else rowRefs.delete(goatId)
+}
 async function focusNext(index: number) {
   await nextTick()
-  rowRefs.value[index + 1]?.focus()
+  const next = line.value[index + 1]
+  if (next) rowRefs.get(next.goat.id)?.focus()
 }
 
 const waiting = computed(() => pending.value.filter((p) => p.paused).length)
@@ -165,6 +172,7 @@ const editing = ref<Goat>()
 const editorOpen = computed({ get: () => !!editing.value, set: (v) => !v && (editing.value = undefined) })
 
 const lactationModal = ref<{ open: boolean; mode: 'start' | 'dryOff'; lactation?: Lactation }>({ open: false, mode: 'start' })
+const orderOpen = ref(false)
 const startLactation = () => (lactationModal.value = { open: true, mode: 'start' })
 const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, mode: 'dryOff', lactation })
 </script>
@@ -229,15 +237,20 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
     </UCard>
 
     <template v-else>
-      <p class="text-sm text-muted">
-        {{ formatDate(date) }} · {{ milkingLabel(milking) }} · {{ line.length }} {{ line.length === 1 ? 'doe' : 'does' }} in milk
-        <template v-if="milking === DAY_TOTAL"> · For days you only weighed once</template>
-      </p>
+      <div class="flex items-center gap-2">
+        <p class="text-sm text-muted flex-1">
+          {{ formatDate(date) }} · {{ milkingLabel(milking) }} · {{ line.length }} {{ line.length === 1 ? 'doe' : 'does' }} in milk
+          <template v-if="milking === DAY_TOTAL"> · For days you only weighed once</template>
+        </p>
+        <UButton v-if="line.length > 1" size="sm" color="neutral" variant="ghost" icon="i-lucide-arrow-down-up" :disabled="!online" @click="orderOpen = true">
+          Order
+        </UButton>
+      </div>
       <ul class="divide-y divide-default">
         <MilkEntryRow
           v-for="({ goat, lactation }, i) in line"
           :key="goat.id"
-          ref="rowRefs"
+          :ref="(row) => setRowRef(goat.id, row)"
           :goat="goat"
           :rows="rowsByGoat.get(goat.id) ?? []"
           :milking="milking"
@@ -295,5 +308,6 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
       :lactation="lactationModal.lactation"
       :date="date"
     />
+    <MilkOrderModal v-model:open="orderOpen" :goats="line.map((x) => x.goat)" />
   </div>
 </template>

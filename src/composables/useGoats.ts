@@ -1,6 +1,6 @@
 import { computed, watch } from 'vue'
 import { useOnline } from '@vueuse/core'
-import { refreshQueries } from '@/lib/queryClient'
+import { queryClient, refreshQueries } from '@/lib/queryClient'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { resizeImage } from '@/lib/images'
@@ -177,5 +177,17 @@ export function useGoatMutations() {
     onSuccess: () => refresh(goatKeys.photos(herdId.value)),
   })
 
-  return { saveGoat, deleteGoat, saveAppraisal, deleteAppraisal, uploadPhoto, deletePhoto, setPrimaryPhoto }
+  // The milk line's order, shown straight away and then saved.
+  const setMilkingOrder = useMutation({
+    mutationFn: async (goatIds: string[]) => unwrap(await supabase.rpc('set_milking_order', { goat_ids: goatIds })),
+    onMutate: (goatIds: string[]) => {
+      const position = new Map(goatIds.map((id, i) => [id, i + 1]))
+      queryClient.setQueryData<Goat[]>(goatKeys.goats(herdId.value), (goats) =>
+        goats?.map((g) => (position.has(g.id) ? { ...g, milking_position: position.get(g.id)! } : g)),
+      )
+    },
+    onSettled: () => refresh(goatKeys.goats(herdId.value)),
+  })
+
+  return { saveGoat, deleteGoat, saveAppraisal, deleteAppraisal, uploadPhoto, deletePhoto, setPrimaryPhoto, setMilkingOrder }
 }

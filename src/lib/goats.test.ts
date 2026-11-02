@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ageInYears,
   appraisalSummary,
+  byMilkingOrder,
   buildPedigree,
   filterGoats,
   formatAge,
@@ -44,6 +45,7 @@ function goat(overrides: Partial<Goat>): Goat {
     left_herd_on: null,
     left_herd_reason: null,
     notes: null,
+    milking_position: null,
     created_by: null,
     created_at: '',
     updated_at: '',
@@ -177,5 +179,17 @@ describe('inHerdOn', () => {
     expect(inHerdOn(goat({ status: 'sold' }), '2020-01-01')).toBe(false)
     expect(inHerdOn(goat({ status: 'reference' }), '2026-01-01')).toBe(false)
     expect(inHerdOn(goat({ status: 'for_sale' }), '2026-01-01')).toBe(true)
+  })
+})
+
+describe('byMilkingOrder', () => {
+  it('follows the milking order, then barn name for does not placed yet', () => {
+    const does = [
+      goat({ barn_name: 'Zinnia', milking_position: null }),
+      goat({ barn_name: 'Clover', milking_position: 2 }),
+      goat({ barn_name: 'Ina', milking_position: 1 }),
+      goat({ barn_name: 'Apple', milking_position: null }),
+    ]
+    expect(does.sort(byMilkingOrder).map((g) => g.barn_name)).toEqual(['Ina', 'Clover', 'Apple', 'Zinnia'])
   })
 })
