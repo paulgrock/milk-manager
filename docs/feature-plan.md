@@ -75,26 +75,20 @@ Fields are modeled on the Bird's Eye Farm goat listings.
   like the sign-in code one. Needs real email delivery (SMTP) on the hosted project. Supabase's invite email only works for people
   without an account yet; existing users would see the invite the next time they open the app.
 
-## Going live: sign-in email (to do)
-The site runs on Netlify (https://bef-milk-manager.netlify.app) with the hosted Supabase project, and Bird's Eye Farm's data is
-copied there (`scripts/copy-herd.ts`). What's left is email: Supabase's built-in sender only delivers to people on the Supabase
-team and a couple of times an hour, so invited helpers would never get a sign-in code, and the code template can't be set
-without custom SMTP. Plan: send through **Resend** from the birdseyefarm.com domain (free for 3,000 emails a month).
-1. Sign up at resend.com and add **birdseyefarm.com** under Domains.
-2. Add the DNS records Resend shows (DKIM, SPF, and an MX record for bounces) wherever birdseyefarm.com's DNS is managed,
-   then click **Verify** in Resend. It can take a few minutes up to a few hours.
-3. Create an API key in Resend with sending access.
-4. Supabase → Authentication → Emails → SMTP Settings, turn on custom SMTP (or use Resend → Integrations → Supabase,
-   which fills these in):
-   - Sender email `milk@birdseyefarm.com`, sender name `Milk Manager`
-   - Host `smtp.resend.com`, port `465`, username `resend`, password: the Resend API key
-5. Supabase → Authentication → Emails → Templates: for **Magic Link** and **Confirm signup**, set the subject to
-   `Your Milk Manager sign-in code` and paste in `supabase/templates/sign_in_code.html`, so emails carry a 6-digit code.
-6. Supabase → Authentication → Rate Limits: raise emails per hour (e.g. to 30) so a few people signing in at once aren't blocked.
-7. Check it: invite a helper's email in Settings, have them sign in, and confirm the code arrives from milk@birdseyefarm.com.
-
-Stopgap if DNS has to wait: Gmail SMTP with an app password (2-step verification on, then host `smtp.gmail.com`, port `465`,
-the Gmail address as username, the app password as password). Codes come from that Gmail address; about 500 a day.
+## Going live: sign-in email (done 2026-11-03)
+Sign-in codes go out through **Resend** from milk@birdseyefarm.com (free for 3,000 emails a month). Supabase's built-in
+sender only reaches people on the Supabase team, a few times an hour, and won't take a custom template.
+- **DNS:** birdseyefarm.com is registered at Namecheap but its DNS is hosted by Netlify (nameservers `dns1–4.p01.nsone.net`),
+  so the records live in Netlify → Domains → birdseyefarm.com → DNS settings: TXT `resend._domainkey` (DKIM), CNAMEs `send`
+  and `rsend` (sending, pointing at `*.forge.rmta.net`), and TXT `_dmarc` `v=DMARC1; p=none;`. Don't add them at Namecheap,
+  and leave its nameservers on Custom DNS.
+- **Supabase → Authentication → Emails → SMTP Settings:** host `smtp.resend.com`, port `465`, username `resend`, password a
+  Resend API key with sending access; sender `milk@birdseyefarm.com`, name `Milk Manager`.
+- **Templates:** Magic Link and Confirm signup both use `supabase/templates/sign_in_code.html`, subject
+  `Your Milk Manager sign-in code`.
+- **Sign In / Providers → Email → Email OTP Length: 6.** The hosted default is 8; the app's code boxes take 6, the same as
+  `otp_length` in `supabase/config.toml`.
+- **Rate Limits:** emails per hour raised to about 30.
 
 ## 11. Milk records, LA and photos on the farm website (P3)
 Show each goat's appraisals and DHI milk records on birdseyefarm.com straight from the app, so they're never typed twice.
