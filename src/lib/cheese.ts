@@ -1,6 +1,6 @@
 // Cheese makes: ready dates, status and monthly totals.
 import type { Database } from './database.types'
-import { addMonths } from './dates'
+import { addDays } from './breeding'
 
 type Tables = Database['public']['Tables']
 export type CheeseType = Tables['cheese_types']['Row']
@@ -9,9 +9,15 @@ export type CheeseMake = Tables['cheese_makes']['Row']
 /** Goat milk weighs about this much per US gallon. */
 export const LB_PER_GALLON = 8.6
 
-/** The made date plus the type's aging time; fresh cheese (0 months) is ready the same day. */
-export function readyDate(madeOn: string, agingMonths: number): string {
-  return agingMonths > 0 ? addMonths(madeOn, agingMonths) : madeOn
+/** The made date plus the type's aging time; fresh cheese (0 days) is ready the same day. */
+export function readyDate(madeOn: string, agingDays: number): string {
+  return addDays(madeOn, agingDays)
+}
+
+/** "fresh", "1 day", "45 days". */
+export function agingLabel(days: number): string {
+  if (!days) return 'fresh'
+  return days === 1 ? '1 day' : `${days} days`
 }
 
 export type MakeStatus = 'aging' | 'ready' | 'finished'

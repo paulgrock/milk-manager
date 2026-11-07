@@ -18,20 +18,20 @@ select pg_temp.act_as('00000000-0000-0000-0000-00000000000b', 'helper@example.co
 select public.accept_invite((select id from public.pending_invites() limit 1));
 
 select results_eq(
-  $$ select name, aging_months::int from cheese_types order by sort_order $$,
-  $$ values ('Chèvre', 0), ('Mozzarella', 0), ('Valençay', 1), ('Feta', 2), ('Tomme', 4), ('Cheddar', 6) $$,
+  $$ select name, aging_days::int from cheese_types order by sort_order $$,
+  $$ values ('Chèvre', 0), ('Mozzarella', 0), ('Valençay', 30), ('Feta', 60), ('Tomme', 120), ('Cheddar', 180) $$,
   'a new herd starts with the farm''s cheeses'
 );
 
 select lives_ok($$
-  insert into cheese_types (herd_id, name, aging_months) select id, 'Gouda', 3 from herds
+  insert into cheese_types (herd_id, name, aging_days) select id, 'Gouda', 90 from herds
 $$, 'a helper can add a cheese');
 select throws_ok($$
   insert into cheese_types (herd_id, name) select id, 'gouda' from herds
 $$, '23505', null, 'each cheese is in the list once');
 
-update cheese_types set aging_months = 12, hidden = true where name = 'Gouda';
-select is((select aging_months::int from cheese_types where name = 'Gouda'), 3, 'only owners change a cheese');
+update cheese_types set aging_days = 365, hidden = true where name = 'Gouda';
+select is((select aging_days::int from cheese_types where name = 'Gouda'), 90, 'only owners change a cheese');
 
 select lives_ok($$
   insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_gallons)

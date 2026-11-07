@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { parseGallons, readyDate, type CheeseMake, type CheeseType } from '@/lib/cheese'
+import { agingLabel, parseGallons, readyDate, type CheeseMake, type CheeseType } from '@/lib/cheese'
 
 const props = defineProps<{ make?: CheeseMake }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -39,28 +39,28 @@ watch(open, (isOpen) => {
 
 const types = computed(() => data.value.types.filter((t) => !t.hidden || t.id === form.typeId))
 const typeItems = computed(() =>
-  types.value.map((t) => ({ label: t.name, value: t.id, suffix: t.aging_months ? `${t.aging_months} mo` : 'fresh' })),
+  types.value.map((t) => ({ label: t.name, value: t.id, suffix: agingLabel(t.aging_days) })),
 )
 const type = computed(() => data.value.types.find((t) => t.id === form.typeId))
 
 watch([() => form.typeId, () => form.madeOn], () => {
-  if (!readyEdited.value && type.value && form.madeOn) form.readyOn = readyDate(form.madeOn, type.value.aging_months)
+  if (!readyEdited.value && type.value && form.madeOn) form.readyOn = readyDate(form.madeOn, type.value.aging_days)
 })
 
 // A cheese that isn't in the list yet: typed into the dropdown, added here.
-const newType = ref<{ name: string; months: number }>()
+const newType = ref<{ name: string; days: number }>()
 function onCreate(name: string) {
-  newType.value = { name: name.trim(), months: 0 }
+  newType.value = { name: name.trim(), days: 0 }
 }
 async function addType() {
   if (!newType.value?.name) return
   try {
     const created: CheeseType = await saveType.mutateAsync({
-      values: { name: newType.value.name, aging_months: newType.value.months, sort_order: data.value.types.length + 1 },
+      values: { name: newType.value.name, aging_days: newType.value.days, sort_order: data.value.types.length + 1 },
     })
     form.typeId = created.id
     readyEdited.value = false
-    form.readyOn = readyDate(form.madeOn, created.aging_months)
+    form.readyOn = readyDate(form.madeOn, created.aging_days)
     newType.value = undefined
   } catch (e) {
     const message = (e as Error).message
@@ -116,8 +116,8 @@ async function onDelete() {
         <div v-if="newType" class="rounded-md border border-default p-3 space-y-2">
           <p class="text-sm">Add <strong>{{ newType.name }}</strong> to your cheeses</p>
           <div class="flex items-end gap-2">
-            <UFormField label="Usually ages (months)" class="flex-1">
-              <UInputNumber v-model="newType.months" :min="0" :max="36" class="w-full" />
+            <UFormField label="Usually ages (days)" class="flex-1">
+              <UInputNumber v-model="newType.days" :min="0" :max="1095" class="w-full" />
             </UFormField>
             <UButton :loading="saveType.isPending.value" @click="addType">Add</UButton>
             <UButton color="neutral" variant="ghost" @click="newType = undefined">Cancel</UButton>
@@ -128,7 +128,7 @@ async function onDelete() {
           <UFormField label="Made" required>
             <UInput v-model="form.madeOn" type="date" required class="w-full" />
           </UFormField>
-          <UFormField label="Ready" required :hint="type && !readyEdited ? (type.aging_months ? `${type.aging_months} mo` : 'fresh') : undefined">
+          <UFormField label="Ready" required :hint="type && !readyEdited ? agingLabel(type.aging_days) : undefined">
             <UInput v-model="form.readyOn" type="date" :min="form.madeOn" required class="w-full" @update:model-value="readyEdited = true" />
           </UFormField>
           <UFormField label="Milk used" hint="Optional">

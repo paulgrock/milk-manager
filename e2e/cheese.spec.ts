@@ -1,4 +1,3 @@
-import { addMonths } from '../src/lib/dates.ts'
 import { admin, createUser, deleteUser, expect, signInContext, test } from './fixtures.ts'
 import { isoDate } from './seed.ts'
 
@@ -21,8 +20,8 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
   const dialog = page.getByRole('dialog', { name: 'New make' })
   await dialog.getByRole('combobox', { name: 'Cheese' }).click()
   await page.getByRole('option', { name: /Tomme/ }).click()
-  // Tomme ages 4 months.
-  await expect(dialog.getByLabel('Ready')).toHaveValue(addMonths(isoDate(), 4))
+  // Tomme ages 120 days.
+  await expect(dialog.getByLabel('Ready')).toHaveValue(isoDate(120))
   await dialog.getByLabel('Milk used').fill('2.5')
   await dialog.getByLabel('Notes').fill('First tomme of fall')
   await dialog.getByRole('button', { name: 'Save' }).click()
@@ -37,7 +36,7 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
   expect(await makes(herd.id)).toEqual([
     {
       made_on: isoDate(),
-      ready_on: addMonths(isoDate(), 4),
+      ready_on: isoDate(120),
       milk_gallons: 2.5,
       notes: 'First tomme of fall',
       finished_on: null,
@@ -53,15 +52,15 @@ test('a cheese not in the list can be added from the dropdown', async ({ page, h
   await dialog.getByRole('combobox', { name: 'Cheese' }).fill('Gouda')
   await page.getByRole('option', { name: /Create "Gouda"/ }).click()
   await expect(dialog.getByText('Add Gouda to your cheeses')).toBeVisible()
-  await dialog.getByRole('spinbutton', { name: 'Usually ages (months)' }).fill('3')
+  await dialog.getByRole('spinbutton', { name: 'Usually ages (days)' }).fill('21')
   await dialog.getByRole('button', { name: 'Add', exact: true }).click()
-  await expect(dialog.getByLabel('Ready')).toHaveValue(addMonths(isoDate(), 3))
+  await expect(dialog.getByLabel('Ready')).toHaveValue(isoDate(21))
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
 
   await expect(page.getByText('Gouda').first()).toBeVisible()
-  const { data } = await admin.from('cheese_types').select('aging_months').eq('herd_id', herd.id).eq('name', 'Gouda').single()
-  expect(data?.aging_months).toBe(3)
+  const { data } = await admin.from('cheese_types').select('aging_days').eq('herd_id', herd.id).eq('name', 'Gouda').single()
+  expect(data?.aging_days).toBe(21)
 })
 
 test('a ready make can be marked finished, and leaves the main list', async ({ page, herd }) => {
@@ -90,9 +89,9 @@ test('a ready make can be marked finished, and leaves the main list', async ({ p
 test('helpers can add a cheese but only owners rename, re-time or hide one', async ({ page, browser, herd }) => {
   // The owner sees the controls.
   await page.goto('/cheese')
-  await page.getByRole('spinbutton', { name: 'Feta aging months' }).fill('3')
-  await page.getByRole('spinbutton', { name: 'Feta aging months' }).blur()
-  await expect.poll(async () => (await admin.from('cheese_types').select('aging_months').eq('id', await typeId(herd.id, 'Feta')).single()).data?.aging_months).toBe(3)
+  await page.getByRole('spinbutton', { name: 'Feta aging days' }).fill('45')
+  await page.getByRole('spinbutton', { name: 'Feta aging days' }).blur()
+  await expect.poll(async () => (await admin.from('cheese_types').select('aging_days').eq('id', await typeId(herd.id, 'Feta')).single()).data?.aging_days).toBe(45)
 
   const helper = await createUser('helper')
   try {
@@ -102,7 +101,7 @@ test('helpers can add a cheese but only owners rename, re-time or hide one', asy
     const helperPage = await ctx.newPage()
     await helperPage.goto('/cheese')
     await expect(helperPage.getByText('Only owners can rename or hide these.')).toBeVisible()
-    await expect(helperPage.getByRole('spinbutton', { name: 'Feta aging months' })).toHaveCount(0)
+    await expect(helperPage.getByRole('spinbutton', { name: 'Feta aging days' })).toHaveCount(0)
     await helperPage.getByPlaceholder('Gouda, ricotta…').fill('Ricotta')
     await helperPage.getByRole('button', { name: 'Add', exact: true }).click()
     await expect(helperPage.getByText('Ricotta', { exact: true })).toBeVisible()

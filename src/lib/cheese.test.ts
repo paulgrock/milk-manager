@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { makeStatus, monthlyTotals, parseGallons, readyDate } from './cheese'
+import { agingLabel, makeStatus, monthlyTotals, parseGallons, readyDate } from './cheese'
 
 describe('readyDate', () => {
-  it('adds the aging time in months', () => {
-    expect(readyDate('2026-10-30', 2)).toBe('2026-12-30')
-    expect(readyDate('2026-10-30', 6)).toBe('2027-04-30')
-  })
-  it('keeps to the end of a shorter month', () => {
-    expect(readyDate('2026-08-31', 6)).toBe('2027-02-28')
+  it('adds the aging time in days', () => {
+    expect(readyDate('2026-10-30', 21)).toBe('2026-11-20')
+    expect(readyDate('2026-10-30', 60)).toBe('2026-12-29')
   })
   it('fresh cheese is ready the day it is made', () => {
     expect(readyDate('2026-10-30', 0)).toBe('2026-10-30')
+  })
+})
+
+describe('agingLabel', () => {
+  it('reads as fresh or a number of days', () => {
+    expect(agingLabel(0)).toBe('fresh')
+    expect(agingLabel(1)).toBe('1 day')
+    expect(agingLabel(45)).toBe('45 days')
   })
 })
 

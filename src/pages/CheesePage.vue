@@ -5,7 +5,7 @@ import { useHerd } from '@/composables/useHerd'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { daysBetween } from '@/lib/breeding'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
-import { STATUS_LABELS, makeStatus, monthlyTotals, type CheeseMake, type CheeseType } from '@/lib/cheese'
+import { STATUS_LABELS, agingLabel, makeStatus, monthlyTotals, type CheeseMake, type CheeseType } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 
 const today = todayISO()
@@ -34,18 +34,18 @@ const monthLabel = (m: string) => new Date(Number(m.slice(0, 4)), Number(m.slice
 const modal = ref<{ open: boolean; make?: CheeseMake }>({ open: false })
 
 // The cheese list: anyone can add; owners rename, change aging times and hide.
-const draft = reactive({ name: '', months: 0 })
+const draft = reactive({ name: '', days: 0 })
 async function addType() {
   if (!draft.name.trim()) return
   try {
-    await saveType.mutateAsync({ values: { name: draft.name.trim(), aging_months: draft.months, sort_order: data.value.types.length + 1 } })
-    Object.assign(draft, { name: '', months: 0 })
+    await saveType.mutateAsync({ values: { name: draft.name.trim(), aging_days: draft.days, sort_order: data.value.types.length + 1 } })
+    Object.assign(draft, { name: '', days: 0 })
   } catch (e) {
     const message = (e as Error).message
     toast.add({ color: 'error', title: 'Could not add', description: message.includes('duplicate') ? 'That cheese is already in the list.' : message })
   }
 }
-function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'aging_months' | 'hidden'>>) {
+function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'aging_days' | 'hidden'>>) {
   if (values.name !== undefined && !values.name.trim()) return
   saveType.mutate(
     { id: t.id, values: { name: t.name, ...values } },
@@ -152,14 +152,14 @@ function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'ag
               <!-- Kept together, so on a phone they wrap as one line under the name. -->
               <div class="flex items-center gap-2 ms-auto">
                 <UInputNumber
-                  :model-value="t.aging_months"
+                  :model-value="t.aging_days"
                   :min="0"
-                  :max="36"
+                  :max="1095"
                   class="w-28"
-                  :aria-label="`${t.name} aging months`"
-                  @update:model-value="(v: unknown) => updateType(t, { aging_months: Number(v) || 0 })"
+                  :aria-label="`${t.name} aging days`"
+                  @update:model-value="(v: unknown) => updateType(t, { aging_days: Number(v) || 0 })"
                 />
-                <span class="text-sm text-muted">months</span>
+                <span class="text-sm text-muted">days</span>
                 <UButton size="xs" color="neutral" variant="ghost" class="w-16 justify-center" @click="updateType(t, { hidden: !t.hidden })">
                   {{ t.hidden ? 'Restore' : 'Hide' }}
                 </UButton>
@@ -167,7 +167,7 @@ function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'ag
             </template>
             <template v-else>
               <span class="flex-1 font-medium">{{ t.name }}</span>
-              <span class="text-sm text-muted">{{ t.aging_months ? `${t.aging_months} months` : 'fresh' }}{{ t.hidden ? ' · hidden' : '' }}</span>
+              <span class="text-sm text-muted">{{ agingLabel(t.aging_days) }}{{ t.hidden ? ' · hidden' : '' }}</span>
             </template>
           </li>
         </ul>
@@ -175,8 +175,8 @@ function updateType(t: CheeseType, values: Partial<Pick<CheeseType, 'name' | 'ag
           <UFormField label="Add a cheese" class="flex-1 min-w-40">
             <UInput v-model="draft.name" placeholder="Gouda, ricotta…" maxlength="60" class="w-full" />
           </UFormField>
-          <UFormField label="Ages (months)">
-            <UInputNumber v-model="draft.months" :min="0" :max="36" class="w-28" />
+          <UFormField label="Ages (days)">
+            <UInputNumber v-model="draft.days" :min="0" :max="1095" class="w-28" />
           </UFormField>
           <UButton type="submit" variant="soft" :loading="saveType.isPending.value">Add</UButton>
         </form>

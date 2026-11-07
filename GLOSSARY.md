@@ -15,7 +15,7 @@ A kind of cheese the farm makes, such as chèvre or tomme, with its usual aging 
 _Avoid_: Cheese kind, recipe, style
 
 **Aging time**:
-How long a cheese type usually ages before it's ready, in months; zero for fresh cheese.
+How long a cheese type usually ages before it's ready, in days; zero for fresh cheese.
 _Avoid_: Cure time, ripening period
 
 **Ready date**:

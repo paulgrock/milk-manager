@@ -143,14 +143,14 @@ isOneToOne: false
                   ]
                 },"cheese_types": {
                   Row: {
-                    "aging_months": number,"created_at": string,"created_by": string | null,"herd_id": string,"hidden": boolean,"id": string,"name": string,"sort_order": number
+                    "aging_days": number,"created_at": string,"created_by": string | null,"herd_id": string,"hidden": boolean,"id": string,"name": string,"sort_order": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "aging_months"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id": string,"hidden"?: boolean,"id"?: string,"name": string,"sort_order"?: number
+                    "aging_days"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id": string,"hidden"?: boolean,"id"?: string,"name": string,"sort_order"?: number
                   }
                   Update: {
-                    "aging_months"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"hidden"?: boolean,"id"?: string,"name"?: string,"sort_order"?: number
+                    "aging_days"?: number,"created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"hidden"?: boolean,"id"?: string,"name"?: string,"sort_order"?: number
                   }
                   Relationships: [
                     {
