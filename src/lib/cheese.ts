@@ -21,10 +21,16 @@ export function agingLabel(days: number): string {
   return days === 1 ? '1 day' : `${days} days`
 }
 
-export type MakeStatus = 'aging' | 'ready' | 'finished'
+export type MakeStatus = 'fresh' | 'aging' | 'ready' | 'finished'
 
-export function makeStatus(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, today: string): MakeStatus {
+/** Fresh cheese is ready the day it's made, so it never waits to come ready. */
+export function isFresh(make: Pick<CheeseMake, 'made_on' | 'ready_on'>): boolean {
+  return make.ready_on <= make.made_on
+}
+
+export function makeStatus(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): MakeStatus {
   if (make.finished_on) return 'finished'
+  if (isFresh(make)) return 'fresh'
   return make.ready_on <= today ? 'ready' : 'aging'
 }
 
@@ -42,15 +48,23 @@ export function isCurrent(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finis
   return (make.made_on >= from && make.made_on <= today) || (make.ready_on >= from && make.ready_on <= to)
 }
 
-/** "Ready in 3 days", "Ready today", "Ready since Oct 2", "Finished Nov 1". */
-export function readyLabel(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, today: string): string {
+/** "Ready in 3 days", "Ready today", "Ready since Oct 2", "Fresh", "Finished Nov 1". */
+export function readyLabel(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): string {
   if (make.finished_on) return `Finished ${formatDate(make.finished_on)}`
+  if (isFresh(make)) return 'Fresh'
   const days = daysBetween(today, make.ready_on)
   if (days > 0) return `Ready ${relativeDays(days)}`
   return days === 0 ? 'Ready today' : `Ready since ${formatDate(make.ready_on)}`
 }
 
-export const STATUS_LABELS: Record<MakeStatus, string> = { aging: 'Aging', ready: 'Ready', finished: 'Finished' }
+export const STATUS_ICONS: Record<MakeStatus, string> = {
+  fresh: 'i-lucide-leaf',
+  aging: 'i-lucide-hourglass',
+  ready: 'i-lucide-check',
+  finished: 'i-lucide-archive',
+}
+
+export const STATUS_LABELS: Record<MakeStatus, string> = { fresh: 'Fresh', aging: 'Aging', ready: 'Ready', finished: 'Finished' }
 
 export interface MonthTotal {
   /** 'YYYY-MM' */

@@ -16,7 +16,7 @@ const { query, data } = useCheeseData()
 const type = computed(() => data.value.types.find((t) => t.id === route.params.type))
 // Every make of this cheese, newest first. Notes wait for the make's own page.
 const makes = computed(() => data.value.makes.filter((m) => m.cheese_type_id === type.value?.id))
-const STATUS_COLORS = { ready: 'primary', aging: 'neutral', finished: 'neutral' } as const
+const STATUS_COLORS = { fresh: 'primary', ready: 'primary', aging: 'neutral', finished: 'neutral' } as const
 
 const modalOpen = ref(false)
 </script>

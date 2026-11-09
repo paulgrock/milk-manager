@@ -98,4 +98,15 @@ describe('buildEvents', () => {
     expect(events.every((e) => e.group === 'chores' && e.href === '/chores')).toBe(true)
     expect(summary(buildEvents(input, '2026-10-20', '2026-10-20'))).toEqual(['2026-10-20 chore-done Clean stalls done'])
   })
+  it('shows cheese coming ready, but not fresh cheese or finished makes', () => {
+    const make = (id: string, made_on: string, ready_on: string, finished_on: string | null = null) =>
+      ({ id, herd_id: 'h', cheese_type_id: 't', made_on, ready_on, milk_gallons: null, notes: null, finished_on, created_by: null, created_at: '' })
+    const input = {
+      ...base,
+      cheeseTypes: [{ id: 't', herd_id: 'h', name: 'Feta', aging_days: 60, hidden: false, sort_order: 1, created_by: null, created_at: '' }],
+      cheeseMakes: [make('aging', '2026-09-01', '2026-10-31'), make('fresh', '2026-10-21', '2026-10-21'), make('done', '2026-09-01', '2026-10-25', '2026-10-21')],
+    }
+    const events = buildEvents(input, '2026-10-21', '2026-11-30')
+    expect(events.map((e) => e.href)).toEqual(['/cheese/makes/aging'])
+  })
 })

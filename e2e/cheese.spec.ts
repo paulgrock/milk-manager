@@ -97,6 +97,19 @@ test('a new make from a cheese’s page starts with that cheese', async ({ page,
   expect((await makes(herd.id))[0]?.cheese_types).toEqual({ name: 'Tomme' })
 })
 
+test('fresh cheese shows as fresh, not ready, and has no ready reminder', async ({ page, herd }) => {
+  await admin.from('cheese_makes').insert({ herd_id: herd.id, cheese_type_id: await typeId(herd.id, 'Chèvre'), made_on: isoDate(-1), ready_on: isoDate(-1) })
+  await page.goto('/cheese')
+  await expect(page.getByRole('heading', { name: 'Chèvre (1)' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Made / })).toContainText('Fresh')
+  await expect(page.getByRole('link', { name: /Made / })).not.toContainText('Ready')
+
+  await page.goto('/')
+  await expect(page.getByRole('main')).toBeVisible()
+  await page.waitForLoadState('networkidle')
+  await expect(page.getByText(/Chèvre .* ready/)).toHaveCount(0)
+})
+
 test('a cheese not in the list can be added from the dropdown', async ({ page, herd }) => {
   await page.goto('/cheese')
   await page.getByRole('button', { name: 'New make' }).click()

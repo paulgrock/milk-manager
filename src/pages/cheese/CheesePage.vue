@@ -4,7 +4,7 @@ import { useToast } from '@nuxt/ui/composables'
 import { useHerd } from '@/composables/useHerd'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { agingLabel, isCurrent, makeStatus, monthlyTotals, readyLabel } from '@/lib/cheese'
+import { STATUS_ICONS, agingLabel, isCurrent, makeStatus, monthlyTotals, readyLabel } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 import TypeSettings from '@/components/cheese/TypeSettings.vue'
 
@@ -74,9 +74,9 @@ async function addType() {
                 Made {{ formatDate(make.made_on) }}<span v-if="make.milk_gallons != null" class="text-muted"> · {{ gallons(make.milk_gallons) }}</span>
               </span>
               <UBadge
-                :color="makeStatus(make, today) === 'ready' ? 'primary' : 'neutral'"
+                :color="makeStatus(make, today) === 'aging' ? 'neutral' : 'primary'"
                 variant="subtle"
-                :icon="makeStatus(make, today) === 'ready' ? 'i-lucide-check' : 'i-lucide-hourglass'"
+                :icon="STATUS_ICONS[makeStatus(make, today)]"
               >
                 {{ readyLabel(make, today) }}
               </UBadge>

@@ -22,12 +22,17 @@ describe('agingLabel', () => {
 describe('makeStatus', () => {
   const today = '2026-10-30'
   it('is aging until the ready date, then ready', () => {
-    expect(makeStatus({ ready_on: '2026-12-30', finished_on: null }, today)).toBe('aging')
-    expect(makeStatus({ ready_on: today, finished_on: null }, today)).toBe('ready')
-    expect(makeStatus({ ready_on: '2026-09-01', finished_on: null }, today)).toBe('ready')
+    expect(makeStatus({ made_on: '2026-10-01', ready_on: '2026-12-30', finished_on: null }, today)).toBe('aging')
+    expect(makeStatus({ made_on: '2026-10-01', ready_on: today, finished_on: null }, today)).toBe('ready')
+    expect(makeStatus({ made_on: '2026-07-01', ready_on: '2026-09-01', finished_on: null }, today)).toBe('ready')
+  })
+  it('cheese ready the day it is made is fresh, not ready', () => {
+    expect(makeStatus({ made_on: today, ready_on: today, finished_on: null }, today)).toBe('fresh')
+    expect(makeStatus({ made_on: '2026-10-20', ready_on: '2026-10-20', finished_on: null }, today)).toBe('fresh')
   })
   it('a finished make stays finished, ready or not', () => {
-    expect(makeStatus({ ready_on: '2026-12-30', finished_on: '2026-10-30' }, today)).toBe('finished')
+    expect(makeStatus({ made_on: '2026-10-01', ready_on: '2026-12-30', finished_on: '2026-10-30' }, today)).toBe('finished')
+    expect(makeStatus({ made_on: today, ready_on: today, finished_on: today }, today)).toBe('finished')
   })
 })
 
@@ -77,10 +82,14 @@ describe('isCurrent', () => {
 
 describe('readyLabel', () => {
   const today = '2026-11-09'
+  const made_on = '2026-09-01'
   it('counts down, then says since when', () => {
-    expect(readyLabel({ ready_on: '2026-11-12', finished_on: null }, today)).toBe('Ready in 3 days')
-    expect(readyLabel({ ready_on: today, finished_on: null }, today)).toBe('Ready today')
-    expect(readyLabel({ ready_on: '2026-11-01', finished_on: null }, today)).toMatch(/^Ready since /)
-    expect(readyLabel({ ready_on: '2026-11-01', finished_on: '2026-11-05' }, today)).toMatch(/^Finished /)
+    expect(readyLabel({ made_on, ready_on: '2026-11-12', finished_on: null }, today)).toBe('Ready in 3 days')
+    expect(readyLabel({ made_on, ready_on: today, finished_on: null }, today)).toBe('Ready today')
+    expect(readyLabel({ made_on, ready_on: '2026-11-01', finished_on: null }, today)).toMatch(/^Ready since /)
+    expect(readyLabel({ made_on, ready_on: '2026-11-01', finished_on: '2026-11-05' }, today)).toMatch(/^Finished /)
+  })
+  it('fresh cheese just says fresh', () => {
+    expect(readyLabel({ made_on: today, ready_on: today, finished_on: null }, today)).toBe('Fresh')
   })
 })

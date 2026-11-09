@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { LB_PER_GALLON, makeStatus, readyLabel, type CheeseMake } from '@/lib/cheese'
+import { LB_PER_GALLON, STATUS_ICONS, makeStatus, readyLabel, type CheeseMake } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 
 const today = todayISO()
@@ -63,9 +63,9 @@ function markFinished() {
       <UCard>
         <div class="flex flex-wrap items-center gap-2 mb-4">
           <UBadge
-            :color="status === 'ready' ? 'primary' : 'neutral'"
+            :color="status === 'ready' || status === 'fresh' ? 'primary' : 'neutral'"
             variant="subtle"
-            :icon="status === 'ready' ? 'i-lucide-check' : status === 'aging' ? 'i-lucide-hourglass' : 'i-lucide-archive'"
+            :icon="STATUS_ICONS[status]"
           >
             {{ readyLabel(make, today) }}
           </UBadge>
