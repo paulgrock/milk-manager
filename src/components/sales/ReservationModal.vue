@@ -139,7 +139,7 @@ async function remove() {
           </UFormField>
         </div>
         <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" maxlength="2000" class="w-full" />
+          <UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full" />
         </UFormField>
         <UCheckbox v-if="reservation" v-model="form.cancelled" label="Cancelled" />
         <p v-if="progress?.matched" class="text-xs text-muted">

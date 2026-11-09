@@ -110,6 +110,7 @@ test('fresh cheese shows only as its cheese on the main page, and has no ready r
   await expect(page.getByRole('link', { name: /Chèvre\s*1 make/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Made / })).toHaveCount(0)
   await page.getByRole('link', { name: /Chèvre\s*1 make/ }).click()
+  await expect(page).toHaveURL(/\/cheese\/types\//)
   await expect(page.getByRole('main').getByRole('listitem')).toContainText('Fresh')
 
   await page.goto('/')
@@ -186,6 +187,28 @@ test('helpers can add a cheese but only owners rename, re-time or hide one', asy
   } finally {
     await deleteUser(helper)
   }
+})
+
+test('a make’s notes can run to 10,000 characters, and the box stops there', async ({ page, herd }) => {
+  await page.goto('/cheese')
+  await page.getByRole('button', { name: 'New make' }).click()
+  const dialog = page.getByRole('dialog', { name: 'New make' })
+  await dialog.getByRole('combobox', { name: 'Cheese' }).click()
+  await page.getByRole('option', { name: /Feta/ }).click()
+  await dialog.getByLabel('Notes').fill('x'.repeat(10_050))
+  await expect(dialog.getByLabel('Notes')).toHaveValue('x'.repeat(10_000))
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(dialog).toBeHidden()
+  await expect.poll(async () => (await makes(herd.id))[0]?.notes?.length).toBe(10_000)
+})
+
+test('the cheese list is alphabetical, including newly added ones', async ({ page, herd: _herd }) => {
+  await page.goto('/cheese')
+  await page.getByPlaceholder('Gouda, ricotta…').fill('brie')
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'brie name' })).toBeVisible()
+  const names = await page.getByRole('textbox', { name: / name$/ }).evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+  expect(names).toEqual(['brie', 'Cheddar', 'Chèvre', 'Feta', 'Mozzarella', 'Tomme', 'Valençay'])
 })
 
 test('cheese coming ready shows on the calendar and Today; cheese sales are a finance category', async ({ page, herd }) => {

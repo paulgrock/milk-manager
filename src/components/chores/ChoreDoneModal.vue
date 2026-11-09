@@ -47,7 +47,7 @@ function submit() {
           </UFormField>
         </div>
         <UFormField label="Notes">
-          <UInput v-model="form.notes" maxlength="500" class="w-full" />
+          <UInput v-model="form.notes" maxlength="10000" class="w-full" />
         </UFormField>
       </form>
       <section class="mt-6">

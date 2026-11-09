@@ -187,7 +187,7 @@ watch(open, () => (enteringDayTotal.value = false))
             </UInput>
           </UFormField>
           <UFormField label="Note">
-            <UInput v-model="fields[DAY_TOTAL]!.note" class="w-full" maxlength="500" @blur="save(DAY_TOTAL)" />
+            <UInput v-model="fields[DAY_TOTAL]!.note" class="w-full" maxlength="10000" @blur="save(DAY_TOTAL)" />
           </UFormField>
 
           <div v-if="isDayTotal" class="rounded-md border border-default p-3 space-y-2">
@@ -231,7 +231,7 @@ watch(open, () => (enteringDayTotal.value = false))
                 placeholder="Note"
                 size="sm"
                 class="w-full"
-                maxlength="500"
+                maxlength="10000"
                 :disabled="!rowFor(slot) && !fields[slot]!.text"
                 :aria-label="`${milkingLabel(slot)} note`"
                 @blur="save(slot)"

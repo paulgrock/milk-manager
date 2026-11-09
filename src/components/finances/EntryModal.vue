@@ -139,7 +139,7 @@ async function onDelete() {
           </UFormField>
         </div>
         <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" autoresize class="w-full" />
+          <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
         </UFormField>
         </fieldset>
       </form>

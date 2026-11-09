@@ -70,7 +70,7 @@ async function remove() {
           <URadioGroup v-model="form.result" :items="resultOptions" />
         </UFormField>
         <UFormField label="Notes">
-          <UInput v-model="form.notes" maxlength="1000" class="w-full" />
+          <UInput v-model="form.notes" maxlength="10000" class="w-full" />
         </UFormField>
       </form>
     </template>

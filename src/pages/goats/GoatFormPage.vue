@@ -332,7 +332,7 @@ async function remove() {
             </UFormField>
           </div>
           <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="4" autoresize class="w-full" />
+            <UTextarea v-model="form.notes" :rows="4" autoresize maxlength="10000" class="w-full" />
           </UFormField>
         </div>
       </UCard>

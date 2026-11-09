@@ -137,7 +137,7 @@ async function undo() {
         </p>
         <p v-else-if="balance !== null" class="text-sm text-muted">{{ formatMoney(balance) }} goes into Finances.</p>
         <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" maxlength="2000" class="w-full" />
+          <UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full" />
         </UFormField>
       </form>
     </template>

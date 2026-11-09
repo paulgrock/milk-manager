@@ -24,7 +24,8 @@ export function useCheeseData() {
         fetchAll<CheeseType>((from, to) => supabase.from('cheese_types').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
         fetchAll<CheeseMake>((from, to) => supabase.from('cheese_makes').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
       ])
-      types.sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+      // Alphabetical, ignoring case and accents (Chèvre sits with the Cs).
+      types.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
       makes.sort((a, b) => b.made_on.localeCompare(a.made_on) || b.created_at.localeCompare(a.created_at))
       return { types, makes }
     },
