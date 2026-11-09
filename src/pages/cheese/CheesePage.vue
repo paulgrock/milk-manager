@@ -71,7 +71,7 @@ async function addType() {
           <li v-for="make in current" :key="make.id">
             <RouterLink :to="`/cheese/makes/${make.id}`" class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span class="flex-1 min-w-40">
-                Made {{ formatDate(make.made_on) }}<span v-if="make.milk_gallons != null" class="text-muted"> · {{ gallons(make.milk_gallons) }}</span>
+                Made {{ formatDate(make.made_on) }}<span v-if="make.milk_gallons != null" class="text-muted"> · <span class="whitespace-nowrap">{{ gallons(make.milk_gallons) }}</span></span>
               </span>
               <UBadge
                 :color="makeStatus(make, today) === 'aging' ? 'neutral' : 'primary'"
