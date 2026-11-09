@@ -50,6 +50,8 @@ test('the calendar moves between months and filters by kind', async ({ page, own
   await page.goto('/calendar')
   await expect(page.getByRole('link', { name: /Ina bred to Rex/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Ina due to kid/ })).toHaveCount(0)
+  // Wide screens get the full grid; the compact phone grid stays hidden.
+  await expect(page.getByRole('group', { name: 'Month' })).toBeHidden()
 
   await page.goto(`/calendar?month=${due.slice(0, 7)}`)
   await expect(page.getByRole('link', { name: /Ina due to kid/ })).toBeVisible()

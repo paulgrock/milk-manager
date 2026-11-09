@@ -1,6 +1,6 @@
 // Runs in the "phone" project (Pixel 7): pages fit the screen with no sideways scrolling.
 import { admin, expect, test } from './fixtures.ts'
-import { addDoeInMilk, addMilkCurve, isoDate } from './seed.ts'
+import { addDoeInMilk, addGoat, addMilkCurve, isoDate } from './seed.ts'
 
 test('main pages fit a phone screen', async ({ page, owner, herd }) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Clover', 60)
@@ -25,4 +25,31 @@ test('milk entry boxes open the number keypad', async ({ page, owner, herd }) =>
   await addDoeInMilk(owner, herd.id, 'Clover')
   await page.goto('/milk')
   await expect(page.getByLabel(/^Clover /)).toHaveAttribute('inputmode', 'decimal')
+})
+
+test('the calendar shows a compact month with a dot per event, and a tap jumps to that day', async ({ page, owner, herd }) => {
+  const rex = await addGoat(owner, herd.id, { barn_name: 'Rex', sex: 'buck' })
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
+  // Both land on today: a breeding done today, and a hoof trim that's overdue (overdue moves to today).
+  await admin.from('breedings').insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate() })
+  const { data: hoof } = await admin.from('care_types').select('id').eq('herd_id', herd.id).eq('name', 'Hoof trim').single()
+  await admin.from('care_events').insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: hoof!.id, done_on: isoDate(-70) })
+
+  await page.goto('/calendar')
+  const month = page.getByRole('group', { name: 'Month' })
+  await expect(month).toBeVisible()
+  // Only days with something on them can be tapped: one button per day in the list.
+  // (How many depends on the date: the breeding also adds a "back in heat?" check 21 days on.)
+  const listDays = await page.getByRole('heading', { level: 2 }).count()
+  await expect(month.getByRole('button')).toHaveCount(listDays)
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+  const today = month.getByRole('button', { name: `${todayLabel}, 2 events` })
+  await expect(today.locator('span[aria-hidden] > span')).toHaveCount(2)
+  await expect(today.locator('.bg-warning')).toHaveCount(1)
+
+  await today.click()
+  await expect(today).toHaveAttribute('aria-pressed', 'true')
+  const section = page.locator('section[data-selected]')
+  await expect(section).toContainText(/Hoof trim: Ina/)
+  await expect(section).toBeInViewport()
 })
