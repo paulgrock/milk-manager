@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agingLabel, isCurrent, milkLabel, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
+import { agingLabel, isReadySoon, milkLabel, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
 
 describe('readyDate', () => {
   it('adds the aging time in days', () => {
@@ -62,21 +62,23 @@ describe('parseGallons', () => {
   })
 })
 
-describe('isCurrent', () => {
+describe('isReadySoon', () => {
   const today = '2026-11-09'
   const make = (made_on: string, ready_on: string, finished_on: string | null = null) => ({ made_on, ready_on, finished_on })
-  it('is made in the last week', () => {
-    expect(isCurrent(make('2026-11-02', '2027-03-01'), today)).toBe(true)
-    expect(isCurrent(make('2026-11-01', '2027-03-01'), today)).toBe(false)
+  it('is coming ready today or in the next week', () => {
+    expect(isReadySoon(make('2026-08-01', today), today)).toBe(true)
+    expect(isReadySoon(make('2026-08-01', '2026-11-16'), today)).toBe(true)
+    expect(isReadySoon(make('2026-08-01', '2026-11-17'), today)).toBe(false)
   })
-  it('is ready in the last week or the coming week', () => {
-    expect(isCurrent(make('2026-08-01', '2026-11-16'), today)).toBe(true)
-    expect(isCurrent(make('2026-08-01', '2026-11-02'), today)).toBe(true)
-    expect(isCurrent(make('2026-08-01', '2026-11-17'), today)).toBe(false)
-    expect(isCurrent(make('2026-08-01', '2026-11-01'), today)).toBe(false)
+  it('leaves out makes already ready, and ones just made that are a long way off', () => {
+    expect(isReadySoon(make('2026-08-01', '2026-11-08'), today)).toBe(false)
+    expect(isReadySoon(make('2026-11-08', '2027-03-01'), today)).toBe(false)
   })
-  it('a finished make is never current', () => {
-    expect(isCurrent(make('2026-11-09', '2026-11-09', '2026-11-09'), today)).toBe(false)
+  it('never lists fresh cheese', () => {
+    expect(isReadySoon(make(today, today), today)).toBe(false)
+  })
+  it('never lists a finished make', () => {
+    expect(isReadySoon(make('2026-08-01', '2026-11-10', '2026-11-09'), today)).toBe(false)
   })
 })
 

@@ -44,18 +44,17 @@ export function makeStatus(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'fini
   return make.ready_on <= today ? 'ready' : 'aging'
 }
 
-/** How many days either side of today counts as recent or ready soon, for the main cheese page. */
-export const CURRENT_WINDOW_DAYS = 7
+/** How many days ahead counts as ready soon, for the main cheese page. */
+export const READY_SOON_DAYS = 7
 
 /**
- * On the main cheese page: not finished, and made in the last week, or ready in the last or the coming week.
- * Anything older is only on its cheese type's page.
+ * On the main cheese page: not finished, and coming ready today or within the next week.
+ * Fresh cheese is ready the day it's made, so it never waits to come ready and isn't listed.
+ * Everything else is only on its cheese type's page.
  */
-export function isCurrent(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): boolean {
-  if (make.finished_on) return false
-  const from = addDays(today, -CURRENT_WINDOW_DAYS)
-  const to = addDays(today, CURRENT_WINDOW_DAYS)
-  return (make.made_on >= from && make.made_on <= today) || (make.ready_on >= from && make.ready_on <= to)
+export function isReadySoon(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): boolean {
+  if (make.finished_on || isFresh(make)) return false
+  return make.ready_on >= today && make.ready_on <= addDays(today, READY_SOON_DAYS)
 }
 
 /** "Ready in 3 days", "Ready today", "Ready since Oct 2", "Fresh", "Finished Nov 1". */

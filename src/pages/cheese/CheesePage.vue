@@ -4,7 +4,7 @@ import { useToast } from '@nuxt/ui/composables'
 import { useHerd } from '@/composables/useHerd'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { STATUS_ICONS, agingLabel, isCurrent, makeStatus, milkLabel, monthlyTotals, readyLabel } from '@/lib/cheese'
+import { STATUS_ICONS, agingLabel, isReadySoon, makeStatus, milkLabel, monthlyTotals, readyLabel } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 import TypeSettings from '@/components/cheese/TypeSettings.vue'
 
@@ -14,11 +14,11 @@ const { isOwner } = useHerd()
 const { query, data } = useCheeseData()
 const { saveType } = useCheeseMutations()
 
-// Each cheese with its makes from the last week and the coming one, soonest ready first.
+// Each cheese with its makes coming ready in the next week, soonest first. Fresh cheese never waits, so shows as a name only.
 const byType = computed(() =>
   data.value.types.map((type) => {
     const makes = data.value.makes.filter((m) => m.cheese_type_id === type.id)
-    const current = makes.filter((m) => isCurrent(m, today)).sort((a, b) => a.ready_on.localeCompare(b.ready_on))
+    const current = makes.filter((m) => isReadySoon(m, today)).sort((a, b) => a.ready_on.localeCompare(b.ready_on))
     return { type, total: makes.length, current }
   }),
 )
@@ -56,7 +56,7 @@ async function addType() {
 
     <template v-else>
       <UCard v-if="!withCurrent.length" class="text-center">
-        <p class="text-muted">Nothing made this week or coming ready in the next. Tap a cheese below to see all its makes.</p>
+        <p class="text-muted">Nothing coming ready in the next week. Tap a cheese below to see all its makes.</p>
       </UCard>
 
       <UCard v-for="{ type, current } in withCurrent" :key="type.id" :ui="{ header: 'p-0 sm:p-0', body: 'p-0 sm:p-0' }">
