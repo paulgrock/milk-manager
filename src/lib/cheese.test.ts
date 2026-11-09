@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agingLabel, isCurrent, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
+import { agingLabel, isCurrent, milkLabel, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
 
 describe('readyDate', () => {
   it('adds the aging time in days', () => {
@@ -91,5 +91,15 @@ describe('readyLabel', () => {
   })
   it('fresh cheese just says fresh', () => {
     expect(readyLabel({ made_on: today, ready_on: today, finished_on: null }, today)).toBe('Fresh')
+  })
+})
+
+describe('milkLabel', () => {
+  it('gives the gallons, with raw or pasteurized when noted', () => {
+    expect(milkLabel({ milk_gallons: 4, milk_treatment: 'raw' })).toBe('4 gal (raw)')
+    expect(milkLabel({ milk_gallons: 2.5, milk_treatment: 'pasteurized' })).toBe('2.5 gal (pasteurized)')
+    expect(milkLabel({ milk_gallons: 4, milk_treatment: null })).toBe('4 gal')
+    expect(milkLabel({ milk_gallons: null, milk_treatment: 'raw' })).toBe('raw milk')
+    expect(milkLabel({ milk_gallons: null, milk_treatment: null })).toBe('')
   })
 })

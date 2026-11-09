@@ -4,7 +4,7 @@ import { useToast } from '@nuxt/ui/composables'
 import { useHerd } from '@/composables/useHerd'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { STATUS_ICONS, agingLabel, isCurrent, makeStatus, monthlyTotals, readyLabel } from '@/lib/cheese'
+import { STATUS_ICONS, agingLabel, isCurrent, makeStatus, milkLabel, monthlyTotals, readyLabel } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 import TypeSettings from '@/components/cheese/TypeSettings.vue'
 
@@ -27,7 +27,6 @@ const withCurrent = computed(() => byType.value.filter((t) => t.current.length))
 const others = computed(() => byType.value.filter((t) => !t.current.length && (t.total || !t.type.hidden)))
 const months = computed(() => monthlyTotals(data.value.makes).slice(0, 6))
 
-const gallons = (g: number | null) => (g != null ? `${Number(g)} gal` : '')
 const monthLabel = (m: string) => new Date(Number(m.slice(0, 4)), Number(m.slice(5)) - 1, 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
 
 const modalOpen = ref(false)
@@ -71,7 +70,7 @@ async function addType() {
           <li v-for="make in current" :key="make.id">
             <RouterLink :to="`/cheese/makes/${make.id}`" class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span class="flex-1 min-w-40">
-                Made {{ formatDate(make.made_on) }}<span v-if="make.milk_gallons != null" class="text-muted"> · <span class="whitespace-nowrap">{{ gallons(make.milk_gallons) }}</span></span>
+                Made {{ formatDate(make.made_on) }}<span v-if="milkLabel(make)" class="text-muted"> · <span class="whitespace-nowrap">{{ milkLabel(make) }}</span></span>
               </span>
               <UBadge
                 :color="makeStatus(make, today) === 'aging' ? 'neutral' : 'primary'"

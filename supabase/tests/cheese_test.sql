@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(14);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'owner@example.com'),
@@ -45,6 +45,14 @@ select throws_ok($$
   insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_gallons)
   select herd_id, id, '2026-10-30', '2026-10-30', 0 from cheese_types where name = 'Chèvre'
 $$, '23514', null, 'milk used is more than nothing');
+select lives_ok($$
+  insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_treatment)
+  select herd_id, id, '2026-10-30', '2026-10-30', 'raw' from cheese_types where name = 'Chèvre'
+$$, 'a make records raw milk');
+select throws_ok($$
+  insert into cheese_makes (herd_id, cheese_type_id, made_on, ready_on, milk_treatment)
+  select herd_id, id, '2026-10-30', '2026-10-30', 'boiled' from cheese_types where name = 'Chèvre'
+$$, '23514', null, 'milk is raw or pasteurized');
 
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000a', 'owner@example.com');
 update cheese_types set hidden = true where name = 'Cheddar';

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { LB_PER_GALLON, STATUS_ICONS, makeStatus, readyLabel, type CheeseMake } from '@/lib/cheese'
+import { LB_PER_GALLON, STATUS_ICONS, makeStatus, milkLabel, readyLabel, type CheeseMake } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 
 const today = todayISO()
@@ -80,8 +80,8 @@ function markFinished() {
           <dd>{{ formatDate(make.ready_on) }}</dd>
           <dt class="text-muted">Milk used</dt>
           <dd>
-            <template v-if="make.milk_gallons != null">
-              {{ Number(make.milk_gallons) }} gal <span class="text-muted">≈ {{ Math.round(Number(make.milk_gallons) * LB_PER_GALLON) }} lb</span>
+            <template v-if="milkLabel(make)">
+              {{ milkLabel(make) }} <span v-if="make.milk_gallons != null" class="text-muted">≈ {{ Math.round(Number(make.milk_gallons) * LB_PER_GALLON) }} lb</span>
             </template>
             <span v-else class="text-muted">Not recorded</span>
           </dd>

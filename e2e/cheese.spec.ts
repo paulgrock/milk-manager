@@ -8,7 +8,7 @@ async function typeId(herdId: string, name: string) {
 async function makes(herdId: string) {
   const { data } = await admin
     .from('cheese_makes')
-    .select('made_on, ready_on, milk_gallons, notes, finished_on, cheese_types(name)')
+    .select('made_on, ready_on, milk_gallons, milk_treatment, notes, finished_on, cheese_types(name)')
     .eq('herd_id', herdId)
   return data ?? []
 }
@@ -23,13 +23,14 @@ test('a make gets its ready date from the cheese, and shows under its cheese', a
   // Tomme ages 120 days.
   await expect(dialog.getByLabel('Ready')).toHaveValue(isoDate(120))
   await dialog.getByLabel('Milk used').fill('2.5')
+  await dialog.getByRole('radio', { name: 'Raw' }).check()
   await dialog.getByLabel('Notes').fill('First tomme of fall')
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
 
   // Made today, so it's on the main page under Tomme: date and milk, but no notes.
   await expect(page.getByRole('heading', { name: 'Tomme (1)' })).toBeVisible()
-  const make = page.getByRole('link', { name: /Made .* 2\.5 gal/ })
+  const make = page.getByRole('link', { name: /Made .* 2\.5 gal \(raw\)/ })
   await expect(make).toContainText(/Ready in \d+ days/)
   await expect(page.getByText('First tomme of fall')).toHaveCount(0)
   await expect(page.getByRole('row', { name: /2\.5 gal ≈ 22 lb/ })).toBeVisible()
@@ -38,13 +39,14 @@ test('a make gets its ready date from the cheese, and shows under its cheese', a
   await make.click()
   await expect(page.getByRole('heading', { name: 'Tomme' })).toBeVisible()
   await expect(page.getByText('First tomme of fall')).toBeVisible()
-  await expect(page.getByText('2.5 gal ≈ 22 lb')).toBeVisible()
+  await expect(page.getByText('2.5 gal (raw) ≈ 22 lb')).toBeVisible()
 
   expect(await makes(herd.id)).toEqual([
     {
       made_on: isoDate(),
       ready_on: isoDate(120),
       milk_gallons: 2.5,
+      milk_treatment: 'raw',
       notes: 'First tomme of fall',
       finished_on: null,
       cheese_types: { name: 'Tomme' },

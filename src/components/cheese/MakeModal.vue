@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { agingLabel, parseGallons, readyDate, type CheeseMake, type CheeseType } from '@/lib/cheese'
+import { MILK_TREATMENT_LABELS, agingLabel, parseGallons, readyDate, type CheeseMake, type CheeseType, type MilkTreatment } from '@/lib/cheese'
 
 // typeId picks the cheese for a new make, as from a cheese type's page.
 const props = defineProps<{ make?: CheeseMake; typeId?: string }>()
@@ -18,6 +18,7 @@ const form = reactive({
   madeOn: todayISO(),
   readyOn: todayISO(),
   gallons: '',
+  treatment: undefined as MilkTreatment | undefined,
   notes: '',
   finished: false,
 })
@@ -32,6 +33,8 @@ watch(open, (isOpen) => {
     madeOn: m?.made_on ?? todayISO(),
     readyOn: m?.ready_on ?? todayISO(),
     gallons: m?.milk_gallons != null ? String(Number(m.milk_gallons)) : '',
+    // A new make starts with the milk the last one used; most farms always do the same.
+    treatment: ((m ? m.milk_treatment : data.value.makes[0]?.milk_treatment) ?? undefined) as MilkTreatment | undefined,
     notes: m?.notes ?? '',
     finished: !!m?.finished_on,
   })
@@ -47,6 +50,7 @@ const typeItems = computed(() =>
   types.value.map((t) => ({ label: t.name, value: t.id, suffix: agingLabel(t.aging_days) })),
 )
 const type = computed(() => data.value.types.find((t) => t.id === form.typeId))
+const treatmentItems = Object.entries(MILK_TREATMENT_LABELS).map(([value, label]) => ({ value, label }))
 
 watch([() => form.typeId, () => form.madeOn], () => {
   if (!readyEdited.value && type.value && form.madeOn) form.readyOn = readyDate(form.madeOn, type.value.aging_days)
@@ -86,6 +90,7 @@ async function submit() {
         made_on: form.madeOn,
         ready_on: form.readyOn,
         milk_gallons: gallons.value,
+        milk_treatment: form.treatment ?? null,
         notes: form.notes.trim() || null,
         finished_on: form.finished ? (props.make?.finished_on ?? todayISO()) : null,
       },
@@ -141,6 +146,9 @@ async function onDelete() {
             <UInput v-model="form.gallons" inputmode="decimal" class="w-full">
               <template #trailing><span class="text-xs text-muted">gal</span></template>
             </UInput>
+          </UFormField>
+          <UFormField label="Milk" hint="Optional">
+            <URadioGroup v-model="form.treatment" :items="treatmentItems" orientation="horizontal" class="pt-1.5" />
           </UFormField>
         </div>
         <UFormField label="Notes">

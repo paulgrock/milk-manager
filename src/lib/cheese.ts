@@ -7,6 +7,16 @@ type Tables = Database['public']['Tables']
 export type CheeseType = Tables['cheese_types']['Row']
 export type CheeseMake = Tables['cheese_makes']['Row']
 
+export type MilkTreatment = 'raw' | 'pasteurized'
+export const MILK_TREATMENT_LABELS: Record<MilkTreatment, string> = { raw: 'Raw', pasteurized: 'Pasteurized' }
+
+/** "4 gal (raw)", "4 gal", "raw milk", or '' when neither was noted. */
+export function milkLabel(make: Pick<CheeseMake, 'milk_gallons' | 'milk_treatment'>): string {
+  const treatment = make.milk_treatment ? MILK_TREATMENT_LABELS[make.milk_treatment as MilkTreatment].toLowerCase() : ''
+  if (make.milk_gallons == null) return treatment ? `${treatment} milk` : ''
+  return `${Number(make.milk_gallons)} gal${treatment ? ` (${treatment})` : ''}`
+}
+
 /** Goat milk weighs about this much per US gallon. */
 export const LB_PER_GALLON = 8.6
 

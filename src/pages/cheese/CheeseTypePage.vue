@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useHerd } from '@/composables/useHerd'
 import { useCheeseData } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { STATUS_LABELS, agingLabel, makeStatus } from '@/lib/cheese'
+import { STATUS_LABELS, agingLabel, makeStatus, milkLabel } from '@/lib/cheese'
 import MakeModal from '@/components/cheese/MakeModal.vue'
 import TypeSettings from '@/components/cheese/TypeSettings.vue'
 
@@ -45,7 +45,7 @@ const modalOpen = ref(false)
         <RouterLink :to="`/cheese/makes/${make.id}`" class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1">
           <span class="flex-1 min-w-40">
             {{ formatDate(make.made_on) }}
-            <span class="text-muted"> · {{ make.milk_gallons != null ? `${Number(make.milk_gallons)} gal` : 'milk not recorded' }}</span>
+            <span class="text-muted"> · {{ milkLabel(make) || 'milk not recorded' }}</span>
           </span>
           <UBadge :color="STATUS_COLORS[makeStatus(make, today)]" variant="subtle">{{ STATUS_LABELS[makeStatus(make, today)] }}</UBadge>
         </RouterLink>
