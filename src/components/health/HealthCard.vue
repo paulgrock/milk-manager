@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useCareLog, useHealthData } from '@/composables/useHealth'
+import { useHealthData } from '@/composables/useHealth'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
 import type { Goat } from '@/lib/goats'
 import {
@@ -12,11 +12,11 @@ import {
 } from '@/lib/health'
 import LogCareModal from './LogCareModal.vue'
 import TreatmentModal from './TreatmentModal.vue'
+import DeleteCareModal from './DeleteCareModal.vue'
 
 const props = defineProps<{ goat: Goat }>()
 const today = todayISO()
 const { data } = useHealthData()
-const { removeCare } = useCareLog()
 
 const care = computed(() =>
   data.value.careTypes.filter((t) => !t.archived).map((t) => careStatus(props.goat.id, t, data.value.careEvents, today)),
@@ -41,6 +41,7 @@ const typeUnit = (id: string) => data.value.careTypes.find((t) => t.id === id)?.
 
 const careModal = ref<{ open: boolean; careTypeId?: string }>({ open: false })
 const treatmentModal = ref<{ open: boolean; treatment?: Treatment }>({ open: false })
+const deleteModal = ref<{ open: boolean; event?: CareEvent }>({ open: false })
 
 function open(e: Event) {
   if (e.kind === 'treatment') treatmentModal.value = { open: true, treatment: e.treatment }
@@ -100,7 +101,7 @@ function open(e: Event) {
             variant="ghost"
             icon="i-lucide-trash-2"
             :aria-label="`Delete ${typeName(e.care.care_type_id)} on ${formatDate(e.date)}`"
-            @click="removeCare(e.care.id)"
+            @click="deleteModal = { open: true, event: e.care }"
           />
         </li>
       </ul>
@@ -111,5 +112,6 @@ function open(e: Event) {
 
     <LogCareModal v-model:open="careModal.open" :care-type-id="careModal.careTypeId" :goat-ids="[goat.id]" />
     <TreatmentModal v-model:open="treatmentModal.open" :goat-id="goat.id" :treatment="treatmentModal.treatment" />
+    <DeleteCareModal v-model:open="deleteModal.open" :event="deleteModal.event" />
   </UCard>
 </template>

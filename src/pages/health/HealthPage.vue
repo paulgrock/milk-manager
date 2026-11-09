@@ -6,9 +6,10 @@ import { useHerdGoats } from '@/composables/useGoats'
 import { useCareLog, useHealthData, useHealthMutations } from '@/composables/useHealth'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
 import { CURRENT_STATUSES, goatName, type Goat } from '@/lib/goats'
-import { careStatus, withdrawalOn, type CareStatus, type CareType } from '@/lib/health'
+import { careStatus, withdrawalOn, type CareEvent, type CareStatus, type CareType } from '@/lib/health'
 import LogCareModal from '@/components/health/LogCareModal.vue'
 import TreatmentModal from '@/components/health/TreatmentModal.vue'
+import DeleteCareModal from '@/components/health/DeleteCareModal.vue'
 
 const today = todayISO()
 const toast = useToast()
@@ -49,6 +50,14 @@ const careDue = computed(() =>
 const recentTreatments = computed(() =>
   [...data.value.treatments].sort((a, b) => b.started_on.localeCompare(a.started_on)).slice(0, 8),
 )
+
+const sortedCare = computed(() =>
+  [...data.value.careEvents].sort((a, b) => b.done_on.localeCompare(a.done_on) || b.created_at.localeCompare(a.created_at)),
+)
+const showAllCare = ref(false)
+const recentCare = computed(() => (showAllCare.value ? sortedCare.value : sortedCare.value.slice(0, 10)))
+const typeOf = (id: string) => data.value.careTypes.find((t) => t.id === id)
+const deleteModal = ref<{ open: boolean; event?: CareEvent }>({ open: false })
 
 function dueLabel(s: CareStatus) {
   return s.state === 'overdue' ? `${-s.daysUntilDue!} days overdue` : relativeDays(s.daysUntilDue!)
@@ -150,6 +159,35 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
 
 
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
+        <template #header><h2 class="font-semibold">Recent care</h2></template>
+        <p v-if="!sortedCare.length" class="p-4 text-muted">None logged yet.</p>
+        <ul v-else aria-label="Recent care" class="divide-y divide-default">
+          <li v-for="e in recentCare" :key="e.id" class="flex items-center gap-2 pe-2">
+            <RouterLink :to="pathOf(e.goat_id)" class="flex-1 flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
+              <span class="w-24 shrink-0 text-muted">{{ formatDate(e.done_on) }}</span>
+              <span class="flex-1">
+                {{ name(byId.get(e.goat_id)) }} · {{ typeOf(e.care_type_id)?.name ?? 'Care' }}<template v-if="e.dose"> · {{ Number(e.dose) }} {{ typeOf(e.care_type_id)?.dose_unit ?? '' }}</template>
+                <span v-if="e.notes" class="text-muted"> · {{ e.notes }}</span>
+              </span>
+            </RouterLink>
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-trash-2"
+              :aria-label="`Delete ${typeOf(e.care_type_id)?.name ?? 'care'} for ${name(byId.get(e.goat_id))} on ${formatDate(e.done_on)}`"
+              @click="deleteModal = { open: true, event: e }"
+            />
+          </li>
+        </ul>
+        <div v-if="sortedCare.length > 10" class="px-4 py-2 border-t border-default">
+          <UButton size="xs" variant="link" color="neutral" @click="showAllCare = !showAllCare">
+            {{ showAllCare ? 'Show less' : `Show all ${sortedCare.length}` }}
+          </UButton>
+        </div>
+      </UCard>
+
+      <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header><h2 class="font-semibold">Recent treatments</h2></template>
         <p v-if="!recentTreatments.length" class="p-4 text-muted">None recorded.</p>
         <ul v-else class="divide-y divide-default">
@@ -205,5 +243,6 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
 
     <LogCareModal v-model:open="careModal.open" :care-type-id="careModal.careTypeId" :goat-ids="careModal.goatIds" />
     <TreatmentModal v-model:open="treatmentOpen" />
+    <DeleteCareModal v-model:open="deleteModal.open" :event="deleteModal.event" :goat-name="deleteModal.event ? name(byId.get(deleteModal.event.goat_id)) : undefined" />
   </div>
 </template>

@@ -44,7 +44,7 @@ test('overdue care shows up and can be logged for just the goats that are due', 
 
   await page.goto('/health')
   await expect(page.getByText('Ina · 4 days overdue')).toBeVisible()
-  await expect(page.getByText(/Clover ·/)).toBeHidden()
+  await expect(page.getByRole('link', { name: /^Clover ·/ })).toBeHidden()
   await page.getByRole('button', { name: 'Log for these 1' }).click()
   await expect(page.getByRole('dialog').getByRole('checkbox', { name: 'Ina' })).toBeChecked()
   await expect(page.getByRole('dialog').getByRole('checkbox', { name: 'Clover' })).not.toBeChecked()
@@ -63,6 +63,55 @@ test('a copper bolus records its dose and shows on the goat', async ({ page, own
   await dialog.getByRole('button', { name: 'Log for 1' }).click()
   await expect(page.getByText('Copper bolus · 4 g')).toBeVisible()
   await expect(page.getByText(`Last ${shown(isoDate())} · next in 180 days`)).toBeVisible()
+})
+
+test('logged care can be deleted from the goat', async ({ page, owner, herd }) => {
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
+  const hoof = await careTypeId(herd.id, 'Hoof trim')
+  await admin.from('care_events').insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: hoof, done_on: isoDate(-3), notes: 'Logged by mistake' })
+
+  await page.goto(`/goats/${ina.id}`)
+  await expect(page.getByText('Hoof trim · Logged by mistake')).toBeVisible()
+  const trash = page.getByRole('button', { name: `Delete Hoof trim on ${shown(isoDate(-3))}` })
+  const confirm = page.getByRole('dialog', { name: 'Delete Hoof trim?' })
+
+  // Cancelling keeps it.
+  await trash.click()
+  await expect(confirm.getByText(`logged on ${shown(isoDate(-3))}. It can't be undone.`)).toBeVisible()
+  await confirm.getByRole('button', { name: 'Cancel' }).click()
+  await expect(confirm).toBeHidden()
+  await expect(page.getByText('Hoof trim · Logged by mistake')).toBeVisible()
+
+  await trash.click()
+  await confirm.getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByText('Hoof trim · Logged by mistake')).toBeHidden()
+
+  await expect.poll(async () => (await admin.from('care_events').select('id').eq('goat_id', ina.id)).data?.length).toBe(0)
+  await page.reload()
+  await expect(page.getByText('Hoof trim · Logged by mistake')).toBeHidden()
+})
+
+test('recent care is listed on the health page and can be deleted there', async ({ page, owner, herd }) => {
+  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
+  const clover = await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe' })
+  const hoof = await careTypeId(herd.id, 'Hoof trim')
+  const copper = await careTypeId(herd.id, 'Copper bolus')
+  await admin.from('care_events').insert([
+    { herd_id: herd.id, goat_id: ina.id, care_type_id: hoof, done_on: isoDate(-5) },
+    { herd_id: herd.id, goat_id: clover.id, care_type_id: copper, done_on: isoDate(-1), dose: 4 },
+  ])
+
+  await page.goto('/health')
+  const card = page.getByRole('list', { name: 'Recent care' })
+  await expect(card.getByRole('listitem')).toHaveText([/Clover · Copper bolus · 4 g/, /Ina · Hoof trim/])
+
+  await page.getByRole('button', { name: `Delete Hoof trim for Ina on ${shown(isoDate(-5))}` }).click()
+  const confirm = page.getByRole('dialog', { name: 'Delete Hoof trim?' })
+  await expect(confirm.getByText(`for Ina on ${shown(isoDate(-5))}`)).toBeVisible()
+  await confirm.getByRole('button', { name: 'Delete' }).click()
+
+  await expect(card.getByRole('listitem')).toHaveText([/Clover · Copper bolus/])
+  await expect.poll(async () => (await admin.from('care_events').select('goat_id').eq('herd_id', herd.id)).data).toEqual([{ goat_id: clover.id }])
 })
 
 test('a treatment withholds her milk: banner on her page, badge on milk entry, withheld total', async ({ page, owner, herd }) => {
