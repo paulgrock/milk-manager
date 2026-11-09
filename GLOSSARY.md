@@ -22,6 +22,10 @@ _Avoid_: Cure time, ripening period
 The day a make is expected to be ready to eat or sell: the make date plus its type's aging time, unless changed for that make.
 _Avoid_: Done date, due date
 
+**Fresh**:
+A make that's ready the day it's made (its ready date is its make date), such as chèvre. It has no wait, so it's never listed as coming ready.
+_Avoid_: Unaged
+
 **Finished**:
 A make that has all been eaten, sold or given away.
 _Avoid_: Closed, archived, used up

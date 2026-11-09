@@ -1,10 +1,21 @@
 // Cheese makes: ready dates, status and monthly totals.
 import type { Database } from './database.types'
-import { addDays } from './breeding'
+import { addDays, daysBetween } from './breeding'
+import { formatDate, relativeDays } from './dates'
 
 type Tables = Database['public']['Tables']
 export type CheeseType = Tables['cheese_types']['Row']
 export type CheeseMake = Tables['cheese_makes']['Row']
+
+export type MilkTreatment = 'raw' | 'pasteurized'
+export const MILK_TREATMENT_LABELS: Record<MilkTreatment, string> = { raw: 'Raw', pasteurized: 'Pasteurized' }
+
+/** "4 gal (raw)", "4 gal", "raw milk", or '' when neither was noted. */
+export function milkLabel(make: Pick<CheeseMake, 'milk_gallons' | 'milk_treatment'>): string {
+  const treatment = make.milk_treatment ? MILK_TREATMENT_LABELS[make.milk_treatment as MilkTreatment].toLowerCase() : ''
+  if (make.milk_gallons == null) return treatment ? `${treatment} milk` : ''
+  return `${Number(make.milk_gallons)} gal${treatment ? ` (${treatment})` : ''}`
+}
 
 /** Goat milk weighs about this much per US gallon. */
 export const LB_PER_GALLON = 8.6
@@ -20,14 +31,49 @@ export function agingLabel(days: number): string {
   return days === 1 ? '1 day' : `${days} days`
 }
 
-export type MakeStatus = 'aging' | 'ready' | 'finished'
+export type MakeStatus = 'fresh' | 'aging' | 'ready' | 'finished'
 
-export function makeStatus(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, today: string): MakeStatus {
+/** Fresh cheese is ready the day it's made, so it never waits to come ready. */
+export function isFresh(make: Pick<CheeseMake, 'made_on' | 'ready_on'>): boolean {
+  return make.ready_on <= make.made_on
+}
+
+export function makeStatus(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): MakeStatus {
   if (make.finished_on) return 'finished'
+  if (isFresh(make)) return 'fresh'
   return make.ready_on <= today ? 'ready' : 'aging'
 }
 
-export const STATUS_LABELS: Record<MakeStatus, string> = { aging: 'Aging', ready: 'Ready', finished: 'Finished' }
+/** How many days ahead counts as ready soon, for the main cheese page. */
+export const READY_SOON_DAYS = 7
+
+/**
+ * On the main cheese page: not finished, and coming ready today or within the next week.
+ * Fresh cheese is ready the day it's made, so it never waits to come ready and isn't listed.
+ * Everything else is only on its cheese type's page.
+ */
+export function isReadySoon(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): boolean {
+  if (make.finished_on || isFresh(make)) return false
+  return make.ready_on >= today && make.ready_on <= addDays(today, READY_SOON_DAYS)
+}
+
+/** "Ready in 3 days", "Ready today", "Ready since Oct 2", "Fresh", "Finished Nov 1". */
+export function readyLabel(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): string {
+  if (make.finished_on) return `Finished ${formatDate(make.finished_on)}`
+  if (isFresh(make)) return 'Fresh'
+  const days = daysBetween(today, make.ready_on)
+  if (days > 0) return `Ready ${relativeDays(days)}`
+  return days === 0 ? 'Ready today' : `Ready since ${formatDate(make.ready_on)}`
+}
+
+export const STATUS_ICONS: Record<MakeStatus, string> = {
+  fresh: 'i-lucide-leaf',
+  aging: 'i-lucide-hourglass',
+  ready: 'i-lucide-check',
+  finished: 'i-lucide-archive',
+}
+
+export const STATUS_LABELS: Record<MakeStatus, string> = { fresh: 'Fresh', aging: 'Aging', ready: 'Ready', finished: 'Finished' }
 
 export interface MonthTotal {
   /** 'YYYY-MM' */

@@ -8,7 +8,7 @@ import { STANDARD_DAYS } from './lactation'
 import { lactationOn, type Lactation } from './milk'
 import { CURRENT_STATUSES, goatName, type Goat } from './goats'
 import type { MilkTest } from './dhia'
-import type { CheeseMake, CheeseType } from './cheese'
+import { isFresh, type CheeseMake, type CheeseType } from './cheese'
 import { choreStatus, type Chore, type ChoreDone } from './chores'
 import { formatDate } from './dates'
 
@@ -239,16 +239,17 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
   }
 
   // Cheese coming ready. One that's been ready a while isn't a job to chase, so past dates are records, not overdue.
+  // Fresh cheese is ready the day it's made, so there's nothing to wait for.
   const cheeseNames = new Map((input.cheeseTypes ?? []).map((t) => [t.id, t.name]))
   for (const m of input.cheeseMakes ?? []) {
-    if (m.finished_on) continue
+    if (m.finished_on || isFresh(m)) continue
     add({
       date: m.ready_on,
       kind: 'cheese-ready',
       group: 'cheese',
       title: `${cheeseNames.get(m.cheese_type_id) ?? 'Cheese'} (${formatDate(m.made_on)}) ready`,
       done: m.ready_on < today,
-      href: '/cheese',
+      href: `/cheese/makes/${m.id}`,
     })
   }
 
