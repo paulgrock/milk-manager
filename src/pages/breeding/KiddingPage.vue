@@ -190,7 +190,7 @@ async function submit() {
         <div class="space-y-3">
           <UCheckbox v-model="startLactation" label="Start her new lactation (adds her to the milk line)" />
           <UFormField label="Notes">
-            <UTextarea v-model="notes" :rows="2" autoresize class="w-full" placeholder="Presentation, help needed, anything to remember" />
+            <UTextarea v-model="notes" :rows="2" autoresize maxlength="10000" class="w-full" placeholder="Presentation, help needed, anything to remember" />
           </UFormField>
         </div>
       </UCard>

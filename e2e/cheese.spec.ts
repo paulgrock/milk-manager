@@ -189,6 +189,19 @@ test('helpers can add a cheese but only owners rename, re-time or hide one', asy
   }
 })
 
+test('a make’s notes can run to 10,000 characters, and the box stops there', async ({ page, herd }) => {
+  await page.goto('/cheese')
+  await page.getByRole('button', { name: 'New make' }).click()
+  const dialog = page.getByRole('dialog', { name: 'New make' })
+  await dialog.getByRole('combobox', { name: 'Cheese' }).click()
+  await page.getByRole('option', { name: /Feta/ }).click()
+  await dialog.getByLabel('Notes').fill('x'.repeat(10_050))
+  await expect(dialog.getByLabel('Notes')).toHaveValue('x'.repeat(10_000))
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(dialog).toBeHidden()
+  await expect.poll(async () => (await makes(herd.id))[0]?.notes?.length).toBe(10_000)
+})
+
 test('the cheese list is alphabetical, including newly added ones', async ({ page, herd: _herd }) => {
   await page.goto('/cheese')
   await page.getByPlaceholder('Gouda, ricotta…').fill('brie')

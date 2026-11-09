@@ -50,7 +50,7 @@ async function remove() {
           <UFormField label="Email"><UInput v-model="form.email" type="email" maxlength="200" class="w-full" /></UFormField>
         </div>
         <UFormField label="Town"><UInput v-model="form.town" maxlength="100" class="w-full" /></UFormField>
-        <UFormField label="Notes"><UTextarea v-model="form.notes" :rows="2" maxlength="2000" class="w-full" /></UFormField>
+        <UFormField label="Notes"><UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full" /></UFormField>
       </form>
     </template>
     <template #footer>

@@ -199,7 +199,7 @@ async function onDelete() {
         </div>
       </UCard>
 
-      <UFormField label="Notes"><UTextarea v-model="form.notes" :rows="2" autoresize class="w-full" /></UFormField>
+      <UFormField label="Notes"><UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" /></UFormField>
       <UAlert
         v-if="save.isPaused.value"
         color="warning"

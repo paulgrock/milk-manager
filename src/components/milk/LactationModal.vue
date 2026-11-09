@@ -135,7 +135,7 @@ async function onDelete() {
             <UInput v-model="form.dried_off_on" type="date" class="w-full" />
           </UFormField>
           <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="2" autoresize class="w-full" />
+            <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
           </UFormField>
         </template>
       </form>
