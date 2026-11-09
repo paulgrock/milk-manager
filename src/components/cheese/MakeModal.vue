@@ -5,7 +5,9 @@ import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
 import { agingLabel, parseGallons, readyDate, type CheeseMake, type CheeseType } from '@/lib/cheese'
 
-const props = defineProps<{ make?: CheeseMake }>()
+// typeId picks the cheese for a new make, as from a cheese type's page.
+const props = defineProps<{ make?: CheeseMake; typeId?: string }>()
+const emit = defineEmits<{ deleted: [] }>()
 const open = defineModel<boolean>('open', { required: true })
 const toast = useToast()
 const { data } = useCheeseData()
@@ -26,7 +28,7 @@ watch(open, (isOpen) => {
   if (!isOpen) return
   const m = props.make
   Object.assign(form, {
-    typeId: m?.cheese_type_id,
+    typeId: m?.cheese_type_id ?? props.typeId,
     madeOn: m?.made_on ?? todayISO(),
     readyOn: m?.ready_on ?? todayISO(),
     gallons: m?.milk_gallons != null ? String(Number(m.milk_gallons)) : '',
@@ -35,6 +37,9 @@ watch(open, (isOpen) => {
   })
   readyEdited.value = !!m
   newType.value = undefined
+  // A cheese picked for us may be the same as last time, so the watch below wouldn't fire.
+  const picked = !m && data.value.types.find((t) => t.id === form.typeId)
+  if (picked) form.readyOn = readyDate(form.madeOn, picked.aging_days)
 })
 
 const types = computed(() => data.value.types.filter((t) => !t.hidden || t.id === form.typeId))
@@ -94,6 +99,7 @@ async function submit() {
 async function onDelete() {
   await removeMake.mutateAsync(props.make!.id)
   open.value = false
+  emit('deleted')
 }
 </script>
 

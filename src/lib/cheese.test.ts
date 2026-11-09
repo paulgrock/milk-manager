@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agingLabel, makeStatus, monthlyTotals, parseGallons, readyDate } from './cheese'
+import { agingLabel, isCurrent, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
 
 describe('readyDate', () => {
   it('adds the aging time in days', () => {
@@ -54,5 +54,33 @@ describe('parseGallons', () => {
   it('rejects anything else', () => {
     expect(parseGallons('two').ok).toBe(false)
     expect(parseGallons('0').ok).toBe(false)
+  })
+})
+
+describe('isCurrent', () => {
+  const today = '2026-11-09'
+  const make = (made_on: string, ready_on: string, finished_on: string | null = null) => ({ made_on, ready_on, finished_on })
+  it('is made in the last week', () => {
+    expect(isCurrent(make('2026-11-02', '2027-03-01'), today)).toBe(true)
+    expect(isCurrent(make('2026-11-01', '2027-03-01'), today)).toBe(false)
+  })
+  it('is ready in the last week or the coming week', () => {
+    expect(isCurrent(make('2026-08-01', '2026-11-16'), today)).toBe(true)
+    expect(isCurrent(make('2026-08-01', '2026-11-02'), today)).toBe(true)
+    expect(isCurrent(make('2026-08-01', '2026-11-17'), today)).toBe(false)
+    expect(isCurrent(make('2026-08-01', '2026-11-01'), today)).toBe(false)
+  })
+  it('a finished make is never current', () => {
+    expect(isCurrent(make('2026-11-09', '2026-11-09', '2026-11-09'), today)).toBe(false)
+  })
+})
+
+describe('readyLabel', () => {
+  const today = '2026-11-09'
+  it('counts down, then says since when', () => {
+    expect(readyLabel({ ready_on: '2026-11-12', finished_on: null }, today)).toBe('Ready in 3 days')
+    expect(readyLabel({ ready_on: today, finished_on: null }, today)).toBe('Ready today')
+    expect(readyLabel({ ready_on: '2026-11-01', finished_on: null }, today)).toMatch(/^Ready since /)
+    expect(readyLabel({ ready_on: '2026-11-01', finished_on: '2026-11-05' }, today)).toMatch(/^Finished /)
   })
 })

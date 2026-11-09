@@ -248,7 +248,7 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
       group: 'cheese',
       title: `${cheeseNames.get(m.cheese_type_id) ?? 'Cheese'} (${formatDate(m.made_on)}) ready`,
       done: m.ready_on < today,
-      href: '/cheese',
+      href: `/cheese/makes/${m.id}`,
     })
   }
 

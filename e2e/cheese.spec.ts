@@ -13,9 +13,9 @@ async function makes(herdId: string) {
   return data ?? []
 }
 
-test('a make gets its ready date from the cheese, and shows as aging', async ({ page, herd }) => {
+test('a make gets its ready date from the cheese, and shows under its cheese', async ({ page, herd }) => {
   await page.goto('/cheese')
-  await expect(page.getByText('No cheese aging.')).toBeVisible()
+  await expect(page.getByText('Nothing made this week')).toBeVisible()
   await page.getByRole('button', { name: 'New make' }).click()
   const dialog = page.getByRole('dialog', { name: 'New make' })
   await dialog.getByRole('combobox', { name: 'Cheese' }).click()
@@ -27,11 +27,18 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
 
-  await expect(page.getByRole('heading', { name: 'Aging (1)' })).toBeVisible()
-  const make = page.getByRole('button', { name: /Tomme · made/ })
-  await expect(make).toContainText('2.5 gal of milk')
+  // Made today, so it's on the main page under Tomme: date and milk, but no notes.
+  await expect(page.getByRole('heading', { name: 'Tomme (1)' })).toBeVisible()
+  const make = page.getByRole('link', { name: /Made .* 2\.5 gal/ })
   await expect(make).toContainText(/Ready in \d+ days/)
+  await expect(page.getByText('First tomme of fall')).toHaveCount(0)
   await expect(page.getByRole('row', { name: /2\.5 gal ≈ 22 lb/ })).toBeVisible()
+
+  // The notes are on the make's own page.
+  await make.click()
+  await expect(page.getByRole('heading', { name: 'Tomme' })).toBeVisible()
+  await expect(page.getByText('First tomme of fall')).toBeVisible()
+  await expect(page.getByText('2.5 gal ≈ 22 lb')).toBeVisible()
 
   expect(await makes(herd.id)).toEqual([
     {
@@ -43,6 +50,51 @@ test('a make gets its ready date from the cheese, and shows as aging', async ({ 
       cheese_types: { name: 'Tomme' },
     },
   ])
+})
+
+test('the main page keeps to this week; a cheese’s page lists all its makes', async ({ page, herd }) => {
+  const feta = await typeId(herd.id, 'Feta')
+  await admin.from('cheese_makes').insert([
+    // Ready in 3 days: on the main page.
+    { herd_id: herd.id, cheese_type_id: feta, made_on: isoDate(-57), ready_on: isoDate(3), milk_gallons: 3, notes: 'Brined in the crock' },
+    // Ready a month ago and still on hand: only on Feta's page.
+    { herd_id: herd.id, cheese_type_id: feta, made_on: isoDate(-90), ready_on: isoDate(-30), milk_gallons: 4 },
+    // Finished: only on Feta's page.
+    { herd_id: herd.id, cheese_type_id: feta, made_on: isoDate(-5), ready_on: isoDate(-5), finished_on: isoDate(-1) },
+  ])
+  await page.goto('/cheese')
+  await expect(page.getByRole('heading', { name: 'Feta (1)' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Made / })).toHaveCount(1)
+  await expect(page.getByRole('link', { name: /Made .* 3 gal/ })).toBeVisible()
+  // Cheeses with nothing this week are a tap away.
+  await expect(page.getByRole('link', { name: /Tomme\s*No makes yet/ })).toBeVisible()
+
+  await page.getByRole('link', { name: /Feta \(1\)/ }).click()
+  await expect(page.getByRole('heading', { name: 'Feta', exact: true })).toBeVisible()
+  const rows = page.getByRole('main').getByRole('listitem')
+  await expect(rows).toHaveCount(3)
+  // Newest first, with milk and status, and no notes.
+  await expect(rows.nth(0)).toContainText('Finished')
+  await expect(rows.nth(1)).toContainText('3 gal')
+  await expect(rows.nth(1)).toContainText('Aging')
+  await expect(rows.nth(2)).toContainText('4 gal')
+  await expect(rows.nth(2)).toContainText('Ready')
+  await expect(page.getByText('Brined in the crock')).toHaveCount(0)
+
+  await rows.nth(1).click()
+  await expect(page.getByText('Brined in the crock')).toBeVisible()
+})
+
+test('a new make from a cheese’s page starts with that cheese', async ({ page, herd }) => {
+  await page.goto(`/cheese/types/${await typeId(herd.id, 'Tomme')}`)
+  await expect(page.getByText('No Tomme made yet.')).toBeVisible()
+  await page.getByRole('button', { name: 'New make' }).click()
+  const dialog = page.getByRole('dialog', { name: 'New make' })
+  await expect(dialog.getByLabel('Ready')).toHaveValue(isoDate(120))
+  await dialog.getByRole('button', { name: 'Save' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(1)
+  expect((await makes(herd.id))[0]?.cheese_types).toEqual({ name: 'Tomme' })
 })
 
 test('a cheese not in the list can be added from the dropdown', async ({ page, herd }) => {
@@ -63,27 +115,31 @@ test('a cheese not in the list can be added from the dropdown', async ({ page, h
   expect(data?.aging_days).toBe(21)
 })
 
-test('a ready make can be marked finished, and leaves the main list', async ({ page, herd }) => {
-  await admin.from('cheese_makes').insert({
-    herd_id: herd.id,
-    cheese_type_id: await typeId(herd.id, 'Feta'),
-    made_on: isoDate(-70),
-    ready_on: isoDate(-9),
-  })
+test('a ready make can be marked finished, and leaves the main page', async ({ page, herd }) => {
+  const { data } = await admin
+    .from('cheese_makes')
+    .insert({ herd_id: herd.id, cheese_type_id: await typeId(herd.id, 'Feta'), made_on: isoDate(-63), ready_on: isoDate(-2) })
+    .select('id')
+    .single()
   await page.goto('/cheese')
-  await expect(page.getByRole('heading', { name: 'Ready (1)' })).toBeVisible()
-  const make = page.getByRole('button', { name: /Feta · made/ })
+  const make = page.getByRole('link', { name: /Made / })
   await expect(make).toContainText(/Ready since/)
   await make.click()
-  const dialog = page.getByRole('dialog', { name: 'Edit make' })
-  await dialog.getByRole('checkbox', { name: /Finished/ }).check()
-  await dialog.getByRole('button', { name: 'Save' }).click()
-  await expect(dialog).toBeHidden()
-
-  await expect(page.getByText('No cheese aging.')).toBeVisible()
-  await page.getByRole('button', { name: 'Finished (1)' }).click()
-  await expect(page.getByRole('button', { name: /Feta · made/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Mark finished' }).click()
+  await expect(page.getByText(/^Finished /).first()).toBeVisible()
   expect((await makes(herd.id))[0]?.finished_on).toBe(isoDate())
+
+  await page.getByRole('link', { name: 'Back to Feta' }).click()
+  await expect(page.getByRole('main').getByRole('listitem')).toContainText('Finished')
+  await page.goto('/cheese')
+  await expect(page.getByText('Nothing made this week')).toBeVisible()
+
+  // Deleting from the make's page goes back to its cheese.
+  await page.goto(`/cheese/makes/${data!.id}`)
+  await page.getByRole('button', { name: 'Edit' }).click()
+  await page.getByRole('dialog', { name: 'Edit make' }).getByRole('button', { name: 'Delete' }).click()
+  await expect(page.getByText('No Feta made yet.')).toBeVisible()
+  expect(await makes(herd.id)).toEqual([])
 })
 
 test('helpers can add a cheese but only owners rename, re-time or hide one', async ({ page, browser, herd }) => {
@@ -104,7 +160,7 @@ test('helpers can add a cheese but only owners rename, re-time or hide one', asy
     await expect(helperPage.getByRole('spinbutton', { name: 'Feta aging days' })).toHaveCount(0)
     await helperPage.getByPlaceholder('Gouda, ricotta…').fill('Ricotta')
     await helperPage.getByRole('button', { name: 'Add', exact: true }).click()
-    await expect(helperPage.getByText('Ricotta', { exact: true })).toBeVisible()
+    await expect(helperPage.getByRole('link', { name: /Ricotta\s*No makes yet/ })).toBeVisible()
     await ctx.close()
   } finally {
     await deleteUser(helper)

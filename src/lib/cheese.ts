@@ -1,6 +1,7 @@
 // Cheese makes: ready dates, status and monthly totals.
 import type { Database } from './database.types'
-import { addDays } from './breeding'
+import { addDays, daysBetween } from './breeding'
+import { formatDate, relativeDays } from './dates'
 
 type Tables = Database['public']['Tables']
 export type CheeseType = Tables['cheese_types']['Row']
@@ -25,6 +26,28 @@ export type MakeStatus = 'aging' | 'ready' | 'finished'
 export function makeStatus(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, today: string): MakeStatus {
   if (make.finished_on) return 'finished'
   return make.ready_on <= today ? 'ready' : 'aging'
+}
+
+/** How many days either side of today counts as recent or ready soon, for the main cheese page. */
+export const CURRENT_WINDOW_DAYS = 7
+
+/**
+ * On the main cheese page: not finished, and made in the last week, or ready in the last or the coming week.
+ * Anything older is only on its cheese type's page.
+ */
+export function isCurrent(make: Pick<CheeseMake, 'made_on' | 'ready_on' | 'finished_on'>, today: string): boolean {
+  if (make.finished_on) return false
+  const from = addDays(today, -CURRENT_WINDOW_DAYS)
+  const to = addDays(today, CURRENT_WINDOW_DAYS)
+  return (make.made_on >= from && make.made_on <= today) || (make.ready_on >= from && make.ready_on <= to)
+}
+
+/** "Ready in 3 days", "Ready today", "Ready since Oct 2", "Finished Nov 1". */
+export function readyLabel(make: Pick<CheeseMake, 'ready_on' | 'finished_on'>, today: string): string {
+  if (make.finished_on) return `Finished ${formatDate(make.finished_on)}`
+  const days = daysBetween(today, make.ready_on)
+  if (days > 0) return `Ready ${relativeDays(days)}`
+  return days === 0 ? 'Ready today' : `Ready since ${formatDate(make.ready_on)}`
 }
 
 export const STATUS_LABELS: Record<MakeStatus, string> = { aging: 'Aging', ready: 'Ready', finished: 'Finished' }

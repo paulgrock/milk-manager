@@ -117,6 +117,9 @@ A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese t
 (from the type's aging time, editable), optional gallons of milk, notes, and a Finished mark. The farm
 keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
 filter) and Today; Finances has a Cheese sales category. Terms are in `GLOSSARY.md`.
+The Cheese page groups makes by cheese type and shows only those made in the last week or ready within a week either
+side of today (not finished). Tapping a type lists all its makes (date, milk, status); tapping a make shows its details
+and notes, with Edit and Mark finished.
 
 ## 13. Chores (built, not live yet)
 A Chores tab for farm tasks that repeat and belong to the farm, not a goat. It starts with clean milking equipment
