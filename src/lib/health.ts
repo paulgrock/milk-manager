@@ -63,13 +63,20 @@ export function withholdThrough(t: Pick<Treatment, 'started_on' | 'ended_on' | '
  * Whether a doe's milk must be withheld on a date, and until when. Milk is
  * withheld from the first dose through the end of the withdrawal.
  */
-export function withdrawalOn(goatId: string, treatments: Treatment[], date: string): { through: string; treatments: Treatment[] } | null {
+export function withdrawalOn(
+  goatId: string,
+  treatments: Treatment[],
+  date: string,
+): { through: string; treatments: Treatment[] } | null {
   const active = treatments.filter((t) => {
     if (t.goat_id !== goatId) return false
     const through = withholdThrough(t)
     return !!through && t.started_on <= date && date <= through
   })
   if (!active.length) return null
-  const through = active.map((t) => withholdThrough(t)!).sort().at(-1)!
+  const through = active
+    .map((t) => withholdThrough(t)!)
+    .sort()
+    .at(-1)!
   return { through, treatments: active }
 }

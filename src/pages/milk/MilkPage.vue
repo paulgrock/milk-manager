@@ -106,7 +106,9 @@ const withheldG = computed(() =>
 const primaryPhotos = computed(
   () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, iconPath(p)])),
 )
-const photoUrls = usePhotoUrls(() => line.value.map((x) => primaryPhotos.value.get(x.goat.id)).filter((p): p is string => !!p))
+const photoUrls = usePhotoUrls(() =>
+  line.value.map((x) => primaryPhotos.value.get(x.goat.id)).filter((p): p is string => !!p),
+)
 
 // --- Saving -------------------------------------------------------------------
 
@@ -171,7 +173,10 @@ const waiting = computed(() => pending.value.filter((p) => p.paused).length)
 const editing = ref<Goat>()
 const editorOpen = computed({ get: () => !!editing.value, set: (v) => !v && (editing.value = undefined) })
 
-const lactationModal = ref<{ open: boolean; mode: 'start' | 'dryOff'; lactation?: Lactation }>({ open: false, mode: 'start' })
+const lactationModal = ref<{ open: boolean; mode: 'start' | 'dryOff'; lactation?: Lactation }>({
+  open: false,
+  mode: 'start',
+})
 const orderOpen = ref(false)
 const startLactation = () => (lactationModal.value = { open: true, mode: 'start' })
 const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, mode: 'dryOff', lactation })
@@ -188,8 +193,21 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
 
     <div class="flex flex-wrap items-center gap-2">
       <div class="flex items-center gap-1">
-        <UButton color="neutral" variant="outline" icon="i-lucide-chevron-left" aria-label="Previous day" @click="goTo(shiftDate(date, -1))" />
-        <UInput :model-value="date" type="date" :max="today" class="w-40" aria-label="Date" @update:model-value="(v: unknown) => v && goTo(String(v))" />
+        <UButton
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-chevron-left"
+          aria-label="Previous day"
+          @click="goTo(shiftDate(date, -1))"
+        />
+        <UInput
+          :model-value="date"
+          type="date"
+          :max="today"
+          class="w-40"
+          aria-label="Date"
+          @update:model-value="(v: unknown) => v && goTo(String(v))"
+        />
         <UButton
           color="neutral"
           variant="outline"
@@ -222,7 +240,9 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
       variant="subtle"
       icon="i-lucide-cloud-off"
       :title="`${waiting} ${waiting === 1 ? 'weight is' : 'weights are'} saved on this phone`"
-      :description="online ? 'Uploading…' : 'They will upload automatically when you have signal. It is safe to close the app.'"
+      :description="
+        online ? 'Uploading…' : 'They will upload automatically when you have signal. It is safe to close the app.'
+      "
     />
 
     <div v-if="goats.isPending.value || lactations.isPending.value" class="space-y-2">
@@ -239,10 +259,19 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
     <template v-else>
       <div class="flex items-center gap-2">
         <p class="text-sm text-muted flex-1">
-          {{ formatDate(date) }} · {{ milkingLabel(milking) }} · {{ line.length }} {{ line.length === 1 ? 'doe' : 'does' }} in milk
+          {{ formatDate(date) }} · {{ milkingLabel(milking) }} · {{ line.length }}
+          {{ line.length === 1 ? 'doe' : 'does' }} in milk
           <template v-if="milking === DAY_TOTAL"> · For days you only weighed once</template>
         </p>
-        <UButton v-if="line.length > 1" size="sm" color="neutral" variant="ghost" icon="i-lucide-arrow-down-up" :disabled="!online" @click="orderOpen = true">
+        <UButton
+          v-if="line.length > 1"
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-arrow-down-up"
+          :disabled="!online"
+          @click="orderOpen = true"
+        >
           Order
         </UButton>
       </div>
@@ -269,7 +298,9 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
           @dry-off="dryOff(lactation)"
         />
       </ul>
-      <UButton color="neutral" variant="ghost" icon="i-lucide-plus" @click="startLactation">Add doe to milk line</UButton>
+      <UButton color="neutral" variant="ghost" icon="i-lucide-plus" @click="startLactation"
+        >Add doe to milk line</UButton
+      >
     </template>
 
     <div
@@ -278,7 +309,9 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
     >
       <div class="mx-auto max-w-5xl px-4 py-3 flex items-center gap-4">
         <div>
-          <p class="text-xs text-muted">{{ milkingLabel(milking) }} · {{ totals.milkingCount }}/{{ line.length }} does</p>
+          <p class="text-xs text-muted">
+            {{ milkingLabel(milking) }} · {{ totals.milkingCount }}/{{ line.length }} does
+          </p>
           <p class="text-lg font-semibold tabular-nums">{{ formatWeight(totals.milkingG, unit, true) }}</p>
         </div>
         <div v-if="withheldG" class="text-end">

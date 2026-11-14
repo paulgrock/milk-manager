@@ -58,6 +58,8 @@ test('with no passkey on the device, sign-in says to use an email code', async (
   await addVirtualAuthenticator(page)
   await page.goto('/login')
   await page.getByRole('button', { name: 'Sign in with a passkey' }).click()
-  await expect(page.getByText(/Cancelled, or there is no passkey for Milk Manager on this device/)).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText(/Cancelled, or there is no passkey for Milk Manager on this device/)).toBeVisible({
+    timeout: 20_000,
+  })
   await expect(page).toHaveURL(/\/login/)
 })

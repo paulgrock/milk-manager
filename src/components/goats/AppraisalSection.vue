@@ -122,7 +122,11 @@ function ageLabel(a: Appraisal) {
     <p v-if="!appraisals.length" class="text-muted">No appraisals recorded.</p>
     <ul v-else class="divide-y divide-default -my-2">
       <li v-for="a in appraisals" :key="a.id">
-        <button type="button" class="w-full py-2 flex items-center gap-3 text-start hover:bg-elevated/50 rounded" @click="startEdit(a)">
+        <button
+          type="button"
+          class="w-full py-2 flex items-center gap-3 text-start hover:bg-elevated/50 rounded"
+          @click="startEdit(a)"
+        >
           <span class="font-mono font-semibold text-lg">{{ appraisalSummary(a) }}</span>
           <span class="text-sm text-muted">{{ ageLabel(a) }}</span>
           <span class="ms-auto text-sm text-muted text-end">
@@ -159,7 +163,13 @@ function ageLabel(a: Appraisal) {
       </template>
       <template #footer>
         <div class="flex gap-2 w-full">
-          <UButton v-if="editingId" color="error" variant="ghost" :loading="deleteAppraisal.isPending.value" @click="remove">
+          <UButton
+            v-if="editingId"
+            color="error"
+            variant="ghost"
+            :loading="deleteAppraisal.isPending.value"
+            @click="remove"
+          >
             Delete
           </UButton>
           <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>

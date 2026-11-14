@@ -2,22 +2,46 @@ import { admin, expect, test } from './fixtures.ts'
 import { addLactation, addGoat, addMilkCurve, isoDate, lbToGrams } from './seed.ts'
 
 /** A doe in milk, born `ageYears` before she freshened `daysAgo` days ago. */
-async function doe(owner: Parameters<typeof addGoat>[0], herdId: string, name: string, opts: { breed?: string; ageYears?: number; daysAgo?: number } = {}) {
+async function doe(
+  owner: Parameters<typeof addGoat>[0],
+  herdId: string,
+  name: string,
+  opts: { breed?: string; ageYears?: number; daysAgo?: number } = {},
+) {
   const daysAgo = opts.daysAgo ?? 60
   const born = new Date()
   born.setDate(born.getDate() - daysAgo)
   born.setMonth(born.getMonth() - Math.round((opts.ageYears ?? 1.5) * 12))
   const birth_date = born.toISOString().slice(0, 10)
-  const goat = await addGoat(owner, herdId, { barn_name: name, sex: 'doe', breed: opts.breed ?? 'Nigerian Dwarf', birth_date })
+  const goat = await addGoat(owner, herdId, {
+    barn_name: name,
+    sex: 'doe',
+    breed: opts.breed ?? 'Nigerian Dwarf',
+    birth_date,
+  })
   await addLactation(owner, herdId, goat.id, isoDate(-daysAgo))
   return goat
 }
 
-test('enters a DHIR test day: milk comes from the day\'s weights, SCC is read lab-style', async ({ page, owner, herd }) => {
+test("enters a DHIR test day: milk comes from the day's weights, SCC is read lab-style", async ({
+  page,
+  owner,
+  herd,
+}) => {
   const ina = await doe(owner, herd.id, 'Ina')
   const clover = await doe(owner, herd.id, 'Clover')
-  await owner.client.rpc('record_milking', { p_goat_id: ina.id, p_milked_on: isoDate(), p_milking: 1, p_weight_g: lbToGrams(2) })
-  await owner.client.rpc('record_milking', { p_goat_id: ina.id, p_milked_on: isoDate(), p_milking: 2, p_weight_g: lbToGrams(1.6) })
+  await owner.client.rpc('record_milking', {
+    p_goat_id: ina.id,
+    p_milked_on: isoDate(),
+    p_milking: 1,
+    p_weight_g: lbToGrams(2),
+  })
+  await owner.client.rpc('record_milking', {
+    p_goat_id: ina.id,
+    p_milked_on: isoDate(),
+    p_milking: 2,
+    p_weight_g: lbToGrams(1.6),
+  })
 
   await page.goto('/milk/tests/new')
   await page.getByLabel('Lab').fill('DHI Provo')
@@ -32,7 +56,11 @@ test('enters a DHIR test day: milk comes from the day\'s weights, SCC is read la
   await expect(page.getByText('Saved 2 results').first()).toBeVisible()
   await expect(page).toHaveURL(/\/milk\/tests\/[0-9a-f-]{36}$/)
 
-  const results = await admin.from('milk_test_results').select('goat_id, milk_g, butterfat_pct, protein_pct, scc').eq('herd_id', herd.id).order('scc')
+  const results = await admin
+    .from('milk_test_results')
+    .select('goat_id, milk_g, butterfat_pct, protein_pct, scc')
+    .eq('herd_id', herd.id)
+    .order('scc')
   expect(results.data).toEqual([
     { goat_id: ina.id, milk_g: lbToGrams(2) + lbToGrams(1.6), butterfat_pct: 6.5, protein_pct: 4.2, scc: 450_000 },
     { goat_id: clover.id, milk_g: lbToGrams(3), butterfat_pct: 5, protein_pct: null, scc: 1_800_000 },
@@ -53,8 +81,14 @@ test('enters a DHIR test day: milk comes from the day\'s weights, SCC is read la
 
 test('an ADGA one-day test scores star points for a Nigerian Dwarf', async ({ page, owner, herd }) => {
   const ina = await doe(owner, herd.id, 'Ina', { daysAgo: 120 })
-  const { data: t } = await admin.from('milk_tests').insert({ herd_id: herd.id, tested_on: isoDate(), kind: 'one_day' }).select().single()
-  await admin.from('milk_test_results').insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, milk_g: lbToGrams(3), butterfat_pct: 6.5 })
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(), kind: 'one_day' })
+    .select()
+    .single()
+  await admin
+    .from('milk_test_results')
+    .insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, milk_g: lbToGrams(3), butterfat_pct: 6.5 })
 
   await page.goto(`/goats/${ina.id}`)
   // 3.0 milk + 3.9 butterfat + 0.48 for 120 days in milk = 7.4, over the 7 points a miniature needs.
@@ -65,8 +99,14 @@ test('an ADGA one-day test scores star points for a Nigerian Dwarf', async ({ pa
 test('DHIR star progress uses her age at kidding and her test-day butterfat', async ({ page, owner, herd }) => {
   const ina = await doe(owner, herd.id, 'Ina', { ageYears: 1.5, daysAgo: 120 })
   await addMilkCurve(herd.id, ina.id, 120)
-  const { data: t } = await admin.from('milk_tests').insert({ herd_id: herd.id, tested_on: isoDate(-30), kind: 'dhir' }).select().single()
-  await admin.from('milk_test_results').insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, milk_g: lbToGrams(4), butterfat_pct: 6.5 })
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-30), kind: 'dhir' })
+    .select()
+    .single()
+  await admin
+    .from('milk_test_results')
+    .insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, milk_g: lbToGrams(4), butterfat_pct: 6.5 })
 
   await page.goto(`/goats/${ina.id}`)
   await expect(page.getByRole('heading', { name: 'DHIR star (ADGA)' })).toBeVisible()
@@ -92,7 +132,11 @@ test('a doe without a birth date gets asked for one', async ({ page, owner, herd
 
 test('edits and deletes a test', async ({ page, owner, herd }) => {
   const ina = await doe(owner, herd.id, 'Ina')
-  const { data: t } = await admin.from('milk_tests').insert({ herd_id: herd.id, tested_on: isoDate(-1), kind: 'dhir' }).select().single()
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-1), kind: 'dhir' })
+    .select()
+    .single()
   await admin.from('milk_test_results').insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, scc: 300_000 })
 
   await page.goto(`/milk/tests/${t!.id}`)
@@ -110,7 +154,11 @@ test('edits and deletes a test', async ({ page, owner, herd }) => {
   await expect(page.getByText('No milk tests yet.')).toBeVisible()
 })
 
-test("a DHI report's lactation-to-date and projected 305 figures are shown as printed", async ({ page, owner, herd }) => {
+test("a DHI report's lactation-to-date and projected 305 figures are shown as printed", async ({
+  page,
+  owner,
+  herd,
+}) => {
   const elena = await doe(owner, herd.id, 'Elena', { ageYears: 2.5, daysAgo: 150 })
   const tests = [
     { day: -95, milk: 3.2, fat: 6.01, ltd: 175, proj: 897 },
@@ -118,7 +166,11 @@ test("a DHI report's lactation-to-date and projected 305 figures are shown as pr
     { day: -5, milk: 2.5, fat: 6.02, ltd: 423, proj: 771 },
   ]
   for (const t of tests) {
-    const { data } = await admin.from('milk_tests').insert({ herd_id: herd.id, tested_on: isoDate(t.day), kind: 'dhir' }).select().single()
+    const { data } = await admin
+      .from('milk_tests')
+      .insert({ herd_id: herd.id, tested_on: isoDate(t.day), kind: 'dhir' })
+      .select()
+      .single()
     await admin.from('milk_test_results').insert({
       herd_id: herd.id,
       test_id: data!.id,

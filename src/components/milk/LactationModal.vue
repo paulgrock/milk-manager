@@ -110,7 +110,9 @@ async function onDelete() {
   <UModal
     v-model:open="open"
     :title="title"
-    :description="mode === 'dryOff' ? 'She will leave the milk line after this date. Her milk records stay.' : undefined"
+    :description="
+      mode === 'dryOff' ? 'She will leave the milk line after this date. Her milk records stay.' : undefined
+    "
   >
     <template #body>
       <form id="lactation-form" class="space-y-3" @submit.prevent="submit">
@@ -121,7 +123,13 @@ async function onDelete() {
         </template>
         <template v-else>
           <UFormField v-if="!goatId && !lactation" label="Doe" required>
-            <UInputMenu v-model="form.goat_id" :items="doeItems" value-key="value" placeholder="Search does…" class="w-full" />
+            <UInputMenu
+              v-model="form.goat_id"
+              :items="doeItems"
+              value-key="value"
+              placeholder="Search does…"
+              class="w-full"
+            />
           </UFormField>
           <div class="grid grid-cols-2 gap-3">
             <UFormField label="Freshened" required>
@@ -142,7 +150,13 @@ async function onDelete() {
     </template>
     <template #footer>
       <div class="flex gap-2 w-full">
-        <UButton v-if="mode === 'edit'" color="error" variant="ghost" :loading="remove.isPending.value" @click="onDelete">
+        <UButton
+          v-if="mode === 'edit'"
+          color="error"
+          variant="ghost"
+          :loading="remove.isPending.value"
+          @click="onDelete"
+        >
           Delete
         </UButton>
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>

@@ -2,7 +2,14 @@ import { computed } from 'vue'
 import { refreshQueries } from '@/lib/queryClient'
 import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
-import { DELETE_CARE, LOG_CARE, healthKey, type DeleteCareVars, type HealthData, type LogCareVars } from '@/lib/healthSync'
+import {
+  DELETE_CARE,
+  LOG_CARE,
+  healthKey,
+  type DeleteCareVars,
+  type HealthData,
+  type LogCareVars,
+} from '@/lib/healthSync'
 import type { CareEvent } from '@/lib/health'
 import type { Database } from '@/lib/database.types'
 import { useHerd } from './useHerd'
@@ -21,7 +28,15 @@ export function useHealthData() {
     queryFn: async (): Promise<HealthData> => {
       const all = <T>(table: HealthTable) =>
         // Same shape for each table; typed per call by T.
-        fetchAll<T>((from, to) => supabase.from(table as 'treatments').select('*').eq('herd_id', herdId.value).order('id').range(from, to) as never)
+        fetchAll<T>(
+          (from, to) =>
+            supabase
+              .from(table as 'treatments')
+              .select('*')
+              .eq('herd_id', herdId.value)
+              .order('id')
+              .range(from, to) as never,
+        )
       const [careTypes, careEvents, treatments] = await Promise.all([
         all<HealthData['careTypes'][number]>('care_types'),
         all<HealthData['careEvents'][number]>('care_events'),
@@ -46,7 +61,13 @@ export function useCareLog() {
     select: (m) => m.state.isPaused || m.state.failureCount > 0,
   })
 
-  function logCare(input: { careTypeId: string; goatIds: string[]; doneOn: string; dose: number | null; notes: string }) {
+  function logCare(input: {
+    careTypeId: string
+    goatIds: string[]
+    doneOn: string
+    dose: number | null
+    notes: string
+  }) {
     const events: CareEvent[] = input.goatIds.map((goatId) => ({
       id: crypto.randomUUID(),
       herd_id: herdId.value,

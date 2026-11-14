@@ -52,7 +52,9 @@ const breed = arg('breed') ?? null
 const apply = args.includes('--apply')
 const appraisedOn = arg('appraised-on') ?? new Date().toISOString().slice(0, 10)
 if (!exportDir || !herdId) {
-  console.error('Usage: node scripts/import-sanity-goats.ts --export <dir> --herd <herd id> [--breed "Nigerian Dwarf"] [--apply]')
+  console.error(
+    'Usage: node scripts/import-sanity-goats.ts --export <dir> --herd <herd id> [--breed "Nigerian Dwarf"] [--apply]',
+  )
   process.exit(1)
 }
 
@@ -66,13 +68,25 @@ const PREFIX_TITLES = new Set(['SGCH', 'GCH', 'ARMCH', 'MCH', 'CH', 'SG'])
 const isTitleWord = (w: string) => /\*|^\(|^[EVGAFP+]{3,4}\d*$|^ELITE$/i.test(w) && !/^[A-Z][a-z]/.test(w)
 
 export function splitName(raw: string) {
-  const words = raw.replace(/ /g, ' ').replace(/[’‘]/g, "'").replace(/^[\s:]+/, '').trim().split(/\s+/)
+  const words = raw
+    .replace(/ /g, ' ')
+    .replace(/[’‘]/g, "'")
+    .replace(/^[\s:]+/, '')
+    .trim()
+    .split(/\s+/)
   const prefix: string[] = []
   while (words.length > 1 && PREFIX_TITLES.has(words[0]!)) prefix.push(words.shift()!)
   const cut = words.findIndex((w, i) => i > 0 && isTitleWord(w))
   const name = (cut < 0 ? words : words.slice(0, cut)).join(' ')
   // "VEEV90" and "VEEV 90" are the same score.
-  const suffix = cut < 0 ? '' : words.slice(cut).join(' ').replace(/\b([EVGAFP+]{3,4})(\d{2})\b/g, '$1 $2').replace(/\s+/g, ' ')
+  const suffix =
+    cut < 0
+      ? ''
+      : words
+          .slice(cut)
+          .join(' ')
+          .replace(/\b([EVGAFP+]{3,4})(\d{2})\b/g, '$1 $2')
+          .replace(/\s+/g, ' ')
   return { name, prefix: prefix.join(' ') || null, suffix: suffix || null }
 }
 
@@ -172,12 +186,18 @@ for (const goat of planned.values()) {
     if (v.seen > c.seen) c.seen = v.seen
     counts.set(k, c)
   }
-  const length = (c: { v: { prefix: string | null; suffix: string | null } }) => (c.v.prefix ?? '').length + (c.v.suffix ?? '').length
+  const length = (c: { v: { prefix: string | null; suffix: string | null } }) =>
+    (c.v.prefix ?? '').length + (c.v.suffix ?? '').length
   const best = [...counts.values()].sort((a, b) => b.seen.localeCompare(a.seen) || length(b) - length(a))[0]!
   goat.prefix = best.v.prefix
   goat.suffix = best.v.suffix
   if (counts.size > 1) {
-    conflicts.push(`${goat.name}: used "${[best.v.prefix, best.v.suffix].filter(Boolean).join(' ')}" over ${[...counts.values()].filter((c) => c !== best).map((c) => `"${[c.v.prefix, c.v.suffix].filter(Boolean).join(' ')}"`).join(', ')}`)
+    conflicts.push(
+      `${goat.name}: used "${[best.v.prefix, best.v.suffix].filter(Boolean).join(' ')}" over ${[...counts.values()]
+        .filter((c) => c !== best)
+        .map((c) => `"${[c.v.prefix, c.v.suffix].filter(Boolean).join(' ')}"`)
+        .join(', ')}`,
+    )
   }
 }
 
@@ -189,12 +209,16 @@ const outside = [...planned.values()].filter((g) => !g.inHerd)
 console.log(`\nHerd goats (${herd.length}):`)
 for (const g of herd) {
   const reg = g.doc!.adgaPedigree?.match(/RegNumber=([A-Z0-9]+)/)?.[1]
-  console.log(`  ${[g.prefix, g.name, g.suffix].filter(Boolean).join(' ')}  [${g.sex}, "${g.doc!.aka ?? ''}", born ${g.doc!.date ?? '?'}, ${reg ?? 'no reg #'}, ${g.doc!.images?.length ?? 0} photos]`)
+  console.log(
+    `  ${[g.prefix, g.name, g.suffix].filter(Boolean).join(' ')}  [${g.sex}, "${g.doc!.aka ?? ''}", born ${g.doc!.date ?? '?'}, ${reg ?? 'no reg #'}, ${g.doc!.images?.length ?? 0} photos]`,
+  )
   console.log(`      sire: ${label(g.sireKey)}   dam: ${label(g.damKey)}`)
 }
 console.log(`\nOutside goats for pedigrees (${outside.length}):`)
 for (const g of outside.sort((a, b) => a.name.localeCompare(b.name))) {
-  console.log(`  ${[g.prefix, g.name, g.suffix].filter(Boolean).join(' ')}  [${g.sex}]  sire: ${label(g.sireKey)}  dam: ${label(g.damKey)}`)
+  console.log(
+    `  ${[g.prefix, g.name, g.suffix].filter(Boolean).join(' ')}  [${g.sex}]  sire: ${label(g.sireKey)}  dam: ${label(g.damKey)}`,
+  )
 }
 if (conflicts.length) console.log(`\nSame goat written differently:\n  ${conflicts.join('\n  ')}`)
 console.log(`\nBreed: ${breed ?? '(not set)'}`)
@@ -208,7 +232,10 @@ if (!apply) {
 
 const { data: herdRow, error: herdError } = await db.from('herds').select('id, name').eq('id', herdId).single()
 if (herdError || !herdRow) throw new Error(`Herd ${herdId} not found`)
-const { data: existing } = await db.from('goats').select('id, registered_name, registration_number').eq('herd_id', herdId)
+const { data: existing } = await db
+  .from('goats')
+  .select('id, registered_name, registration_number')
+  .eq('herd_id', herdId)
 const ids = new Map<string, string>()
 for (const g of existing ?? []) {
   if (g.registered_name) ids.set(nameKey(g.registered_name), g.id)
@@ -250,9 +277,13 @@ for (const g of planned.values()) {
   const { appraisal } = splitAppraisal(g.suffix)
   if (appraisal) {
     const { age, ...scores } = appraisal
-    const { error } = await db
-      .from('linear_appraisals')
-      .insert({ herd_id: herdId, goat_id: data.id, appraised_on: appraisedOn, ...scores, notes: age ? `Listed as ${age}` : null })
+    const { error } = await db.from('linear_appraisals').insert({
+      herd_id: herdId,
+      goat_id: data.id,
+      appraised_on: appraisedOn,
+      ...scores,
+      notes: age ? `Listed as ${age}` : null,
+    })
     if (error) throw new Error(`${g.name} appraisal: ${error.message}`)
     appraisals += 1
   }
@@ -284,17 +315,29 @@ for (const g of herd) {
   for (const [i, img] of (g.doc!.images ?? []).entries()) {
     const file = join(exportDir, img._sanityAsset.replace(/^image@file:\/\/\.\//, ''))
     const small = join(work, `${goatId}-${i}.jpg`)
-    execFileSync('sips', ['-Z', '1600', '-s', 'format', 'jpeg', '-s', 'formatOptions', '85', file, '--out', small], { stdio: 'ignore' })
+    execFileSync('sips', ['-Z', '1600', '-s', 'format', 'jpeg', '-s', 'formatOptions', '85', file, '--out', small], {
+      stdio: 'ignore',
+    })
     const id = crypto.randomUUID()
     const path = `${herdId}/${goatId}/${id}.jpg`
     const up = await db.storage.from('goat-photos').upload(path, readFileSync(small), { contentType: 'image/jpeg' })
     if (up.error) throw new Error(`${g.name} photo: ${up.error.message}`)
     const alt = img.alt ?? ''
-    const kind = /confo/i.test(alt) ? 'conformation' : /head/i.test(alt) ? 'head' : /udder/i.test(alt) ? 'udder' : 'other'
-    const { error } = await db.from('goat_photos').insert({ id, herd_id: herdId, goat_id: goatId, storage_path: path, kind, is_primary: i === 0 })
+    const kind = /confo/i.test(alt)
+      ? 'conformation'
+      : /head/i.test(alt)
+        ? 'head'
+        : /udder/i.test(alt)
+          ? 'udder'
+          : 'other'
+    const { error } = await db
+      .from('goat_photos')
+      .insert({ id, herd_id: herdId, goat_id: goatId, storage_path: path, kind, is_primary: i === 0 })
     if (error) throw new Error(`${g.name} photo row: ${error.message}`)
     photos += 1
   }
 }
 
-console.log(`\nImported into "${herdRow.name}": ${created} goats created, ${appraisals} appraisals, ${linked} parent links, ${photos} photos.`)
+console.log(
+  `\nImported into "${herdRow.name}": ${created} goats created, ${appraisals} appraisals, ${linked} parent links, ${photos} photos.`,
+)

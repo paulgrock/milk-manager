@@ -14,10 +14,20 @@ const rows = computed(() =>
   data.value.tests.map((test) => {
     const results = data.value.results.filter((r) => r.test_id === test.id)
     const avg = (key: 'milk_g' | 'butterfat_pct' | 'protein_pct' | 'scc') => {
-      const values = results.map((r) => r[key]).filter((v): v is number => v !== null).map(Number)
+      const values = results
+        .map((r) => r[key])
+        .filter((v): v is number => v !== null)
+        .map(Number)
       return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null
     }
-    return { test, count: results.length, milk: avg('milk_g'), fat: avg('butterfat_pct'), protein: avg('protein_pct'), scc: avg('scc') }
+    return {
+      test,
+      count: results.length,
+      milk: avg('milk_g'),
+      fat: avg('butterfat_pct'),
+      protein: avg('protein_pct'),
+      scc: avg('scc'),
+    }
   }),
 )
 </script>
@@ -29,7 +39,9 @@ const rows = computed(() =>
       <h1 class="text-2xl font-semibold flex-1">Milk tests</h1>
       <UButton to="/milk/tests/new" icon="i-lucide-plus">Add test day</UButton>
     </div>
-    <p class="text-sm text-muted">DHIR test days, ADGA one-day tests and your own samples: weights, butterfat, protein and somatic cell count.</p>
+    <p class="text-sm text-muted">
+      DHIR test days, ADGA one-day tests and your own samples: weights, butterfat, protein and somatic cell count.
+    </p>
 
     <div v-if="query.isPending.value" class="space-y-2"><USkeleton v-for="i in 3" :key="i" class="h-12 w-full" /></div>
     <UCard v-else-if="!rows.length" class="text-center">
@@ -52,14 +64,23 @@ const rows = computed(() =>
         <tbody>
           <tr v-for="r in rows" :key="r.test.id" class="border-t border-default hover:bg-elevated/50">
             <td class="px-3 py-2">
-              <RouterLink :to="`/milk/tests/${r.test.id}`" class="font-medium hover:underline">{{ formatDate(r.test.tested_on) }}</RouterLink>
+              <RouterLink :to="`/milk/tests/${r.test.id}`" class="font-medium hover:underline">{{
+                formatDate(r.test.tested_on)
+              }}</RouterLink>
             </td>
-            <td class="px-3 py-2">{{ TEST_KIND_LABELS[r.test.kind] }}<span v-if="r.test.lab" class="text-muted"> · {{ r.test.lab }}</span></td>
+            <td class="px-3 py-2">
+              {{ TEST_KIND_LABELS[r.test.kind] }}<span v-if="r.test.lab" class="text-muted"> · {{ r.test.lab }}</span>
+            </td>
             <td class="px-3 py-2 text-end tabular-nums">{{ r.count }}</td>
-            <td class="px-3 py-2 text-end tabular-nums">{{ r.milk === null ? '—' : formatWeight(r.milk, unit, true) }}</td>
+            <td class="px-3 py-2 text-end tabular-nums">
+              {{ r.milk === null ? '—' : formatWeight(r.milk, unit, true) }}
+            </td>
             <td class="px-3 py-2 text-end tabular-nums">{{ r.fat === null ? '—' : `${r.fat.toFixed(1)}%` }}</td>
             <td class="px-3 py-2 text-end tabular-nums">{{ r.protein === null ? '—' : `${r.protein.toFixed(1)}%` }}</td>
-            <td class="px-3 py-2 text-end tabular-nums" :class="r.scc !== null && r.scc >= SCC_LIMIT ? 'text-warning' : ''">
+            <td
+              class="px-3 py-2 text-end tabular-nums"
+              :class="r.scc !== null && r.scc >= SCC_LIMIT ? 'text-warning' : ''"
+            >
               {{ r.scc === null ? '—' : formatScc(r.scc) }}
             </td>
           </tr>

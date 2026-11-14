@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { breedingStatus, doeBreedingState, dryOffBy, dueWindow, kiddingFor, type Breeding, type BreedingData, type Kidding, type PregnancyCheck } from './breeding'
+import {
+  breedingStatus,
+  doeBreedingState,
+  dryOffBy,
+  dueWindow,
+  kiddingFor,
+  type Breeding,
+  type BreedingData,
+  type Kidding,
+  type PregnancyCheck,
+} from './breeding'
 
 const breeding = (over: Partial<Breeding> = {}): Breeding => ({
   id: 'b1',
@@ -63,7 +73,9 @@ describe('breedingStatus', () => {
     const b = breeding()
     expect(breedingStatus(b, empty, '2026-03-20')).toBe('bred')
     expect(breedingStatus(b, { ...empty, checks: [check('pregnant', '2026-04-05')] }, '2026-04-10')).toBe('confirmed')
-    expect(breedingStatus(b, { checks: [], kiddings: [kidding('2026-07-28', { breeding_id: 'b1' })] }, '2026-08-01')).toBe('kidded')
+    expect(
+      breedingStatus(b, { checks: [], kiddings: [kidding('2026-07-28', { breeding_id: 'b1' })] }, '2026-08-01'),
+    ).toBe('kidded')
   })
 
   it('uses the latest check', () => {
@@ -84,7 +96,11 @@ describe('breedingStatus', () => {
 
 describe('doeBreedingState', () => {
   it('tracks a current pregnancy with due date and dry-off date', () => {
-    const state = doeBreedingState('ina', { ...empty, breedings: [breeding()], checks: [check('pregnant', '2026-04-05')] }, '2026-06-29')
+    const state = doeBreedingState(
+      'ina',
+      { ...empty, breedings: [breeding()], checks: [check('pregnant', '2026-04-05')] },
+      '2026-06-29',
+    )
     expect(state.current?.status).toBe('confirmed')
     expect(state.current?.due.expected).toBe('2026-07-29')
     expect(state.current?.daysToDue).toBe(30)
@@ -104,10 +120,26 @@ describe('doeBreedingState', () => {
   })
 
   it("projects an open doe's cycle from her last heat", () => {
-    const heats = [{ id: 'h1', herd_id: 'h', goat_id: 'ina', observed_on: '2026-09-01', signs: null, created_by: null, created_at: '' }]
-    expect(doeBreedingState('ina', { ...empty, heats }, '2026-09-10').nextHeat).toEqual({ date: '2026-09-22', reason: 'cycle' })
+    const heats = [
+      {
+        id: 'h1',
+        herd_id: 'h',
+        goat_id: 'ina',
+        observed_on: '2026-09-01',
+        signs: null,
+        created_by: null,
+        created_at: '',
+      },
+    ]
+    expect(doeBreedingState('ina', { ...empty, heats }, '2026-09-10').nextHeat).toEqual({
+      date: '2026-09-22',
+      reason: 'cycle',
+    })
     // Skips cycles that already went by.
-    expect(doeBreedingState('ina', { ...empty, heats }, '2026-10-20').nextHeat).toEqual({ date: '2026-11-03', reason: 'cycle' })
+    expect(doeBreedingState('ina', { ...empty, heats }, '2026-10-20').nextHeat).toEqual({
+      date: '2026-11-03',
+      reason: 'cycle',
+    })
   })
 
   it('treats a doe confirmed open as cycling from that breeding', () => {

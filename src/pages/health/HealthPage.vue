@@ -21,7 +21,9 @@ const { saveCareType } = useHealthMutations()
 
 const name = (g?: Goat) => (g ? g.barn_name || goatName(g) : '?')
 const herd = computed(() =>
-  (goats.data.value ?? []).filter((g) => CURRENT_STATUSES.includes(g.status)).sort((a, b) => name(a).localeCompare(name(b))),
+  (goats.data.value ?? [])
+    .filter((g) => CURRENT_STATUSES.includes(g.status))
+    .sort((a, b) => name(a).localeCompare(name(b))),
 )
 const activeTypes = computed(() => data.value.careTypes.filter((t) => !t.archived))
 
@@ -37,7 +39,10 @@ const careDue = computed(() =>
   activeTypes.value
     .filter((t) => t.interval_days)
     .map((type) => {
-      const statuses = herd.value.map((goat) => ({ goat, status: careStatus(goat.id, type, data.value.careEvents, today) }))
+      const statuses = herd.value.map((goat) => ({
+        goat,
+        status: careStatus(goat.id, type, data.value.careEvents, today),
+      }))
       const due = statuses
         .filter((s) => s.status.state === 'overdue' || s.status.state === 'due')
         .sort((a, b) => a.status.daysUntilDue! - b.status.daysUntilDue!)
@@ -52,7 +57,9 @@ const recentTreatments = computed(() =>
 )
 
 const sortedCare = computed(() =>
-  [...data.value.careEvents].sort((a, b) => b.done_on.localeCompare(a.done_on) || b.created_at.localeCompare(a.created_at)),
+  [...data.value.careEvents].sort(
+    (a, b) => b.done_on.localeCompare(a.done_on) || b.created_at.localeCompare(a.created_at),
+  ),
 )
 const showAllCare = ref(false)
 const recentCare = computed(() => (showAllCare.value ? sortedCare.value : sortedCare.value.slice(0, 10)))
@@ -72,11 +79,22 @@ async function addType() {
   if (!draft.name.trim()) return
   try {
     await saveCareType.mutateAsync({
-      values: { name: draft.name.trim(), interval_days: draft.interval || null, dose_unit: draft.unit.trim() || null, sort_order: data.value.careTypes.length + 1 },
+      values: {
+        name: draft.name.trim(),
+        interval_days: draft.interval || null,
+        dose_unit: draft.unit.trim() || null,
+        sort_order: data.value.careTypes.length + 1,
+      },
     })
     Object.assign(draft, { name: '', interval: undefined, unit: '' })
   } catch (e) {
-    toast.add({ color: 'error', title: 'Could not add', description: (e as Error).message.includes('duplicate') ? 'That name is already in the list.' : (e as Error).message })
+    toast.add({
+      color: 'error',
+      title: 'Could not add',
+      description: (e as Error).message.includes('duplicate')
+        ? 'That name is already in the list.'
+        : (e as Error).message,
+    })
   }
 }
 function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' | 'archived'>>) {
@@ -111,14 +129,18 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
     <template v-else>
       <UCard v-if="withheld.length" :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
-          <h2 class="font-semibold flex items-center gap-2"><UIcon name="i-lucide-milk-off" class="text-warning" /> Milk withheld</h2>
+          <h2 class="font-semibold flex items-center gap-2">
+            <UIcon name="i-lucide-milk-off" class="text-warning" /> Milk withheld
+          </h2>
         </template>
         <ul class="divide-y divide-default">
           <li v-for="{ goat, withdrawal } in withheld" :key="goat.id">
             <RouterLink :to="`/goats/${goat.slug}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
               <span class="font-medium flex-1">{{ name(goat) }}</span>
               <span class="text-sm text-muted">{{ withdrawal!.treatments.map((t) => t.medication).join(', ') }}</span>
-              <span class="text-sm">through <strong>{{ formatDate(withdrawal!.through) }}</strong></span>
+              <span class="text-sm"
+                >through <strong>{{ formatDate(withdrawal!.through) }}</strong></span
+              >
             </RouterLink>
           </li>
         </ul>
@@ -130,7 +152,11 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
           <p class="text-sm text-muted">Overdue, or due soon</p>
         </template>
         <p v-if="!careDue.length" class="p-4 text-muted">Everyone is up to date.</p>
-        <div v-for="{ type, due, never } in careDue" :key="type.id" class="border-t border-default first:border-0 px-4 py-3 space-y-2">
+        <div
+          v-for="{ type, due, never } in careDue"
+          :key="type.id"
+          class="border-t border-default first:border-0 px-4 py-3 space-y-2"
+        >
           <div class="flex items-center gap-2">
             <h3 class="font-medium flex-1">{{ type.name }}</h3>
             <UButton
@@ -145,7 +171,11 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
           <ul v-if="due.length" class="flex flex-wrap gap-2">
             <li v-for="{ goat, status } in due" :key="goat.id">
               <RouterLink :to="`/goats/${goat.slug}`">
-                <UBadge :color="status.state === 'overdue' ? 'warning' : 'neutral'" variant="subtle" :icon="status.state === 'overdue' ? 'i-lucide-alarm-clock' : undefined">
+                <UBadge
+                  :color="status.state === 'overdue' ? 'warning' : 'neutral'"
+                  variant="subtle"
+                  :icon="status.state === 'overdue' ? 'i-lucide-alarm-clock' : undefined"
+                >
                   {{ name(goat) }} · {{ dueLabel(status) }}
                 </UBadge>
               </RouterLink>
@@ -157,16 +187,21 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
         </div>
       </UCard>
 
-
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header><h2 class="font-semibold">Recent care</h2></template>
         <p v-if="!sortedCare.length" class="p-4 text-muted">None logged yet.</p>
         <ul v-else aria-label="Recent care" class="divide-y divide-default">
           <li v-for="e in recentCare" :key="e.id" class="flex items-center gap-2 pe-2">
-            <RouterLink :to="pathOf(e.goat_id)" class="flex-1 flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50">
+            <RouterLink
+              :to="pathOf(e.goat_id)"
+              class="flex-1 flex items-center gap-3 px-4 py-2 text-sm hover:bg-elevated/50"
+            >
               <span class="w-24 shrink-0 text-muted">{{ formatDate(e.done_on) }}</span>
               <span class="flex-1">
-                {{ name(byId.get(e.goat_id)) }} · {{ typeOf(e.care_type_id)?.name ?? 'Care' }}<template v-if="e.dose"> · {{ Number(e.dose) }} {{ typeOf(e.care_type_id)?.dose_unit ?? '' }}</template>
+                {{ name(byId.get(e.goat_id)) }} · {{ typeOf(e.care_type_id)?.name ?? 'Care'
+                }}<template v-if="e.dose">
+                  · {{ Number(e.dose) }} {{ typeOf(e.care_type_id)?.dose_unit ?? '' }}</template
+                >
                 <span v-if="e.notes" class="text-muted"> · {{ e.notes }}</span>
               </span>
             </RouterLink>
@@ -203,11 +238,20 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
       <UCard>
         <template #header>
           <h2 class="font-semibold">Care routine</h2>
-          <p class="text-sm text-muted">How often each kind of care is due. {{ isOwner ? '' : 'Only owners can change this.' }}</p>
+          <p class="text-sm text-muted">
+            How often each kind of care is due. {{ isOwner ? '' : 'Only owners can change this.' }}
+          </p>
         </template>
         <ul class="divide-y divide-default -my-2">
-          <li v-for="t in data.careTypes" :key="t.id" class="py-2 flex flex-wrap items-center gap-3" :class="t.archived ? 'opacity-60' : ''">
-            <span class="flex-1 min-w-32 font-medium">{{ t.name }}<span v-if="t.dose_unit" class="text-muted font-normal"> ({{ t.dose_unit }})</span></span>
+          <li
+            v-for="t in data.careTypes"
+            :key="t.id"
+            class="py-2 flex flex-wrap items-center gap-3"
+            :class="t.archived ? 'opacity-60' : ''"
+          >
+            <span class="flex-1 min-w-32 font-medium"
+              >{{ t.name }}<span v-if="t.dose_unit" class="text-muted font-normal"> ({{ t.dose_unit }})</span></span
+            >
             <template v-if="isOwner">
               <UInputNumber
                 :model-value="t.interval_days ?? undefined"
@@ -223,7 +267,9 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
                 {{ t.archived ? 'Restore' : 'Hide' }}
               </UButton>
             </template>
-            <span v-else class="text-sm text-muted">{{ t.interval_days ? `every ${t.interval_days} days` : 'as needed' }}</span>
+            <span v-else class="text-sm text-muted">{{
+              t.interval_days ? `every ${t.interval_days} days` : 'as needed'
+            }}</span>
           </li>
         </ul>
         <form v-if="isOwner" class="flex flex-wrap items-end gap-2 mt-4" @submit.prevent="addType">
@@ -243,6 +289,10 @@ function updateType(t: CareType, values: Partial<Pick<CareType, 'interval_days' 
 
     <LogCareModal v-model:open="careModal.open" :care-type-id="careModal.careTypeId" :goat-ids="careModal.goatIds" />
     <TreatmentModal v-model:open="treatmentOpen" />
-    <DeleteCareModal v-model:open="deleteModal.open" :event="deleteModal.event" :goat-name="deleteModal.event ? name(byId.get(deleteModal.event.goat_id)) : undefined" />
+    <DeleteCareModal
+      v-model:open="deleteModal.open"
+      :event="deleteModal.event"
+      :goat-name="deleteModal.event ? name(byId.get(deleteModal.event.goat_id)) : undefined"
+    />
   </div>
 </template>

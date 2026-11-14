@@ -4,7 +4,11 @@ import { addGoat, isoDate } from './seed.ts'
 
 const year = Number(isoDate().slice(0, 4))
 
-async function addEntry(page: import('@playwright/test').Page, type: 'Income' | 'Expense', fields: { category?: string; amount: string; what?: string; party?: string }) {
+async function addEntry(
+  page: import('@playwright/test').Page,
+  type: 'Income' | 'Expense',
+  fields: { category?: string; amount: string; what?: string; party?: string },
+) {
   await page.getByRole('button', { name: type, exact: true }).click()
   const dialog = page.getByRole('dialog', { name: `Add ${type.toLowerCase()}` })
   if (fields.category) {
@@ -42,7 +46,11 @@ test('records income and expenses and totals the year', async ({ page, herd }) =
   await expect(page.getByText(`Profit ${year}`)).toBeVisible()
   await expect(page.getByText('$1,100.00').first()).toBeVisible()
 
-  const saved = await admin.from('finance_entries').select('kind, category, amount_cents').eq('herd_id', herd.id).order('amount_cents')
+  const saved = await admin
+    .from('finance_entries')
+    .select('kind, category, amount_cents')
+    .eq('herd_id', herd.id)
+    .order('amount_cents')
   expect(saved.data).toEqual([
     { kind: 'expense', category: 'feed', amount_cents: 10000 },
     { kind: 'income', category: 'kid_sale', amount_cents: 120000 },
@@ -51,7 +59,15 @@ test('records income and expenses and totals the year', async ({ page, herd }) =
 
 test('exports the year as a CSV for the tax preparer', async ({ page, herd }) => {
   await admin.from('finance_entries').insert([
-    { herd_id: herd.id, kind: 'expense', category: 'feed', occurred_on: `${year}-02-01`, amount_cents: 4550, description: 'Hay, 5 bales', party: 'Smith, J' },
+    {
+      herd_id: herd.id,
+      kind: 'expense',
+      category: 'feed',
+      occurred_on: `${year}-02-01`,
+      amount_cents: 4550,
+      description: 'Hay, 5 bales',
+      party: 'Smith, J',
+    },
     { herd_id: herd.id, kind: 'income', category: 'milk', occurred_on: `${year}-03-01`, amount_cents: 2000 },
     { herd_id: herd.id, kind: 'income', category: 'milk', occurred_on: `${year - 1}-12-01`, amount_cents: 999 },
   ])
@@ -77,7 +93,11 @@ test('exports the year as a CSV for the tax preparer', async ({ page, herd }) =>
 test('a stud fee typed on a breeding can go in the books once', async ({ page, owner, herd }) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   const rex = await addGoat(owner, herd.id, { registered_name: 'Rex Ridge Rocket', sex: 'buck', status: 'reference' })
-  const { data: b } = await admin.from('breedings').insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate(-5), service_fee_cents: 7500 }).select().single()
+  const { data: b } = await admin
+    .from('breedings')
+    .insert({ herd_id: herd.id, doe_id: ina.id, buck_id: rex.id, bred_on: isoDate(-5), service_fee_cents: 7500 })
+    .select()
+    .single()
 
   await page.goto('/finances')
   await expect(page.getByText('1 stud fee from breedings not in the books yet')).toBeVisible()
@@ -88,7 +108,11 @@ test('a stud fee typed on a breeding can go in the books once', async ({ page, o
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('stud fee from breedings not in the books yet')).toBeHidden()
 
-  const entry = await admin.from('finance_entries').select('category, amount_cents, breeding_id, goat_id').eq('herd_id', herd.id).single()
+  const entry = await admin
+    .from('finance_entries')
+    .select('category, amount_cents, breeding_id, goat_id')
+    .eq('herd_id', herd.id)
+    .single()
   expect(entry.data).toEqual({ category: 'stud_fee', amount_cents: 7500, breeding_id: b!.id, goat_id: ina.id })
 })
 
@@ -114,10 +138,14 @@ test('marking a goat adopted offers to record the sale', async ({ page, owner, h
 })
 
 test('helpers see no finances at all', async ({ browser, herd }) => {
-  await admin.from('finance_entries').insert({ herd_id: herd.id, kind: 'income', category: 'milk', occurred_on: isoDate(), amount_cents: 5000 })
+  await admin
+    .from('finance_entries')
+    .insert({ herd_id: herd.id, kind: 'income', category: 'milk', occurred_on: isoDate(), amount_cents: 5000 })
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const page = await ctx.newPage()

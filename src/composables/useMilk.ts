@@ -1,6 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 import { refreshQueries } from '@/lib/queryClient'
-import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
+import { keepPreviousData, useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
 import { toISODate, parseDate } from '@/lib/dates'
 import type { DayTotal, EntryUnit, Lactation, MilkRow, WeightUnit } from '@/lib/milk'
@@ -40,6 +40,8 @@ export function useHerdDayTotals(since: MaybeRefOrGetter<string>) {
           .range(from, to),
       ),
     enabled: computed(() => !!herdId.value && !!toValue(since)),
+    // Moving the start date (e.g. a wider chart window) keeps showing what's loaded instead of blanking.
+    placeholderData: keepPreviousData,
   })
 }
 

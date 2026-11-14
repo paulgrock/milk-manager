@@ -24,7 +24,12 @@ const rows = computed(() => {
       const dim = lactation ? daysInMilk(lactation.freshened_on, test.tested_on) : null
       const points =
         test.kind === 'one_day' && r.milk_g !== null && r.butterfat_pct !== null && dim !== null
-          ? oneDayPoints({ milkG: r.milk_g, butterfatPct: r.butterfat_pct, dim, miniature: isMiniature(props.goat.breed) })
+          ? oneDayPoints({
+              milkG: r.milk_g,
+              butterfatPct: r.butterfat_pct,
+              dim,
+              miniature: isMiniature(props.goat.breed),
+            })
           : null
       return {
         r,
@@ -58,37 +63,59 @@ const rows = computed(() => {
           <template v-for="row in rows" :key="row.r.id">
             <tr class="border-t border-default">
               <td class="px-3 py-2">
-                <RouterLink :to="`/milk/tests/${row.test.id}`" class="hover:underline">{{ formatDate(row.test.tested_on) }}</RouterLink>
+                <RouterLink :to="`/milk/tests/${row.test.id}`" class="hover:underline">{{
+                  formatDate(row.test.tested_on)
+                }}</RouterLink>
                 <span class="block text-xs text-muted">{{ TEST_KIND_LABELS[row.test.kind] }}</span>
               </td>
               <td class="px-2 py-2 text-end">{{ row.dim ?? '—' }}</td>
-              <td class="px-2 py-2 text-end">{{ row.r.milk_g === null ? '—' : formatWeight(row.r.milk_g, unit, true) }}</td>
+              <td class="px-2 py-2 text-end">
+                {{ row.r.milk_g === null ? '—' : formatWeight(row.r.milk_g, unit, true) }}
+              </td>
               <td class="px-2 py-2 text-end">
                 <template v-if="row.r.butterfat_pct !== null">
                   {{ Number(row.r.butterfat_pct) }}%
-                  <span v-if="row.fatG !== null" class="block text-xs text-muted">{{ formatWeight(row.fatG, unit, true) }}</span>
+                  <span v-if="row.fatG !== null" class="block text-xs text-muted">{{
+                    formatWeight(row.fatG, unit, true)
+                  }}</span>
                 </template>
                 <template v-else>—</template>
               </td>
               <td class="px-2 py-2 text-end">
                 <template v-if="row.r.protein_pct !== null">
                   {{ Number(row.r.protein_pct) }}%
-                  <span v-if="row.proteinG !== null" class="block text-xs text-muted">{{ formatWeight(row.proteinG, unit, true) }}</span>
+                  <span v-if="row.proteinG !== null" class="block text-xs text-muted">{{
+                    formatWeight(row.proteinG, unit, true)
+                  }}</span>
                 </template>
                 <template v-else>—</template>
               </td>
-              <td class="px-3 py-2 text-end" :class="row.r.scc !== null && row.r.scc >= SCC_LIMIT ? 'text-warning font-semibold' : ''">
+              <td
+                class="px-3 py-2 text-end"
+                :class="row.r.scc !== null && row.r.scc >= SCC_LIMIT ? 'text-warning font-semibold' : ''"
+              >
                 {{ row.r.scc === null ? '—' : formatScc(row.r.scc) }}
-                <UIcon v-if="row.r.scc !== null && row.r.scc >= SCC_LIMIT" name="i-lucide-triangle-alert" class="align-middle" aria-label="Over 1.5 million, the Grade A limit" />
+                <UIcon
+                  v-if="row.r.scc !== null && row.r.scc >= SCC_LIMIT"
+                  name="i-lucide-triangle-alert"
+                  class="align-middle"
+                  aria-label="Over 1.5 million, the Grade A limit"
+                />
               </td>
             </tr>
             <tr v-if="row.points">
               <td colspan="6" class="px-3 pb-2 text-xs">
-                <UBadge :color="row.points.earned ? 'success' : 'neutral'" variant="subtle" size="sm" :icon="row.points.earned ? 'i-lucide-star' : undefined">
+                <UBadge
+                  :color="row.points.earned ? 'success' : 'neutral'"
+                  variant="subtle"
+                  size="sm"
+                  :icon="row.points.earned ? 'i-lucide-star' : undefined"
+                >
                   {{ row.points.total }} of {{ row.points.needed }} points{{ row.points.earned ? ' · *M' : '' }}
                 </UBadge>
                 <span class="text-muted ms-2">
-                  milk {{ row.points.milk }} + butterfat {{ row.points.butterfat }} + days in milk {{ row.points.daysInMilk }}
+                  milk {{ row.points.milk }} + butterfat {{ row.points.butterfat }} + days in milk
+                  {{ row.points.daysInMilk }}
                 </span>
               </td>
             </tr>

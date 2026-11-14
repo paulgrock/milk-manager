@@ -1,6 +1,7 @@
 # Dairy Goat Herd Tracker — Feature Plan
 
 ## Context
+
 You want a herd tracker for dairy goats with features like herdmanager.app (dairy and breeding only, no meat, fiber or pack). Goat profiles should hold the details shown on birdseyefarm.com/goats. The core is daily milk weights, entered per milking, that roll up into lactation curves. The project folder (`/Users/paulgrock/Code/milk-manager`) is empty, so this is a new build. This document lists features only. We pick the tech stack in the next step.
 
 Phases: **MVP** = what you asked for. **P2** = high value, comes next. **P3** = nice to have later.
@@ -8,7 +9,9 @@ Phases: **MVP** = what you asked for. **P2** = high value, comes next. **P3** = 
 ---
 
 ## 1. Goat Records (MVP)
+
 Fields are modeled on the Bird's Eye Farm goat listings.
+
 - **Identity:** registered name, barn name, herd prefix, tattoo (L/R ear), registration # and registry (ADGA, AGS, AMGRA, etc.), a link to the ADGA pedigree, microchip/scrapie tag.
 - **Basics:** sex (doe, buck, wether), breed, % / American / Purebred, birth date (age is calculated), color and markings, horned/disbudded/polled, photos (conformation, head, udder).
 - **Titles and suffixes:** milk stars (e.g. 5\*M), \*B / +B / ++B, \*D, GCH, plus any pending status.
@@ -18,6 +21,7 @@ Fields are modeled on the Bird's Eye Farm goat listings.
 - **Notes**, and a herd list you can search and filter by status, sex, breed and in-milk.
 
 ## 2. Daily Milk Recording (MVP)
+
 - **Quick herd entry:** one screen for today's milking that lists every doe in milk, so you can tap through and enter weights fast.
 - **Split by milking:** each day's total is the sum of its milkings. AM and PM are the defaults, and you can add an extra milking on a given day. Enter the parts and the app adds up the daily total. You can also enter just a total and add the breakdown later. The app flags a day where a milking is missing.
 - **Units:** lbs or kg, with an optional conversion from volume.
@@ -25,12 +29,14 @@ Fields are modeled on the Bird's Eye Farm goat listings.
 - A flag for milk that can't be sold, tied to the treatment withdrawal periods in section 5.
 
 ## 3. Lactation Tracking and Curves (MVP)
+
 - **Lactations:** each one starts at a freshening (kidding) date and ends on its dry-off date. Track lactation number and days in milk (DIM).
 - **Lactation curve chart:** daily weights plotted against DIM, with a smoothed line. You can overlay the doe's previous lactations, or other does, to compare.
 - **Totals:** lactation to date, a projected 305-day total (Wood's curve fit), peak yield and the DIM it came on, plus averages.
 - **Herd view:** today's herd total, a trend over time, and a top-producer ranking.
 
 ## 4. Breeding and Kidding (MVP)
+
 - **Heat log:** observed heats, with the next one predicted (~21-day cycle).
 - **Breeding records:** date, buck (from your herd or an outside stud), method (hand breeding, pen breeding, AI), and service fee.
 - **Due dates:** calculated automatically at ~150 days, with a "due soon" list and status (open, bred, confirmed pregnant, kidded).
@@ -39,32 +45,38 @@ Fields are modeled on the Bird's Eye Farm goat listings.
 - **Dry-off planning:** a suggested dry-off date about 60 days before the due date.
 
 ## 5. Health and Routine Care (MVP)
+
 - **Routine care log, with a "last done / next due" date for each goat:** hoof trims, Replamin Gel Plus, copper bolus (with dose in grams), and vaccinations (CDT, etc.). You set the interval for each care type (e.g. hoof trim every 6–8 weeks, copper every 6 months). You can log one item for many goats at once ("trimmed 8 does today").
 - You can add your own care types, such as deworming or selenium/BoSe.
 - Treatments and medications with dose, route and lot #. **Milk withdrawal periods**, with a banner for "milk withheld until X" that also flags the milk records from section 2.
 - FAMACHA scores, body condition score (BCS), body weight, and disease testing (CAE, CL, Johne's, with dates and results).
 
 ## 6. Milk Quality / DHIA (MVP)
+
 - Official DHIA test days, which carry their own weights and also show on the curve.
 - Somatic cell count (SCC), butterfat %, protein %. Butterfat and protein pounds are calculated from the milk weights.
 - Progress toward milk stars and ADGA milk-star qualification.
 
 ## 7. Calendar and Reminders (MVP)
+
 - One calendar for expected heats, due dates, dry-offs, hoof trims, Replamin/copper due dates, vaccinations, withdrawal end dates and test days.
 - A "today" dashboard showing what needs doing (overdue / due this week) and today's milk total.
 - Notifications are optional (push or email). We decide which during tech planning.
 
 ## 8. Genetics (P3)
+
 - Inbreeding coefficient (COI) for a planned breeding.
 - A pairing planner to check a doe × buck match before breeding.
 - ADGA pedigree import.
 
 ## 9. Data and Reports (MVP basics, more later)
+
 - **MVP:** export to CSV, and import a herd list from CSV.
 - **MVP finances:** income (milk, kid and goat sales, stud fees) and expenses (feed, vet, minerals, registration) by category. Each entry can be tied to a goat, and there's a yearly summary.
 - **Later:** PDF goat summary sheets (a sales packet with pedigree, LA and milk), lactation reports, and Schedule F tax categories.
 
 ## 10. Users and Access (MVP)
+
 - One shared herd with several logins (you plus family and helpers), so the app needs cloud sync.
 - Each entry records who made it ("milked by", "trimmed by").
 - Roles: owner (everything) and helper (enter milk and care records, no deleting goats or editing finances).
@@ -76,8 +88,10 @@ Fields are modeled on the Bird's Eye Farm goat listings.
   without an account yet; existing users would see the invite the next time they open the app.
 
 ## Going live: sign-in email (done 2026-11-03)
+
 Sign-in codes go out through **Resend** from milk@birdseyefarm.com (free for 3,000 emails a month). Supabase's built-in
 sender only reaches people on the Supabase team, a few times an hour, and won't take a custom template.
+
 - **DNS:** birdseyefarm.com is registered at Namecheap but its DNS is hosted by Netlify (nameservers `dns1–4.p01.nsone.net`),
   so the records live in Netlify → Domains → birdseyefarm.com → DNS settings: TXT `resend._domainkey` (DKIM), CNAMEs `send`
   and `rsend` (sending, pointing at `*.forge.rmta.net`), and TXT `_dmarc` `v=DMARC1; p=none;`. Don't add them at Namecheap,
@@ -91,8 +105,10 @@ sender only reaches people on the Supabase team, a few times an hour, and won't 
 - **Rate Limits:** emails per hour raised to about 30.
 
 ## 11. Milk records, LA and photos on the farm website (P3)
+
 Show each goat's appraisals and DHI milk records on birdseyefarm.com straight from the app, so they're never typed twice.
 The website is an Astro site built ahead of time from Sanity (`output: 'static'`) on Netlify.
+
 - **App:** one database function readable without signing in (the only thing visitors can reach) that returns, per goat:
   registration number, name and titles; linear appraisals (date, codes, final score); DHI lactation records (lactation
   number, days, milk/fat/protein lb, 305-day figures, milk stars); and the current lactation's to-date and projected
@@ -113,6 +129,7 @@ The website is an Astro site built ahead of time from Sanity (`output: 'static'`
   would be flattened, and it would need a secret Sanity token on a server.
 
 ## 12. Cheese (live)
+
 A Cheese tab for cheese made from the herd's milk. Each **make** is one cheese type made on one day, with its ready date
 (from the type's aging time, editable), optional gallons of milk and whether it was raw or pasteurized, notes, and a Finished mark. The farm
 keeps its own list of cheeses: anyone adds, owners rename, re-time or hide. Ready dates show on the calendar (Cheese
@@ -122,6 +139,7 @@ not fresh). Tapping a type lists all its makes (date, milk, status); tapping a m
 and notes, with Edit and Mark finished.
 
 ## 13. Chores (built, not live yet)
+
 A Chores tab for farm tasks that repeat and belong to the farm, not a goat. It starts with clean milking equipment
 (weekly), fill waterers and refill mineral feeder (every other week), and clean stalls and clean coop (every 30 days).
 A chore is due its repeat time after it was last done. "Done today" is one tap (with undo); a past date and a note
@@ -131,6 +149,7 @@ chores show on Today, and all due dates on the calendar under a Chores filter. *
 repeat time, at most 7 days, for care as well as chores.
 
 ## 14. Adoptions: kid reservations (built, not live yet)
+
 An Adoptions page under Breeding, owners only. **Adopters** are kept year to year. A **reservation** holds an adopter's
 place in line for one doe's kids (or any doe's) in a kidding season: the sex wanted (doeling, buckling, wether or
 either) and how many. Its **deposit** goes into Finances the day it's received; marking it refunded takes it back out,
@@ -143,10 +162,12 @@ reservations on the doe's page, and registration-transfer paperwork.
 Milk entry also has a **milking order**, set by anyone in the herd, so the list follows the milking stand.
 
 ## Whole-app review (2026-10-31)
+
 Reviewed after Cheese went live: bundle sizes, unused code and packages, repeated code, data loading, offline
 behavior, tests and tooling. Security was audited separately on 2026-10-23.
 
 **Worth doing, most valuable first**
+
 1. **Done:** **Small photo copies for icons.** The goat list, milk line and goat page header show photos as small icons but
    download the full photo (average 372 KB, up to 1.4 MB): about 5 MB the first time a phone opens the goat list,
    often on barn signal. Save a ~256 px copy at upload, backfill existing photos with a script, and use it for icons.
@@ -162,6 +183,7 @@ behavior, tests and tooling. Security was audited separately on 2026-10-23.
 7. **Drop the unused `health_observations` and `disease_tests` tables** (empty since health checks were removed).
 
 **Smaller or optional**
+
 - Package updates: all a minor version behind. The audit warnings are in test and build tools only, not shipped code.
 - Offline saves: milk and care work with no signal; treatments, breeding, cheese, goats and photos need signal.
   Decide whether any of those should work offline too.
@@ -172,17 +194,20 @@ behavior, tests and tooling. Security was audited separately on 2026-10-23.
 - No linter. ESLint's Vue rules would catch some mistakes earlier; optional.
 
 **Checked and fine**
+
 - The chart library is already trimmed to what's used and only loads on the lactation and production pages.
 - Milk data loads by date range (one day for entry, a window for history and production, one goat for her curves).
 - No unused files, components or packages; no file over about 370 lines.
 - Owner-managed lists sit on the page they're used on (care routine on Health, cheeses on Cheese), consistently.
 
 ## Explicitly out of scope
+
 Meat, fiber and pack features. A marketplace or public farm page (could be added later).
 
 ---
 
 ## Suggested additions (my picks)
+
 - **Per-milking breakdown** that adds up to the total, as you asked. It's built into section 2.
 - **Withdrawal-aware milk flags:** this is the most important safety feature for selling milk.
 - **Kid → goat promotion:** pedigrees fill in over time as kids are born into the herd.
@@ -190,9 +215,11 @@ Meat, fiber and pack features. A marketplace or public farm page (could be added
 - **Reference goats for outside sires and dams,** so pedigrees can link to them.
 
 ## Next step
+
 Choose the tech stack (web, mobile or PWA; how offline entry syncs; how logins work; hosting), then break the MVP into build milestones: goats → milk → lactation → breeding → care/health → DHIA → calendar → finances.
 
 ## Verification (once built)
+
 - Enter a week of AM/PM weights for 3 does and check that the daily totals match the sum of the milkings.
 - Record a kidding → check that a lactation starts and that DIM is correct → check that the curve shows and gives a 305-day projection.
 - Record a breeding → check that the due date is the breeding date + 150 days and that it appears in "due soon".

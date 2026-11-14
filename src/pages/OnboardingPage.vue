@@ -43,10 +43,22 @@ async function onSignOut() {
 
         <form class="space-y-4" @submit.prevent="createHerd.mutate(herdName)">
           <UFormField label="Herd or farm name" name="herdName">
-            <UInput v-model="herdName" required maxlength="100" placeholder="e.g. Bird's Eye Farm" class="w-full" size="xl" />
+            <UInput
+              v-model="herdName"
+              required
+              maxlength="100"
+              placeholder="e.g. Bird's Eye Farm"
+              class="w-full"
+              size="xl"
+            />
           </UFormField>
           <UButton type="submit" block size="xl" :loading="createHerd.isPending.value">Create herd</UButton>
-          <UAlert v-if="createHerd.error.value" color="error" variant="subtle" :description="createHerd.error.value.message" />
+          <UAlert
+            v-if="createHerd.error.value"
+            color="error"
+            variant="subtle"
+            :description="createHerd.error.value.message"
+          />
         </form>
       </UCard>
 

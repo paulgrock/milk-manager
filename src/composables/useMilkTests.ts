@@ -14,7 +14,13 @@ export function useMilkTests() {
     queryFn: async () => {
       const [tests, results] = await Promise.all([
         fetchAll<MilkTest>((from, to) =>
-          supabase.from('milk_tests').select('*').eq('herd_id', herdId.value).order('tested_on', { ascending: false }).order('id').range(from, to),
+          supabase
+            .from('milk_tests')
+            .select('*')
+            .eq('herd_id', herdId.value)
+            .order('tested_on', { ascending: false })
+            .order('id')
+            .range(from, to),
         ),
         fetchAll<MilkTestResult>((from, to) =>
           supabase.from('milk_test_results').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
@@ -42,7 +48,13 @@ export function useMilkTestMutations() {
     }) => {
       const test: MilkTest = v.id
         ? unwrap(await supabase.from('milk_tests').update(v.test).eq('id', v.id).select().single())!
-        : unwrap(await supabase.from('milk_tests').insert({ ...v.test, herd_id: herdId.value }).select().single())!
+        : unwrap(
+            await supabase
+              .from('milk_tests')
+              .insert({ ...v.test, herd_id: herdId.value })
+              .select()
+              .single(),
+          )!
       const keep = v.results.map((r) => r.goat_id)
       if (v.id) {
         const stale = supabase.from('milk_test_results').delete().eq('test_id', test.id)
@@ -50,9 +62,10 @@ export function useMilkTestMutations() {
       }
       if (v.results.length) {
         unwrap(
-          await supabase
-            .from('milk_test_results')
-            .upsert(v.results.map((r) => ({ ...r, test_id: test.id, herd_id: herdId.value })), { onConflict: 'test_id,goat_id' }),
+          await supabase.from('milk_test_results').upsert(
+            v.results.map((r) => ({ ...r, test_id: test.id, herd_id: herdId.value })),
+            { onConflict: 'test_id,goat_id' },
+          ),
         )
       }
       return test

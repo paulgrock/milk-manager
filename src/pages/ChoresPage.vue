@@ -16,7 +16,9 @@ const { query, data } = useChoresData()
 const { markDone, removeDone, waitingCount } = useChoreLog()
 const { saveChore } = useChoreMutations()
 
-const statuses = computed(() => sortByDue(data.value.chores.filter((c) => !c.hidden).map((c) => choreStatus(c, data.value.done, today))))
+const statuses = computed(() =>
+  sortByDue(data.value.chores.filter((c) => !c.hidden).map((c) => choreStatus(c, data.value.done, today))),
+)
 
 function dueLabel(s: ChoreStatus) {
   const days = s.daysUntilDue!
@@ -46,11 +48,17 @@ const draft = reactive({ name: '', interval: undefined as number | undefined })
 async function addChore() {
   if (!draft.name.trim() || !draft.interval) return
   try {
-    await saveChore.mutateAsync({ values: { name: draft.name.trim(), interval_days: draft.interval, sort_order: data.value.chores.length + 1 } })
+    await saveChore.mutateAsync({
+      values: { name: draft.name.trim(), interval_days: draft.interval, sort_order: data.value.chores.length + 1 },
+    })
     Object.assign(draft, { name: '', interval: undefined })
   } catch (e) {
     const message = (e as Error).message
-    toast.add({ color: 'error', title: 'Could not add', description: message.includes('duplicate') ? 'That chore is already in the list.' : message })
+    toast.add({
+      color: 'error',
+      title: 'Could not add',
+      description: message.includes('duplicate') ? 'That chore is already in the list.' : message,
+    })
   }
 }
 function updateChore(c: Chore, values: Partial<Pick<Chore, 'name' | 'interval_days' | 'hidden'>>) {
@@ -85,13 +93,19 @@ function updateChore(c: Chore, values: Partial<Pick<Chore, 'name' | 'interval_da
           <li v-for="s in statuses" :key="s.chore.id" class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
             <button type="button" class="flex-1 min-w-48 text-start" @click="modal = { open: true, chore: s.chore }">
               <span class="block font-medium">{{ s.chore.name }}</span>
-              <span class="block text-sm text-muted">{{ lastLabel(s) }} · {{ repeatLabel(s.chore.interval_days) }}</span>
+              <span class="block text-sm text-muted"
+                >{{ lastLabel(s) }} · {{ repeatLabel(s.chore.interval_days) }}</span
+              >
             </button>
             <div class="flex items-center gap-2 ms-auto">
-              <UBadge v-if="s.state === 'overdue'" color="warning" variant="subtle" icon="i-lucide-alarm-clock">{{ dueLabel(s) }}</UBadge>
+              <UBadge v-if="s.state === 'overdue'" color="warning" variant="subtle" icon="i-lucide-alarm-clock">{{
+                dueLabel(s)
+              }}</UBadge>
               <UBadge v-else-if="s.state === 'due'" color="neutral" variant="subtle">{{ dueLabel(s) }}</UBadge>
               <span v-else-if="s.state === 'ok'" class="text-sm text-muted">{{ dueLabel(s) }}</span>
-              <UButton v-else size="sm" color="neutral" variant="ghost" @click="modal = { open: true, chore: s.chore }">Enter last done</UButton>
+              <UButton v-else size="sm" color="neutral" variant="ghost" @click="modal = { open: true, chore: s.chore }"
+                >Enter last done</UButton
+              >
               <UButton
                 v-if="s.last?.done_on === today"
                 size="sm"
@@ -102,7 +116,13 @@ function updateChore(c: Chore, values: Partial<Pick<Chore, 'name' | 'interval_da
               >
                 Done
               </UButton>
-              <UButton v-else size="sm" icon="i-lucide-check" :variant="s.state === 'overdue' || s.state === 'due' ? 'solid' : 'soft'" @click="doneToday(s.chore)">
+              <UButton
+                v-else
+                size="sm"
+                icon="i-lucide-check"
+                :variant="s.state === 'overdue' || s.state === 'due' ? 'solid' : 'soft'"
+                @click="doneToday(s.chore)"
+              >
                 Done today
               </UButton>
             </div>
@@ -113,10 +133,17 @@ function updateChore(c: Chore, values: Partial<Pick<Chore, 'name' | 'interval_da
       <UCard>
         <template #header>
           <h2 class="font-semibold">Chores we do</h2>
-          <p class="text-sm text-muted">How often each one is due. {{ isOwner ? '' : 'Only owners can rename, change or hide these.' }}</p>
+          <p class="text-sm text-muted">
+            How often each one is due. {{ isOwner ? '' : 'Only owners can rename, change or hide these.' }}
+          </p>
         </template>
         <ul class="divide-y divide-default -my-2">
-          <li v-for="c in data.chores" :key="c.id" class="py-2 flex flex-wrap items-center gap-3" :class="c.hidden ? 'opacity-60' : ''">
+          <li
+            v-for="c in data.chores"
+            :key="c.id"
+            class="py-2 flex flex-wrap items-center gap-3"
+            :class="c.hidden ? 'opacity-60' : ''"
+          >
             <template v-if="isOwner">
               <UInput
                 :model-value="c.name"
@@ -137,14 +164,22 @@ function updateChore(c: Chore, values: Partial<Pick<Chore, 'name' | 'interval_da
                   @update:model-value="(v: unknown) => updateChore(c, { interval_days: Number(v) })"
                 />
                 <span class="text-sm text-muted">days</span>
-                <UButton size="xs" color="neutral" variant="ghost" class="w-16 justify-center" @click="updateChore(c, { hidden: !c.hidden })">
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  class="w-16 justify-center"
+                  @click="updateChore(c, { hidden: !c.hidden })"
+                >
                   {{ c.hidden ? 'Restore' : 'Hide' }}
                 </UButton>
               </div>
             </template>
             <template v-else>
               <span class="flex-1 font-medium">{{ c.name }}</span>
-              <span class="text-sm text-muted">{{ repeatLabel(c.interval_days) }}{{ c.hidden ? ' · hidden' : '' }}</span>
+              <span class="text-sm text-muted"
+                >{{ repeatLabel(c.interval_days) }}{{ c.hidden ? ' · hidden' : '' }}</span
+              >
             </template>
           </li>
         </ul>

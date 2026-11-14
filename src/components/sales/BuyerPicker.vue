@@ -9,7 +9,9 @@ const toast = useToast()
 const { data } = useSalesData()
 const { saveBuyer } = useSalesMutations()
 
-const items = computed(() => data.value.buyers.map((b) => ({ label: b.town ? `${b.name} (${b.town})` : b.name, value: b.id })))
+const items = computed(() =>
+  data.value.buyers.map((b) => ({ label: b.town ? `${b.name} (${b.town})` : b.name, value: b.id })),
+)
 
 // A new adopter typed in: name now, contact details optional.
 const draft = ref<{ name: string; phone: string; email: string }>()
@@ -17,7 +19,11 @@ async function add() {
   if (!draft.value?.name.trim()) return
   try {
     const buyer = await saveBuyer.mutateAsync({
-      values: { name: draft.value.name.trim(), phone: draft.value.phone.trim() || null, email: draft.value.email.trim() || null },
+      values: {
+        name: draft.value.name.trim(),
+        phone: draft.value.phone.trim() || null,
+        email: draft.value.email.trim() || null,
+      },
     })
     model.value = buyer.id
     draft.value = undefined

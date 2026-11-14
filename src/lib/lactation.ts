@@ -160,7 +160,15 @@ export function fitWood(points: DayPoint[]): WoodFit | null {
 
   // Solve [n Σx1 Σx2; Σx1 Σx1² Σx1x2; Σx2 Σx1x2 Σx2²] · [k b -c] = [Σy Σx1y Σx2y]
   // with x1 = ln t, x2 = t, y = ln yield.
-  let n = 0, s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0, sy = 0, s1y = 0, s2y = 0
+  let n = 0,
+    s1 = 0,
+    s2 = 0,
+    s11 = 0,
+    s12 = 0,
+    s22 = 0,
+    sy = 0,
+    s1y = 0,
+    s2y = 0
   for (const p of usable) {
     const x1 = Math.log(p.dim)
     const x2 = p.dim
@@ -276,22 +284,53 @@ export function summarizeLactation(
     totalSource,
     daysRecorded: points.length,
   }
-  const none = (note: string) => ({ ...base, fit: null, projected305G: null, projectedSource: null, confidence: null, projectionNote: note })
+  const none = (note: string) => ({
+    ...base,
+    fit: null,
+    projected305G: null,
+    projectedSource: null,
+    confidence: null,
+    projectionNote: note,
+  })
 
   // A finished lactation's 305-day record is what she actually gave.
   if (dried) {
     if (official.complete) {
-      const r305 = official.complete.r305MilkG ?? ((official.complete.days ?? currentDim) <= STANDARD_DAYS ? official.complete.milkG : null)
-      if (r305 !== null) return { ...base, fit: null, projected305G: r305, projectedSource: 'official', confidence: null, projectionNote: null }
+      const r305 =
+        official.complete.r305MilkG ??
+        ((official.complete.days ?? currentDim) <= STANDARD_DAYS ? official.complete.milkG : null)
+      if (r305 !== null)
+        return {
+          ...base,
+          fit: null,
+          projected305G: r305,
+          projectedSource: 'official',
+          confidence: null,
+          projectionNote: null,
+        }
     }
     if (!series.length) return none('No weights recorded in this lactation')
     const first305 = Math.round(sumGrams(series.filter((d) => d.dim <= STANDARD_DAYS)))
-    return { ...base, fit: null, projected305G: first305, projectedSource: 'curve', confidence: null, projectionNote: null }
+    return {
+      ...base,
+      fit: null,
+      projected305G: first305,
+      projectedSource: 'curve',
+      confidence: null,
+      projectionNote: null,
+    }
   }
 
   // In milk: DHI's projection stands until there are newer weights than its test.
   if (official.test?.proj305MilkG != null && lastRecordedDim <= official.test.dim) {
-    return { ...base, fit: null, projected305G: official.test.proj305MilkG, projectedSource: 'official', confidence: null, projectionNote: null }
+    return {
+      ...base,
+      fit: null,
+      projected305G: official.test.proj305MilkG,
+      projectedSource: 'official',
+      confidence: null,
+      projectionNote: null,
+    }
   }
 
   const spanDays = points.length ? lastRecordedDim - points[0]!.dim : 0

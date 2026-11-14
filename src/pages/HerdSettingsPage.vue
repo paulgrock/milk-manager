@@ -42,7 +42,12 @@ watch(
 
 const saveDetails = useMutation({
   mutationFn: async () =>
-    unwrap(await supabase.from('herds').update({ name: details.name.trim(), weight_unit: details.weight_unit }).eq('id', herdId.value)),
+    unwrap(
+      await supabase
+        .from('herds')
+        .update({ name: details.name.trim(), weight_unit: details.weight_unit })
+        .eq('id', herdId.value),
+    ),
   onSuccess: async () => {
     await refreshMemberships()
     toast.add({ color: 'success', title: 'Herd saved' })
@@ -56,7 +61,8 @@ const saveDetails = useMutation({
 const LOGO_SIZE = 192
 const logoInput = ref<HTMLInputElement>()
 const saveLogo = useMutation({
-  mutationFn: async (logo: string | null) => unwrap(await supabase.from('herds').update({ logo }).eq('id', herdId.value)),
+  mutationFn: async (logo: string | null) =>
+    unwrap(await supabase.from('herds').update({ logo }).eq('id', herdId.value)),
   onSuccess: (_data, logo) => {
     void refreshMemberships()
     toast.add({ color: 'success', title: logo ? 'Logo updated' : 'Logo removed' })
@@ -161,11 +167,26 @@ async function onSignOut() {
         <div class="space-y-1">
           <p class="text-sm font-medium">Logo</p>
           <div v-if="isOwner" class="flex gap-2">
-            <UButton size="sm" variant="soft" icon="i-lucide-image-up" :loading="saveLogo.isPending.value" @click="logoInput?.click()">
+            <UButton
+              size="sm"
+              variant="soft"
+              icon="i-lucide-image-up"
+              :loading="saveLogo.isPending.value"
+              @click="logoInput?.click()"
+            >
               {{ herd?.logo ? 'Change' : 'Upload' }}
             </UButton>
-            <UButton v-if="herd?.logo" size="sm" color="neutral" variant="ghost" @click="saveLogo.mutate(null)">Remove</UButton>
-            <input ref="logoInput" type="file" accept="image/*" class="hidden" aria-label="Logo file" @change="onLogoFile" />
+            <UButton v-if="herd?.logo" size="sm" color="neutral" variant="ghost" @click="saveLogo.mutate(null)"
+              >Remove</UButton
+            >
+            <input
+              ref="logoInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              aria-label="Logo file"
+              @change="onLogoFile"
+            />
           </div>
           <p class="text-xs text-muted">Shown at the top of the app. Square pictures work best.</p>
         </div>

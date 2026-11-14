@@ -73,7 +73,10 @@ const persister = createAsyncStoragePersister({
  * phone is locked or the app is closed is already on the device.
  */
 export async function saveCacheNow(): Promise<void> {
-  await set(CACHE_KEY, serialize({ buster: '', timestamp: Date.now(), clientState: dehydrate(queryClient, dehydrateOptions) }))
+  await set(
+    CACHE_KEY,
+    serialize({ buster: '', timestamp: Date.now(), clientState: dehydrate(queryClient, dehydrateOptions) }),
+  )
 }
 
 /**

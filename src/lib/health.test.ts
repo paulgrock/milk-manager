@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { careStatus, dueSoonDays, withdrawalOn, withholdThrough, type CareEvent, type CareType, type Treatment } from './health'
+import {
+  careStatus,
+  dueSoonDays,
+  withdrawalOn,
+  withholdThrough,
+  type CareEvent,
+  type CareType,
+  type Treatment,
+} from './health'
 
 const type = (over: Partial<CareType> = {}): CareType => ({
   id: 'hoof',
@@ -44,7 +52,12 @@ const treatment = (over: Partial<Treatment> = {}): Treatment => ({
 
 describe('careStatus', () => {
   it('counts from the most recent time it was done', () => {
-    const status = careStatus('ina', type(), [event('2026-06-01'), event('2026-09-01'), event('2026-07-15')], '2026-10-20')
+    const status = careStatus(
+      'ina',
+      type(),
+      [event('2026-06-01'), event('2026-09-01'), event('2026-07-15')],
+      '2026-10-20',
+    )
     expect(status.last?.done_on).toBe('2026-09-01')
     expect(status.nextDue).toBe('2026-10-27')
     expect(status.daysUntilDue).toBe(7)
@@ -63,7 +76,9 @@ describe('careStatus', () => {
   })
 
   it('has no due date for as-needed care', () => {
-    expect(careStatus('ina', type({ interval_days: null }), [event('2026-10-01')], '2026-10-20')).toMatchObject({ state: 'as-needed' })
+    expect(careStatus('ina', type({ interval_days: null }), [event('2026-10-01')], '2026-10-20')).toMatchObject({
+      state: 'as-needed',
+    })
   })
 })
 
@@ -100,7 +115,10 @@ describe('milk withdrawal', () => {
   })
 
   it('uses the longest of overlapping treatments', () => {
-    const treatments = [treatment({ id: 'a' }), treatment({ id: 'b', started_on: '2026-10-12', milk_withdrawal_days: 30 })]
+    const treatments = [
+      treatment({ id: 'a' }),
+      treatment({ id: 'b', started_on: '2026-10-12', milk_withdrawal_days: 30 }),
+    ]
     const w = withdrawalOn('ina', treatments, '2026-10-15')!
     expect(w.through).toBe('2026-11-11')
     expect(w.treatments).toHaveLength(2)

@@ -13,7 +13,12 @@ const model = defineModel<T>({ required: true })
 
 const list = ref<HTMLElement>()
 const id = `wheel-${Math.random().toString(36).slice(2, 8)}`
-const index = computed(() => Math.max(0, props.items.findIndex((i) => i.value === model.value)))
+const index = computed(() =>
+  Math.max(
+    0,
+    props.items.findIndex((i) => i.value === model.value),
+  ),
+)
 
 function scrollTo(i: number, smooth: boolean) {
   list.value?.scrollTo({ top: i * ROW, behavior: smooth ? 'smooth' : 'instant' })
@@ -42,7 +47,12 @@ function choose(i: number) {
 }
 
 function onKey(e: KeyboardEvent) {
-  const moves: Record<string, number> = { ArrowUp: index.value - 1, ArrowDown: index.value + 1, Home: 0, End: props.items.length - 1 }
+  const moves: Record<string, number> = {
+    ArrowUp: index.value - 1,
+    ArrowDown: index.value + 1,
+    Home: 0,
+    End: props.items.length - 1,
+  }
   if (!(e.key in moves)) return
   e.preventDefault()
   choose(moves[e.key]!)
@@ -51,7 +61,10 @@ function onKey(e: KeyboardEvent) {
 
 <template>
   <div class="relative" :style="{ height: `${ROW * VISIBLE}px` }">
-    <div class="pointer-events-none absolute inset-x-1 rounded-md bg-elevated" :style="{ top: `${PAD}px`, height: `${ROW}px` }" />
+    <div
+      class="pointer-events-none absolute inset-x-1 rounded-md bg-elevated"
+      :style="{ top: `${PAD}px`, height: `${ROW}px` }"
+    />
     <div
       ref="list"
       role="listbox"

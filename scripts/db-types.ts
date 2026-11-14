@@ -11,9 +11,14 @@ const FILE = new URL('../src/lib/database.types.ts', import.meta.url)
 
 let out: string
 try {
-  out = execFileSync('npx', ['supabase', 'gen', 'types', 'typescript', '--local'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+  out = execFileSync('npx', ['supabase', 'gen', 'types', 'typescript', '--local'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
 } catch (e) {
-  console.error(`Could not generate types; ${FILE.pathname} is unchanged. Is the local database running (npm run db:start)?`)
+  console.error(
+    `Could not generate types; ${FILE.pathname} is unchanged. Is the local database running (npm run db:start)?`,
+  )
   console.error((e as { stderr?: string }).stderr ?? e)
   process.exit(1)
 }

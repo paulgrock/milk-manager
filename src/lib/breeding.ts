@@ -76,11 +76,19 @@ export function kiddingFor(b: Breeding, kiddings: Kidding[]): Kidding | undefine
   if (linked) return linked
   const due = dueWindow(b)
   return kiddings.find(
-    (k) => !k.breeding_id && k.doe_id === b.doe_id && k.kidded_on >= addDays(b.bred_on, 100) && k.kidded_on <= addDays(due.latest, 30),
+    (k) =>
+      !k.breeding_id &&
+      k.doe_id === b.doe_id &&
+      k.kidded_on >= addDays(b.bred_on, 100) &&
+      k.kidded_on <= addDays(due.latest, 30),
   )
 }
 
-export function breedingStatus(b: Breeding, data: Pick<BreedingData, 'checks' | 'kiddings'>, today: string): BreedingStatus {
+export function breedingStatus(
+  b: Breeding,
+  data: Pick<BreedingData, 'checks' | 'kiddings'>,
+  today: string,
+): BreedingStatus {
   if (kiddingFor(b, data.kiddings)) return 'kidded'
   const latestCheck = data.checks
     .filter((c) => c.breeding_id === b.id)
@@ -102,7 +110,9 @@ const ACTIVE: BreedingStatus[] = ['bred', 'confirmed', 'overdue']
 
 export function doeBreedingState(doeId: string, data: BreedingData, today: string): DoeBreedingState {
   const breedings = data.breedings.filter((b) => b.doe_id === doeId).sort((a, b) => b.bred_on.localeCompare(a.bred_on))
-  const lastKidding = data.kiddings.filter((k) => k.doe_id === doeId).sort((a, b) => b.kidded_on.localeCompare(a.kidded_on))[0]
+  const lastKidding = data.kiddings
+    .filter((k) => k.doe_id === doeId)
+    .sort((a, b) => b.kidded_on.localeCompare(a.kidded_on))[0]
   const state: DoeBreedingState = { lastKidding }
 
   const latest = breedings[0]
@@ -110,7 +120,13 @@ export function doeBreedingState(doeId: string, data: BreedingData, today: strin
     const status = breedingStatus(latest, data, today)
     if (ACTIVE.includes(status)) {
       const due = dueWindow(latest)
-      state.current = { breeding: latest, status, due, dryOffBy: dryOffBy(due), daysToDue: daysBetween(today, due.expected) }
+      state.current = {
+        breeding: latest,
+        status,
+        due,
+        dryOffBy: dryOffBy(due),
+        daysToDue: daysBetween(today, due.expected),
+      }
       // Not confirmed yet: watch for her coming back into heat ~21 days after.
       if (status === 'bred') {
         const returnDate = addDays(latest.exposure_end ?? latest.bred_on, HEAT_CYCLE_DAYS)
@@ -121,8 +137,15 @@ export function doeBreedingState(doeId: string, data: BreedingData, today: strin
   }
 
   // Open: project her cycle forward from the last heat or breeding we know of.
-  const lastHeat = data.heats.filter((h) => h.goat_id === doeId).map((h) => h.observed_on).sort().at(-1)
-  const lastSign = [lastHeat, latest?.exposure_end ?? latest?.bred_on].filter((d): d is string => !!d).sort().at(-1)
+  const lastHeat = data.heats
+    .filter((h) => h.goat_id === doeId)
+    .map((h) => h.observed_on)
+    .sort()
+    .at(-1)
+  const lastSign = [lastHeat, latest?.exposure_end ?? latest?.bred_on]
+    .filter((d): d is string => !!d)
+    .sort()
+    .at(-1)
   if (lastSign && (!lastKidding || lastSign > lastKidding.kidded_on)) {
     let next = addDays(lastSign, HEAT_CYCLE_DAYS)
     while (next < addDays(today, -HEAT_WINDOW)) next = addDays(next, HEAT_CYCLE_DAYS)

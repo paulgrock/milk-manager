@@ -34,7 +34,10 @@ const viewOptions = [
   { label: 'Everyone', value: 'all' },
   ...(['for_sale', 'sold', 'deceased', 'reference'] as const).map((s) => ({ label: STATUS_LABELS[s], value: s })),
 ]
-const sexOptions = [{ label: 'Any sex', value: 'any' }, ...Object.entries(SEX_LABELS).map(([value, label]) => ({ label, value }))]
+const sexOptions = [
+  { label: 'Any sex', value: 'any' },
+  ...Object.entries(SEX_LABELS).map(([value, label]) => ({ label, value })),
+]
 const breedOptions = computed(() => [
   { label: 'Any breed', value: 'any' },
   ...[...new Set((goats.data.value ?? []).map((g) => g.breed).filter((b): b is string => !!b))]
@@ -48,7 +51,12 @@ const today = todayISO()
 const filtered = computed(() => {
   const list = filterGoats(goats.data.value ?? [], {
     search: search.value,
-    statuses: view.value === 'current' || view.value === 'in_milk' ? CURRENT_STATUSES : view.value === 'all' ? [] : [view.value],
+    statuses:
+      view.value === 'current' || view.value === 'in_milk'
+        ? CURRENT_STATUSES
+        : view.value === 'all'
+          ? []
+          : [view.value],
     sex: sex.value === 'any' ? null : sex.value,
     breed: breed.value === 'any' ? null : breed.value,
   })
@@ -59,9 +67,13 @@ const latest = computed(() => latestAppraisals(appraisals.data.value ?? []))
 const primaryPhotos = computed(
   () => new Map((photos.data.value ?? []).filter((p) => p.is_primary).map((p) => [p.goat_id, iconPath(p)])),
 )
-const photoUrls = usePhotoUrls(() => filtered.value.map((g) => primaryPhotos.value.get(g.id)).filter((p): p is string => !!p))
+const photoUrls = usePhotoUrls(() =>
+  filtered.value.map((g) => primaryPhotos.value.get(g.id)).filter((p): p is string => !!p),
+)
 
-const hasFilters = computed(() => !!search.value || view.value !== 'current' || sex.value !== 'any' || breed.value !== 'any')
+const hasFilters = computed(
+  () => !!search.value || view.value !== 'current' || sex.value !== 'any' || breed.value !== 'any',
+)
 function clearFilters() {
   search.value = ''
   view.value = 'current'
@@ -111,7 +123,9 @@ function clearFilters() {
     <template v-else>
       <p class="text-sm text-muted">
         {{ filtered.length }} {{ filtered.length === 1 ? 'goat' : 'goats' }}
-        <UButton v-if="hasFilters" variant="link" size="sm" class="p-0 ms-2" @click="clearFilters">Clear filters</UButton>
+        <UButton v-if="hasFilters" variant="link" size="sm" class="p-0 ms-2" @click="clearFilters"
+          >Clear filters</UButton
+        >
       </p>
       <ul class="divide-y divide-default rounded-lg border border-default">
         <li v-for="g in filtered" :key="g.id">
@@ -130,7 +144,12 @@ function clearFilters() {
               <UBadge v-if="latest.get(g.id)" color="neutral" variant="subtle">
                 {{ appraisalSummary(latest.get(g.id)!) }}
               </UBadge>
-              <UBadge v-if="!CURRENT_STATUSES.includes(g.status) || g.status === 'for_sale'" color="neutral" variant="outline" size="sm">
+              <UBadge
+                v-if="!CURRENT_STATUSES.includes(g.status) || g.status === 'for_sale'"
+                color="neutral"
+                variant="outline"
+                size="sm"
+              >
                 {{ STATUS_LABELS[g.status] }}
               </UBadge>
             </div>

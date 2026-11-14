@@ -159,7 +159,9 @@ console.log(
 )
 if (older.length) console.log(`Removed ${older.length} old backups (keeping the newest ${KEEP}).`)
 if (mismatches.length) {
-  console.log(`\nDoesn't match the live project (fine if someone was entering records just now):\n  ${mismatches.join('\n  ')}`)
+  console.log(
+    `\nDoesn't match the live project (fine if someone was entering records just now):\n  ${mismatches.join('\n  ')}`,
+  )
   process.exitCode = 1
 } else {
   console.log('Checked: every table and photo matches the live project.')

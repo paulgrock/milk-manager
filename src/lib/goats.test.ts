@@ -55,7 +55,9 @@ function goat(overrides: Partial<Goat>): Goat {
 
 describe('names', () => {
   it('prefers the registered name and falls back to the barn name', () => {
-    expect(goatName(goat({ registered_name: "Bird's Eye Farm Ina May", barn_name: 'Ina' }))).toBe("Bird's Eye Farm Ina May")
+    expect(goatName(goat({ registered_name: "Bird's Eye Farm Ina May", barn_name: 'Ina' }))).toBe(
+      "Bird's Eye Farm Ina May",
+    )
     expect(goatName(goat({ registered_name: '  ', barn_name: 'Ina' }))).toBe('Ina')
   })
 
@@ -78,7 +80,12 @@ describe('appraisals', () => {
 
   it('keeps the newest appraisal per goat', () => {
     const a = (goat_id: string, appraised_on: string) => ({ goat_id, appraised_on }) as Appraisal
-    const latest = latestAppraisals([a('x', '2021-06-01'), a('x', '2023-06-01'), a('x', '2022-06-01'), a('y', '2020-01-01')])
+    const latest = latestAppraisals([
+      a('x', '2021-06-01'),
+      a('x', '2023-06-01'),
+      a('x', '2022-06-01'),
+      a('y', '2020-01-01'),
+    ])
     expect(latest.get('x')?.appraised_on).toBe('2023-06-01')
     expect(latest.get('y')?.appraised_on).toBe('2020-01-01')
   })

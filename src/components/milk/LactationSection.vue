@@ -27,7 +27,12 @@ const rows = computed(() =>
       inMilk: !l.dried_off_on || l.dried_off_on >= today,
       summary: summarizeLactation(
         l,
-        withTestDays(dayTotals.data.value ?? [], props.goat.id, milkTests.data.value.tests, milkTests.data.value.results),
+        withTestDays(
+          dayTotals.data.value ?? [],
+          props.goat.id,
+          milkTests.data.value.tests,
+          milkTests.data.value.results,
+        ),
         today,
         officialFigures(l, milkTests.data.value.tests, milkTests.data.value.results),
       ),
@@ -35,7 +40,10 @@ const rows = computed(() =>
 )
 const current = computed(() => rows.value.find((r) => r.inMilk)?.lactation)
 
-const modal = ref<{ open: boolean; mode: 'start' | 'edit' | 'dryOff'; lactation?: Lactation }>({ open: false, mode: 'start' })
+const modal = ref<{ open: boolean; mode: 'start' | 'edit' | 'dryOff'; lactation?: Lactation }>({
+  open: false,
+  mode: 'start',
+})
 </script>
 
 <template>
@@ -83,18 +91,14 @@ const modal = ref<{ open: boolean; mode: 'start' | 'edit' | 'dryOff'; lactation?
           <span class="text-end">
             <span class="block font-medium tabular-nums">{{ formatWeight(r.summary.totalG, unit, true) }}</span>
             <span v-if="r.summary.projected305G !== null" class="block text-xs text-muted tabular-nums">
-              {{ r.inMilk && r.summary.currentDim < STANDARD_DAYS ? 'proj.' : '' }} 305d {{ formatWeight(r.summary.projected305G, unit) }}
+              {{ r.inMilk && r.summary.currentDim < STANDARD_DAYS ? 'proj.' : '' }} 305d
+              {{ formatWeight(r.summary.projected305G, unit) }}
             </span>
           </span>
         </button>
       </li>
     </ul>
 
-    <LactationModal
-      v-model:open="modal.open"
-      :mode="modal.mode"
-      :lactation="modal.lactation"
-      :goat-id="goat.id"
-    />
+    <LactationModal v-model:open="modal.open" :mode="modal.mode" :lactation="modal.lactation" :goat-id="goat.id" />
   </UCard>
 </template>

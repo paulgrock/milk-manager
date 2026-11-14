@@ -8,7 +8,12 @@ import { formatDate } from '@/lib/dates'
 import { formatWeight, fromGrams, type WeightUnit } from '@/lib/milk'
 
 /** One point per day, oldest first. `grams` is null for days with nothing recorded. */
-const props = defineProps<{ days: { date: string; grams: number | null; avgG: number | null }[]; unit: WeightUnit }>()
+const props = defineProps<{
+  days: { date: string; grams: number | null; avgG: number | null }[]
+  unit: WeightUnit
+  /** Describes the window for screen readers, e.g. "last 90 days". */
+  rangeLabel?: string
+}>()
 const theme = useChartTheme()
 const toUnit = (g: number | null) => (g === null ? null : Math.round(fromGrams(g, props.unit) * 100) / 100)
 
@@ -30,7 +35,11 @@ const option = computed<EChartsOption>(() => {
     xAxis: {
       type: 'category',
       data: props.days.map((d) => d.date),
-      axisLabel: { color: t.muted, formatter: (v: string) => formatDate(v).replace(/,? \d{4}$/, ''), hideOverlap: true },
+      axisLabel: {
+        color: t.muted,
+        formatter: (v: string) => formatDate(v).replace(/,? \d{4}$/, ''),
+        hideOverlap: true,
+      },
       axisLine: { lineStyle: { color: t.axis } },
       axisTick: { show: false },
     },
@@ -83,6 +92,12 @@ const option = computed<EChartsOption>(() => {
 <template>
   <!-- vue-echarts sets its own element to height: 100%, so the wrapper sets the size. -->
   <div class="h-56 sm:h-72">
-    <VChart :option="option" autoresize class="size-full" role="img" aria-label="Herd milk per day, last 90 days" />
+    <VChart
+      :option="option"
+      autoresize
+      class="size-full"
+      role="img"
+      :aria-label="`Herd milk per day, ${rangeLabel ?? `last ${days.length} days`}`"
+    />
   </div>
 </template>

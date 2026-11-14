@@ -13,11 +13,20 @@ test('Today lists what is overdue and what is coming up this week', async ({ pag
   await admin.from('breedings').insert({ herd_id: herd.id, doe_id: clover.id, buck_id: rex.id, bred_on: isoDate(-120) })
   // Ina: hoof trim overdue; in heat 18 days ago, so expected again in 3.
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
-  await admin.from('care_events').insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: await careTypeId(herd.id, 'Hoof trim'), done_on: isoDate(-70) })
+  await admin.from('care_events').insert({
+    herd_id: herd.id,
+    goat_id: ina.id,
+    care_type_id: await careTypeId(herd.id, 'Hoof trim'),
+    done_on: isoDate(-70),
+  })
   await admin.from('heats').insert({ herd_id: herd.id, goat_id: ina.id, observed_on: isoDate(-18) })
 
   await page.goto('/')
-  const attention = page.getByRole('main').locator('section, div').filter({ has: page.getByRole('heading', { name: 'Needs attention' }) }).first()
+  const attention = page
+    .getByRole('main')
+    .locator('section, div')
+    .filter({ has: page.getByRole('heading', { name: 'Needs attention' }) })
+    .first()
   await expect(attention.getByRole('link', { name: /Dry off Clover.*Overdue/ })).toBeVisible()
   await expect(attention.getByRole('link', { name: /Hoof trim: Ina.*Overdue/ })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ina heat expected' })).toBeVisible()
@@ -28,7 +37,12 @@ test('Today lists what is overdue and what is coming up this week', async ({ pag
 
 test('logging the care clears it from Today', async ({ page, owner, herd }) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
-  await admin.from('care_events').insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: await careTypeId(herd.id, 'Hoof trim'), done_on: isoDate(-70) })
+  await admin.from('care_events').insert({
+    herd_id: herd.id,
+    goat_id: ina.id,
+    care_type_id: await careTypeId(herd.id, 'Hoof trim'),
+    done_on: isoDate(-70),
+  })
 
   await page.goto('/')
   await expect(page.getByRole('link', { name: /Hoof trim: Ina.*Overdue/ })).toBeVisible()
@@ -72,7 +86,13 @@ test('the calendar moves between months and filters by kind', async ({ page, own
 
 test('milk withdrawal shows when her milk is OK again', async ({ page, owner, herd }) => {
   const { goat: ina } = await addDoeInMilk(owner, herd.id, 'Ina')
-  await admin.from('treatments').insert({ herd_id: herd.id, goat_id: ina.id, started_on: isoDate(-1), medication: 'Penicillin', milk_withdrawal_days: 4 })
+  await admin.from('treatments').insert({
+    herd_id: herd.id,
+    goat_id: ina.id,
+    started_on: isoDate(-1),
+    medication: 'Penicillin',
+    milk_withdrawal_days: 4,
+  })
   await page.goto('/')
   await expect(page.getByRole('link', { name: /Ina's milk OK again/ })).toBeVisible()
 })
@@ -86,7 +106,9 @@ test('the month title opens month and year wheels, like iOS', async ({ page, her
 
   const months = page.getByRole('listbox', { name: 'Month' })
   const years = page.getByRole('listbox', { name: 'Year' })
-  await expect(months.getByRole('option', { selected: true })).toHaveText(now.toLocaleDateString(undefined, { month: 'long' }))
+  await expect(months.getByRole('option', { selected: true })).toHaveText(
+    now.toLocaleDateString(undefined, { month: 'long' }),
+  )
 
   // Tapping an item.
   await months.getByRole('option', { name: 'March' }).click()

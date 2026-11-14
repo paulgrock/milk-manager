@@ -24,7 +24,13 @@ const modalOpen = ref(false)
 <template>
   <div v-if="query.isPending.value" class="space-y-2"><USkeleton v-for="i in 3" :key="i" class="h-14 w-full" /></div>
 
-  <UAlert v-else-if="!type" color="error" variant="subtle" title="Cheese not found" :actions="[{ label: 'Back to cheese', to: '/cheese' }]" />
+  <UAlert
+    v-else-if="!type"
+    color="error"
+    variant="subtle"
+    title="Cheese not found"
+    :actions="[{ label: 'Back to cheese', to: '/cheese' }]"
+  />
 
   <div v-else class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
@@ -42,12 +48,17 @@ const modalOpen = ref(false)
 
     <ul v-else class="divide-y divide-default rounded-lg border border-default">
       <li v-for="make in makes" :key="make.id">
-        <RouterLink :to="`/cheese/makes/${make.id}`" class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <RouterLink
+          :to="`/cheese/makes/${make.id}`"
+          class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1"
+        >
           <span class="flex-1 min-w-40">
             {{ formatDate(make.made_on) }}
             <span class="text-muted"> · {{ milkLabel(make) || 'milk not recorded' }}</span>
           </span>
-          <UBadge :color="STATUS_COLORS[makeStatus(make, today)]" variant="subtle">{{ STATUS_LABELS[makeStatus(make, today)] }}</UBadge>
+          <UBadge :color="STATUS_COLORS[makeStatus(make, today)]" variant="subtle">{{
+            STATUS_LABELS[makeStatus(make, today)]
+          }}</UBadge>
         </RouterLink>
       </li>
     </ul>

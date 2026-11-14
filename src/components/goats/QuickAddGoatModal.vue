@@ -14,7 +14,13 @@ const form = reactive({ title_prefix: '', registered_name: '', title_suffix: '',
 
 watch(open, (isOpen) => {
   if (isOpen) {
-    Object.assign(form, { title_prefix: '', registered_name: props.initialName, title_suffix: '', registration_number: '', breed: '' })
+    Object.assign(form, {
+      title_prefix: '',
+      registered_name: props.initialName,
+      title_suffix: '',
+      registration_number: '',
+      breed: '',
+    })
   }
 })
 

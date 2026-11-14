@@ -28,7 +28,11 @@ const modal = ref<{ open: boolean; entry?: FinanceEntry }>({ open: false })
     </template>
     <ul class="divide-y divide-default">
       <li v-for="e in mine" :key="e.id">
-        <button type="button" class="w-full flex gap-3 px-4 py-2 text-start text-sm hover:bg-elevated/50" @click="modal = { open: true, entry: e }">
+        <button
+          type="button"
+          class="w-full flex gap-3 px-4 py-2 text-start text-sm hover:bg-elevated/50"
+          @click="modal = { open: true, entry: e }"
+        >
           <span class="w-24 text-muted">{{ formatDate(e.occurred_on) }}</span>
           <span class="flex-1 truncate">{{ e.description || categoryLabel(e.kind, e.category) }}</span>
           <span class="tabular-nums">{{ e.kind === 'income' ? '+' : '−' }}{{ formatMoney(e.amount_cents) }}</span>

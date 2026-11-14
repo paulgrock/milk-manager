@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+package-lock.json
+src/lib/database.types.ts
+auto-imports.d.ts
+components.d.ts
+supabase/.temp
+supabase/.branches
+test-results
+playwright-report
+blob-report

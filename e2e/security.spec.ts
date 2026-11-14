@@ -12,7 +12,13 @@ const policy = readFileSync(new URL('../netlify.toml', import.meta.url), 'utf8')
 
 // Serving the page through page.route makes Chrome treat it as public, and
 // its local-network protection then blocks calls to the local Supabase stack.
-test.use({ launchOptions: { args: ['--disable-features=LocalNetworkAccessChecks,PrivateNetworkAccessRespectPreflightResults,BlockInsecurePrivateNetworkRequests'] } })
+test.use({
+  launchOptions: {
+    args: [
+      '--disable-features=LocalNetworkAccessChecks,PrivateNetworkAccessRespectPreflightResults,BlockInsecurePrivateNetworkRequests',
+    ],
+  },
+})
 
 test('every page works under the Content Security Policy', async ({ page, owner, herd }) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Ina')
@@ -30,7 +36,22 @@ test('every page works under the Content Security Policy', async ({ page, owner,
     if (/Content Security Policy|Refused to/i.test(m.text())) blocked.push(m.text())
   })
 
-  for (const path of ['/', '/goats', `/goats/${goat.slug}`, '/milk', '/cheese', '/milk/production', '/milk/tests', '/breeding', '/breeding/adoptions', '/health', '/chores', '/calendar', '/finances', '/settings']) {
+  for (const path of [
+    '/',
+    '/goats',
+    `/goats/${goat.slug}`,
+    '/milk',
+    '/cheese',
+    '/milk/production',
+    '/milk/tests',
+    '/breeding',
+    '/breeding/adoptions',
+    '/health',
+    '/chores',
+    '/calendar',
+    '/finances',
+    '/settings',
+  ]) {
     await page.goto(path)
     await expect(page.getByRole('main')).toBeVisible()
     await page.waitForLoadState('networkidle')

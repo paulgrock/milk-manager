@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { appraisalSummary, buildPedigree, goatFullName, type Appraisal, type Goat, type PedigreeNode } from '@/lib/goats'
+import {
+  appraisalSummary,
+  buildPedigree,
+  goatFullName,
+  type Appraisal,
+  type Goat,
+  type PedigreeNode,
+} from '@/lib/goats'
 
 const props = defineProps<{ goat: Goat; byId: Map<string, Goat>; latest: Map<string, Appraisal> }>()
 

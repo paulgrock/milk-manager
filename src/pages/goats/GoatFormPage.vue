@@ -130,7 +130,9 @@ const categoryOptions = [
   ...Object.entries(BREED_CATEGORY_LABELS).map(([value, label]) => ({ label, value })),
 ]
 const breedItems = computed(() =>
-  [...new Set([...DAIRY_BREEDS, ...(goats.data.value ?? []).map((g) => g.breed).filter((b): b is string => !!b)])].sort(),
+  [
+    ...new Set([...DAIRY_BREEDS, ...(goats.data.value ?? []).map((g) => g.breed).filter((b): b is string => !!b)]),
+  ].sort(),
 )
 const registryItems = computed(() => [...new Set([...REGISTRIES, form.registry].filter(Boolean))])
 
@@ -211,7 +213,12 @@ async function remove() {
       </h1>
     </div>
 
-    <UAlert v-if="goatRef && !existing && !goats.isPending.value" color="error" variant="subtle" title="Goat not found" />
+    <UAlert
+      v-if="goatRef && !existing && !goats.isPending.value"
+      color="error"
+      variant="subtle"
+      title="Goat not found"
+    />
 
     <!-- Editing: wait for her details, or the empty form would be typed over, or saved as a new goat. -->
     <div v-else-if="goatRef && !existing" class="space-y-4" aria-label="Loading goat">
@@ -341,7 +348,9 @@ async function remove() {
         <UButton type="submit" size="lg" :loading="saveGoat.isPending.value">
           {{ existing ? 'Save changes' : 'Add goat' }}
         </UButton>
-        <UButton color="neutral" variant="ghost" size="lg" :to="existing ? `/goats/${existing.slug}` : '/goats'">Cancel</UButton>
+        <UButton color="neutral" variant="ghost" size="lg" :to="existing ? `/goats/${existing.slug}` : '/goats'"
+          >Cancel</UButton
+        >
         <UButton
           v-if="existing && isOwner"
           class="ms-auto"

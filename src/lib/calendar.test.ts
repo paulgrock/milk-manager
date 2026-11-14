@@ -3,12 +3,32 @@ import { buildEvents, needsAttention, type CalendarInput } from './calendar'
 import type { Goat } from './goats'
 
 const goat = (id: string, over: Partial<Goat> = {}): Goat =>
-  ({ id, herd_id: 'h', barn_name: id, registered_name: null, sex: 'doe', status: 'active', birth_date: null, ...over }) as Goat
+  ({
+    id,
+    herd_id: 'h',
+    barn_name: id,
+    registered_name: null,
+    sex: 'doe',
+    status: 'active',
+    birth_date: null,
+    ...over,
+  }) as Goat
 
 const base: CalendarInput = {
   goats: [goat('Ina'), goat('Clover'), goat('Rex', { sex: 'buck' }), goat('Sold', { status: 'sold' })],
   breeding: { heats: [], breedings: [], checks: [], kiddings: [] },
-  careTypes: [{ id: 'hoof', herd_id: 'h', name: 'Hoof trim', interval_days: 56, dose_unit: null, sort_order: 1, archived: false, created_at: '' }],
+  careTypes: [
+    {
+      id: 'hoof',
+      herd_id: 'h',
+      name: 'Hoof trim',
+      interval_days: 56,
+      dose_unit: null,
+      sort_order: 1,
+      archived: false,
+      created_at: '',
+    },
+  ],
   careEvents: [],
   treatments: [],
   lactations: [],
@@ -16,11 +36,40 @@ const base: CalendarInput = {
   today: '2026-10-21',
 }
 const breeding = (doe_id: string, bred_on: string) =>
-  ({ id: `b-${doe_id}`, herd_id: 'h', doe_id, buck_id: 'Rex', method: 'hand', bred_on, exposure_end: null, service_fee_cents: null, notes: null, created_by: null, created_at: '' }) as const
-const lactation = (goat_id: string, freshened_on: string) =>
-  ({ id: `l-${goat_id}`, herd_id: 'h', goat_id, lactation_number: 1, freshened_on, dried_off_on: null, notes: null, created_by: null, created_at: '', official_days: null, official_milk_g: null, official_fat_g: null, official_protein_g: null, official_305_milk_g: null, official_305_fat_g: null, official_305_protein_g: null })
+  ({
+    id: `b-${doe_id}`,
+    herd_id: 'h',
+    doe_id,
+    buck_id: 'Rex',
+    method: 'hand',
+    bred_on,
+    exposure_end: null,
+    service_fee_cents: null,
+    notes: null,
+    created_by: null,
+    created_at: '',
+  }) as const
+const lactation = (goat_id: string, freshened_on: string) => ({
+  id: `l-${goat_id}`,
+  herd_id: 'h',
+  goat_id,
+  lactation_number: 1,
+  freshened_on,
+  dried_off_on: null,
+  notes: null,
+  created_by: null,
+  created_at: '',
+  official_days: null,
+  official_milk_g: null,
+  official_fat_g: null,
+  official_protein_g: null,
+  official_305_milk_g: null,
+  official_305_fat_g: null,
+  official_305_protein_g: null,
+})
 
-const summary = (events: ReturnType<typeof buildEvents>) => events.map((e) => `${e.date} ${e.kind} ${e.title}${e.overdue ? ' (overdue)' : ''}`)
+const summary = (events: ReturnType<typeof buildEvents>) =>
+  events.map((e) => `${e.date} ${e.kind} ${e.title}${e.overdue ? ' (overdue)' : ''}`)
 
 describe('buildEvents', () => {
   it('shows a pregnancy: check, dry-off, due date, and the 305-day mark', () => {
@@ -47,7 +96,19 @@ describe('buildEvents', () => {
   it('brings overdue things forward to today', () => {
     const input = {
       ...base,
-      careEvents: [{ id: 'c', herd_id: 'h', goat_id: 'Clover', care_type_id: 'hoof', done_on: '2026-08-01', dose: null, notes: null, created_by: null, created_at: '' }],
+      careEvents: [
+        {
+          id: 'c',
+          herd_id: 'h',
+          goat_id: 'Clover',
+          care_type_id: 'hoof',
+          done_on: '2026-08-01',
+          dose: null,
+          notes: null,
+          created_by: null,
+          created_at: '',
+        },
+      ],
     }
     const events = buildEvents(input, '2026-10-21', '2026-10-31')
     expect(summary(events)).toEqual(['2026-10-21 care-due Hoof trim: Clover (overdue)'])
@@ -55,56 +116,166 @@ describe('buildEvents', () => {
   })
 
   it("repeats an open doe's heat cycle across the range", () => {
-    const input = { ...base, breeding: { ...base.breeding, heats: [{ id: 'h1', herd_id: 'h', goat_id: 'Ina', observed_on: '2026-10-10', signs: null, created_by: null, created_at: '' }] } }
-    expect(buildEvents(input, '2026-10-21', '2026-12-31').filter((e) => e.kind === 'heat').map((e) => e.date)).toEqual([
-      '2026-10-31',
-      '2026-11-21',
-      '2026-12-12',
-    ])
+    const input = {
+      ...base,
+      breeding: {
+        ...base.breeding,
+        heats: [
+          {
+            id: 'h1',
+            herd_id: 'h',
+            goat_id: 'Ina',
+            observed_on: '2026-10-10',
+            signs: null,
+            created_by: null,
+            created_at: '',
+          },
+        ],
+      },
+    }
+    expect(
+      buildEvents(input, '2026-10-21', '2026-12-31')
+        .filter((e) => e.kind === 'heat')
+        .map((e) => e.date),
+    ).toEqual(['2026-10-31', '2026-11-21', '2026-12-12'])
   })
 
   it('says when withheld milk is OK again', () => {
     const input = {
       ...base,
-      treatments: [{ id: 't', herd_id: 'h', goat_id: 'Ina', started_on: '2026-10-20', ended_on: null, reason: 'Mastitis', medication: 'Penicillin', dose: null, route: null, lot_number: null, milk_withdrawal_days: 5, notes: null, created_by: null, created_at: '' }],
+      treatments: [
+        {
+          id: 't',
+          herd_id: 'h',
+          goat_id: 'Ina',
+          started_on: '2026-10-20',
+          ended_on: null,
+          reason: 'Mastitis',
+          medication: 'Penicillin',
+          dose: null,
+          route: null,
+          lot_number: null,
+          milk_withdrawal_days: 5,
+          notes: null,
+          created_by: null,
+          created_at: '',
+        },
+      ],
     }
     const events = buildEvents(input, '2026-10-20', '2026-10-31')
-    expect(summary(events)).toEqual(['2026-10-20 treated Ina: Penicillin', "2026-10-26 withdrawal-ends Ina's milk OK again"])
+    expect(summary(events)).toEqual([
+      '2026-10-20 treated Ina: Penicillin',
+      "2026-10-26 withdrawal-ends Ina's milk OK again",
+    ])
   })
 
   it('groups care logged for many goats on one day', () => {
-    const careEvents = ['Ina', 'Clover', 'Rex'].map((goat_id) => ({ id: goat_id, herd_id: 'h', goat_id, care_type_id: 'hoof', done_on: '2026-10-15', dose: null, notes: null, created_by: null, created_at: '' }))
+    const careEvents = ['Ina', 'Clover', 'Rex'].map((goat_id) => ({
+      id: goat_id,
+      herd_id: 'h',
+      goat_id,
+      care_type_id: 'hoof',
+      done_on: '2026-10-15',
+      dose: null,
+      notes: null,
+      created_by: null,
+      created_at: '',
+    }))
     const done = buildEvents({ ...base, careEvents }, '2026-10-15', '2026-10-15')
     expect(done).toHaveLength(1)
     expect(done[0]).toMatchObject({ title: 'Hoof trim: 3 goats', detail: 'Clover, Ina, Rex', done: true })
   })
 
   it('leaves out goats no longer in the herd', () => {
-    const careEvents = [{ id: 'c', herd_id: 'h', goat_id: 'Sold', care_type_id: 'hoof', done_on: '2026-10-01', dose: null, notes: null, created_by: null, created_at: '' }]
-    expect(buildEvents({ ...base, careEvents }, '2026-10-02', '2027-01-01').filter((e) => e.kind === 'care-due')).toEqual([])
+    const careEvents = [
+      {
+        id: 'c',
+        herd_id: 'h',
+        goat_id: 'Sold',
+        care_type_id: 'hoof',
+        done_on: '2026-10-01',
+        dose: null,
+        notes: null,
+        created_by: null,
+        created_at: '',
+      },
+    ]
+    expect(
+      buildEvents({ ...base, careEvents }, '2026-10-02', '2027-01-01').filter((e) => e.kind === 'care-due'),
+    ).toEqual([])
   })
 
   it('shows chores coming due and done, but not ones never recorded or hidden', () => {
-    const chore = (id: string, name: string, interval_days: number, hidden = false) =>
-      ({ id, herd_id: 'h', name, interval_days, hidden, sort_order: 1, created_by: null, created_at: '' })
-    const done = (chore_id: string, done_on: string) => ({ id: `${chore_id}-${done_on}`, herd_id: 'h', chore_id, done_on, notes: null, created_by: null, created_at: '' })
+    const chore = (id: string, name: string, interval_days: number, hidden = false) => ({
+      id,
+      herd_id: 'h',
+      name,
+      interval_days,
+      hidden,
+      sort_order: 1,
+      created_by: null,
+      created_at: '',
+    })
+    const done = (chore_id: string, done_on: string) => ({
+      id: `${chore_id}-${done_on}`,
+      herd_id: 'h',
+      chore_id,
+      done_on,
+      notes: null,
+      created_by: null,
+      created_at: '',
+    })
     const input = {
       ...base,
-      chores: [chore('water', 'Fill waterers', 14), chore('coop', 'Clean coop', 30), chore('stalls', 'Clean stalls', 30), chore('old', 'Old chore', 7, true)],
+      chores: [
+        chore('water', 'Fill waterers', 14),
+        chore('coop', 'Clean coop', 30),
+        chore('stalls', 'Clean stalls', 30),
+        chore('old', 'Old chore', 7, true),
+      ],
       choresDone: [done('water', '2026-10-01'), done('stalls', '2026-10-20'), done('old', '2026-10-01')],
     }
     const events = buildEvents(input, '2026-10-21', '2026-11-30')
-    expect(summary(events)).toEqual(['2026-10-21 chore-due Fill waterers (overdue)', '2026-11-19 chore-due Clean stalls'])
+    expect(summary(events)).toEqual([
+      '2026-10-21 chore-due Fill waterers (overdue)',
+      '2026-11-19 chore-due Clean stalls',
+    ])
     expect(events.every((e) => e.group === 'chores' && e.href === '/chores')).toBe(true)
     expect(summary(buildEvents(input, '2026-10-20', '2026-10-20'))).toEqual(['2026-10-20 chore-done Clean stalls done'])
   })
   it('shows cheese coming ready, but not fresh cheese or finished makes', () => {
-    const make = (id: string, made_on: string, ready_on: string, finished_on: string | null = null) =>
-      ({ id, herd_id: 'h', cheese_type_id: 't', made_on, ready_on, milk_gallons: null, milk_treatment: null, notes: null, finished_on, created_by: null, created_at: '' })
+    const make = (id: string, made_on: string, ready_on: string, finished_on: string | null = null) => ({
+      id,
+      herd_id: 'h',
+      cheese_type_id: 't',
+      made_on,
+      ready_on,
+      milk_gallons: null,
+      milk_treatment: null,
+      notes: null,
+      finished_on,
+      created_by: null,
+      created_at: '',
+    })
     const input = {
       ...base,
-      cheeseTypes: [{ id: 't', herd_id: 'h', name: 'Feta', aging_days: 60, hidden: false, sort_order: 1, created_by: null, created_at: '' }],
-      cheeseMakes: [make('aging', '2026-09-01', '2026-10-31'), make('fresh', '2026-10-21', '2026-10-21'), make('done', '2026-09-01', '2026-10-25', '2026-10-21')],
+      cheeseTypes: [
+        {
+          id: 't',
+          herd_id: 'h',
+          name: 'Feta',
+          aging_days: 60,
+          hidden: false,
+          sort_order: 1,
+          created_by: null,
+          created_at: '',
+        },
+      ],
+      cheeseMakes: [
+        make('aging', '2026-09-01', '2026-10-31'),
+        make('fresh', '2026-10-21', '2026-10-21'),
+        make('done', '2026-09-01', '2026-10-25', '2026-10-21'),
+      ],
     }
     const events = buildEvents(input, '2026-10-21', '2026-11-30')
     expect(events.map((e) => e.href)).toEqual(['/cheese/makes/aging'])

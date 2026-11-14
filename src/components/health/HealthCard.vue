@@ -3,13 +3,7 @@ import { computed, ref } from 'vue'
 import { useHealthData } from '@/composables/useHealth'
 import { formatDate, relativeDays, todayISO } from '@/lib/dates'
 import type { Goat } from '@/lib/goats'
-import {
-  ROUTE_LABELS,
-  careStatus,
-  withholdThrough,
-  type CareEvent,
-  type Treatment,
-} from '@/lib/health'
+import { ROUTE_LABELS, careStatus, withholdThrough, type CareEvent, type Treatment } from '@/lib/health'
 import LogCareModal from './LogCareModal.vue'
 import TreatmentModal from './TreatmentModal.vue'
 import DeleteCareModal from './DeleteCareModal.vue'
@@ -19,19 +13,23 @@ const today = todayISO()
 const { data } = useHealthData()
 
 const care = computed(() =>
-  data.value.careTypes.filter((t) => !t.archived).map((t) => careStatus(props.goat.id, t, data.value.careEvents, today)),
+  data.value.careTypes
+    .filter((t) => !t.archived)
+    .map((t) => careStatus(props.goat.id, t, data.value.careEvents, today)),
 )
 
-type Event =
-  | { kind: 'care'; date: string; care: CareEvent }
-  | { kind: 'treatment'; date: string; treatment: Treatment }
+type Event = { kind: 'care'; date: string; care: CareEvent } | { kind: 'treatment'; date: string; treatment: Treatment }
 
 const history = computed<Event[]>(() => {
   const id = props.goat.id
   const d = data.value
   return [
-    ...d.careEvents.filter((e) => e.goat_id === id).map((care) => ({ kind: 'care' as const, date: care.done_on, care })),
-    ...d.treatments.filter((t) => t.goat_id === id).map((treatment) => ({ kind: 'treatment' as const, date: treatment.started_on, treatment })),
+    ...d.careEvents
+      .filter((e) => e.goat_id === id)
+      .map((care) => ({ kind: 'care' as const, date: care.done_on, care })),
+    ...d.treatments
+      .filter((t) => t.goat_id === id)
+      .map((treatment) => ({ kind: 'treatment' as const, date: treatment.started_on, treatment })),
   ].sort((a, b) => b.date.localeCompare(a.date))
 })
 const showAll = ref(false)
@@ -53,8 +51,12 @@ function open(e: Event) {
     <template #header>
       <div class="flex flex-wrap items-center gap-2">
         <h2 class="font-semibold flex-1">Health</h2>
-        <UButton size="sm" variant="soft" icon="i-lucide-clipboard-check" @click="careModal = { open: true }">Log care</UButton>
-        <UButton size="sm" variant="soft" icon="i-lucide-pill" @click="treatmentModal = { open: true }">Treatment</UButton>
+        <UButton size="sm" variant="soft" icon="i-lucide-clipboard-check" @click="careModal = { open: true }"
+          >Log care</UButton
+        >
+        <UButton size="sm" variant="soft" icon="i-lucide-pill" @click="treatmentModal = { open: true }"
+          >Treatment</UButton
+        >
       </div>
     </template>
 
@@ -63,7 +65,9 @@ function open(e: Event) {
         <li v-for="c in care" :key="c.type.id" class="rounded-md border border-default px-3 py-2">
           <div class="flex items-center gap-2">
             <span class="font-medium flex-1 text-sm">{{ c.type.name }}</span>
-            <UBadge v-if="c.state === 'overdue'" color="warning" variant="subtle" size="sm" icon="i-lucide-alarm-clock">Overdue</UBadge>
+            <UBadge v-if="c.state === 'overdue'" color="warning" variant="subtle" size="sm" icon="i-lucide-alarm-clock"
+              >Overdue</UBadge
+            >
             <UBadge v-else-if="c.state === 'due'" color="neutral" variant="subtle" size="sm">Due soon</UBadge>
           </div>
           <p class="text-xs text-muted">
@@ -74,14 +78,25 @@ function open(e: Event) {
         </li>
       </ul>
 
-
       <ul v-if="history.length" class="divide-y divide-default border-t border-default">
-        <li v-for="e in shownHistory" :key="`${e.kind}-${e.kind === 'care' ? e.care.id : e.treatment.id}`" class="flex items-center gap-2">
-          <button type="button" class="flex-1 py-2 flex gap-3 text-start text-sm hover:bg-elevated/50 rounded" :disabled="e.kind === 'care'" @click="open(e)">
+        <li
+          v-for="e in shownHistory"
+          :key="`${e.kind}-${e.kind === 'care' ? e.care.id : e.treatment.id}`"
+          class="flex items-center gap-2"
+        >
+          <button
+            type="button"
+            class="flex-1 py-2 flex gap-3 text-start text-sm hover:bg-elevated/50 rounded"
+            :disabled="e.kind === 'care'"
+            @click="open(e)"
+          >
             <span class="w-24 shrink-0 text-muted">{{ formatDate(e.date) }}</span>
             <span class="flex-1">
               <template v-if="e.kind === 'care'">
-                {{ typeName(e.care.care_type_id) }}<template v-if="e.care.dose"> · {{ Number(e.care.dose) }} {{ typeUnit(e.care.care_type_id) }}</template>
+                {{ typeName(e.care.care_type_id)
+                }}<template v-if="e.care.dose">
+                  · {{ Number(e.care.dose) }} {{ typeUnit(e.care.care_type_id) }}</template
+                >
                 <template v-if="e.care.notes"> · {{ e.care.notes }}</template>
               </template>
               <template v-else>
@@ -89,7 +104,9 @@ function open(e: Event) {
                 <span class="text-muted">
                   <template v-if="e.treatment.dose"> · {{ e.treatment.dose }}</template>
                   <template v-if="e.treatment.route"> {{ ROUTE_LABELS[e.treatment.route].toLowerCase() }}</template>
-                  <template v-if="withholdThrough(e.treatment)"> · milk withheld through {{ formatDate(withholdThrough(e.treatment)) }}</template>
+                  <template v-if="withholdThrough(e.treatment)">
+                    · milk withheld through {{ formatDate(withholdThrough(e.treatment)) }}</template
+                  >
                 </span>
               </template>
             </span>

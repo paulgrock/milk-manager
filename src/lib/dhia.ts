@@ -47,7 +47,12 @@ export interface StarPoints {
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 
-export function oneDayPoints(input: { milkG: number; butterfatPct: number | string; dim: number; miniature: boolean }): StarPoints {
+export function oneDayPoints(input: {
+  milkG: number
+  butterfatPct: number | string
+  dim: number
+  miniature: boolean
+}): StarPoints {
   const milkLb = input.milkG / GRAMS_PER_LB
   const fatLb = (milkLb * Number(input.butterfatPct)) / 100
   const tens = Math.floor(Math.max(0, input.dim) / 10)
@@ -96,7 +101,11 @@ export interface DhirRequirement {
   ageAtKidding: { years: number; months: number }
 }
 
-export function dhirRequirement(input: { breed: string | null; birthDate: string | null; freshenedOn: string }): DhirRequirement | null {
+export function dhirRequirement(input: {
+  breed: string | null
+  birthDate: string | null
+  freshenedOn: string
+}): DhirRequirement | null {
   if (!input.birthDate || input.birthDate >= input.freshenedOn) return null
   const miniature = isMiniature(input.breed)
   const twoYears = addMonths(input.birthDate, 24)
@@ -174,12 +183,16 @@ export function starOutlook(req: DhirRequirement, toDate: Production, projected:
  * weight replaces that day's own weights, so the curve uses the official
  * figure, and test-only herds still get a curve.
  */
-export function withTestDays<T extends { goat_id: string | null; milked_on: string | null; total_g: number | null; is_day_total: boolean | null; has_am: boolean | null; has_pm: boolean | null }>(
-  dayTotals: T[],
-  goatId: string,
-  tests: MilkTest[],
-  results: MilkTestResult[],
-): T[] {
+export function withTestDays<
+  T extends {
+    goat_id: string | null
+    milked_on: string | null
+    total_g: number | null
+    is_day_total: boolean | null
+    has_am: boolean | null
+    has_pm: boolean | null
+  },
+>(dayTotals: T[], goatId: string, tests: MilkTest[], results: MilkTestResult[]): T[] {
   const testDates = new Map(tests.map((t) => [t.id, t.tested_on]))
   const official = new Map<string, number>()
   for (const r of results) {
@@ -189,7 +202,15 @@ export function withTestDays<T extends { goat_id: string | null; milked_on: stri
   if (!official.size) return dayTotals
   const kept = dayTotals.filter((d) => !(d.goat_id === goatId && official.has(d.milked_on!)))
   const added = [...official].map(
-    ([date, grams]) => ({ goat_id: goatId, milked_on: date, total_g: grams, is_day_total: true, has_am: false, has_pm: false }) as unknown as T,
+    ([date, grams]) =>
+      ({
+        goat_id: goatId,
+        milked_on: date,
+        total_g: grams,
+        is_day_total: true,
+        has_am: false,
+        has_pm: false,
+      }) as unknown as T,
   )
   return [...kept, ...added]
 }
@@ -216,7 +237,9 @@ export function officialFigures(lactation: Lactation, tests: MilkTest[], results
   const latest = results
     .filter((r) => r.goat_id === lactation.goat_id && r.ltd_milk_g !== null)
     .map((r) => ({ r, date: dates.get(r.test_id) }))
-    .filter((x): x is { r: MilkTestResult; date: string } => !!x.date && x.date >= lactation.freshened_on && x.date <= end)
+    .filter(
+      (x): x is { r: MilkTestResult; date: string } => !!x.date && x.date >= lactation.freshened_on && x.date <= end,
+    )
     .sort((a, b) => b.date.localeCompare(a.date))[0]
   if (latest) {
     const r = latest.r
@@ -240,14 +263,21 @@ const lbOrNull = (g: number | null) => (g === null ? null : Math.round((g / GRAM
  * The report's own production figures for the DHIR star: what she's given in
  * her first 305 days, and DHI's projection while she's still in milk.
  */
-export function officialProduction(official: OfficialFigures, dried: boolean): { toDate: Production; projected: Production | null } | null {
+export function officialProduction(
+  official: OfficialFigures,
+  dried: boolean,
+): { toDate: Production; projected: Production | null } | null {
   if (dried && official.complete) {
     const c = official.complete
     const within = (c.days ?? Infinity) <= 305
     const milk = c.r305MilkG ?? (within ? c.milkG : null)
     if (milk === null) return null
     return {
-      toDate: { milkLb: lbOrNull(milk)!, butterfatLb: lbOrNull(c.r305FatG ?? (within ? c.fatG : null)), proteinLb: lbOrNull(c.r305ProteinG ?? (within ? c.proteinG : null)) },
+      toDate: {
+        milkLb: lbOrNull(milk)!,
+        butterfatLb: lbOrNull(c.r305FatG ?? (within ? c.fatG : null)),
+        proteinLb: lbOrNull(c.r305ProteinG ?? (within ? c.proteinG : null)),
+      },
       projected: null,
     }
   }
@@ -255,7 +285,14 @@ export function officialProduction(official: OfficialFigures, dried: boolean): {
     const t = official.test
     return {
       toDate: { milkLb: lbOrNull(t.ltdMilkG)!, butterfatLb: lbOrNull(t.ltdFatG), proteinLb: lbOrNull(t.ltdProteinG) },
-      projected: t.proj305MilkG === null ? null : { milkLb: lbOrNull(t.proj305MilkG)!, butterfatLb: lbOrNull(t.proj305FatG), proteinLb: lbOrNull(t.proj305ProteinG) },
+      projected:
+        t.proj305MilkG === null
+          ? null
+          : {
+              milkLb: lbOrNull(t.proj305MilkG)!,
+              butterfatLb: lbOrNull(t.proj305FatG),
+              proteinLb: lbOrNull(t.proj305ProteinG),
+            },
     }
   }
   return null

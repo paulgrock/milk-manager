@@ -11,7 +11,8 @@ function load() {
         .filter((m): m is RegExpMatchArray => !!m)
         .map((m) => [m[1], m[2]]),
     )
-    if (!vars.API_URL || !vars.SECRET_KEY) throw new Error('Local Supabase is not running. Start it with `npm run db:start`.')
+    if (!vars.API_URL || !vars.SECRET_KEY)
+      throw new Error('Local Supabase is not running. Start it with `npm run db:start`.')
     process.env.E2E_API_URL = vars.API_URL
     process.env.E2E_PUBLISHABLE_KEY = vars.PUBLISHABLE_KEY
     process.env.E2E_SECRET_KEY = vars.SECRET_KEY

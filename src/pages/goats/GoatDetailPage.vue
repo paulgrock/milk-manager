@@ -71,16 +71,23 @@ const saleDraft = computed(() => {
 })
 
 const health = useHealthData()
-const withdrawal = computed(() => (goat.value ? withdrawalOn(goat.value.id, health.data.value.treatments, todayISO()) : null))
+const withdrawal = computed(() =>
+  goat.value ? withdrawalOn(goat.value.id, health.data.value.treatments, todayISO()) : null,
+)
 const kids = computed(() => (goat.value ? offspringOf(goat.value.id, goats.data.value ?? []) : []))
 
 const details = computed(() => {
   const g = goat.value
   if (!g) return []
-  const tattoo = [g.tattoo_right && `R: ${g.tattoo_right}`, g.tattoo_left && `L: ${g.tattoo_left}`].filter(Boolean).join(' · ')
+  const tattoo = [g.tattoo_right && `R: ${g.tattoo_right}`, g.tattoo_left && `L: ${g.tattoo_left}`]
+    .filter(Boolean)
+    .join(' · ')
   return [
     { label: 'Born', value: g.birth_date ? `${formatDate(g.birth_date)} (${formatAge(g.birth_date)})` : '' },
-    { label: 'Breed', value: [g.breed, g.breed_category && BREED_CATEGORY_LABELS[g.breed_category]].filter(Boolean).join(' · ') },
+    {
+      label: 'Breed',
+      value: [g.breed, g.breed_category && BREED_CATEGORY_LABELS[g.breed_category]].filter(Boolean).join(' · '),
+    },
     { label: 'Color', value: g.color_markings },
     { label: 'Horns', value: g.horn_status === 'unknown' ? '' : HORN_LABELS[g.horn_status] },
     { label: 'Registration', value: [g.registry, g.registration_number].filter(Boolean).join(' ') },
@@ -97,7 +104,13 @@ const details = computed(() => {
     <USkeleton class="h-48 w-full" />
   </div>
 
-  <UAlert v-else-if="!goat" color="error" variant="subtle" title="Goat not found" :actions="[{ label: 'Back to goats', to: '/goats' }]" />
+  <UAlert
+    v-else-if="!goat"
+    color="error"
+    variant="subtle"
+    title="Goat not found"
+    :actions="[{ label: 'Back to goats', to: '/goats' }]"
+  />
 
   <div v-else class="space-y-4">
     <div class="flex items-start gap-4">
@@ -107,8 +120,12 @@ const details = computed(() => {
         <p v-if="goat.barn_name && goat.registered_name" class="text-muted">"{{ goat.barn_name }}"</p>
         <div class="flex flex-wrap gap-1 mt-2">
           <UBadge color="neutral" variant="subtle">{{ SEX_LABELS[goat.sex] }}</UBadge>
-          <UBadge :color="goat.status === 'active' ? 'primary' : 'neutral'" variant="subtle">{{ STATUS_LABELS[goat.status] }}</UBadge>
-          <UBadge v-if="latest.get(goat.id)" color="neutral" variant="outline">LA {{ latest.get(goat.id)!.final_score }}</UBadge>
+          <UBadge :color="goat.status === 'active' ? 'primary' : 'neutral'" variant="subtle">{{
+            STATUS_LABELS[goat.status]
+          }}</UBadge>
+          <UBadge v-if="latest.get(goat.id)" color="neutral" variant="outline"
+            >LA {{ latest.get(goat.id)!.final_score }}</UBadge
+          >
         </div>
       </div>
       <UButton :to="`/goats/${goat.slug}/edit`" color="neutral" variant="outline" icon="i-lucide-pencil">
@@ -186,7 +203,10 @@ const details = computed(() => {
             <li v-for="k in kids" :key="k.id">
               <RouterLink :to="`/goats/${k.slug}`" class="py-2 flex items-center gap-2 hover:underline">
                 <span class="flex-1 truncate">{{ goatFullName(k) }}</span>
-                <span class="text-sm text-muted">{{ SEX_LABELS[k.sex] }}<template v-if="k.birth_date"> · {{ formatDate(k.birth_date) }}</template></span>
+                <span class="text-sm text-muted"
+                  >{{ SEX_LABELS[k.sex]
+                  }}<template v-if="k.birth_date"> · {{ formatDate(k.birth_date) }}</template></span
+                >
               </RouterLink>
             </li>
           </ul>

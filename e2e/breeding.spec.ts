@@ -36,8 +36,16 @@ test('records a breeding to an outside buck, then a positive pregnancy check', a
   await expect(page.getByText('Confirmed pregnant').first()).toBeVisible()
   await expect(page.getByText('Blood test: pregnant')).toBeVisible()
 
-  const saved = await admin.from('breedings').select('bred_on, service_fee_cents, buck:goats!breedings_buck_id_herd_id_fkey(registered_name, status)').eq('doe_id', ina.id).single()
-  expect(saved.data).toEqual({ bred_on: bredOn, service_fee_cents: 7500, buck: { registered_name: 'Castle Rock Roxstar', status: 'reference' } })
+  const saved = await admin
+    .from('breedings')
+    .select('bred_on, service_fee_cents, buck:goats!breedings_buck_id_herd_id_fkey(registered_name, status)')
+    .eq('doe_id', ina.id)
+    .single()
+  expect(saved.data).toEqual({
+    bred_on: bredOn,
+    service_fee_cents: 7500,
+    buck: { registered_name: 'Castle Rock Roxstar', status: 'reference' },
+  })
 })
 
 test('the breeding page lists who is due and who to dry off', async ({ page, owner, herd }) => {
@@ -60,8 +68,17 @@ test('the breeding page lists who is due and who to dry off', async ({ page, own
   await expect(page.getByRole('link', { name: /Ina.*No kiddings recorded/ })).toBeVisible()
 })
 
-test('records twins: kids become goats, the dam starts a new lactation and shows on the milk line', async ({ page, owner, herd }) => {
-  const rex = await addGoat(owner, herd.id, { barn_name: 'Rex', registered_name: 'Rex Ridge Rocket', sex: 'buck', breed: 'Nigerian Dwarf' })
+test('records twins: kids become goats, the dam starts a new lactation and shows on the milk line', async ({
+  page,
+  owner,
+  herd,
+}) => {
+  const rex = await addGoat(owner, herd.id, {
+    barn_name: 'Rex',
+    registered_name: 'Rex Ridge Rocket',
+    sex: 'buck',
+    breed: 'Nigerian Dwarf',
+  })
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe', breed: 'Nigerian Dwarf' })
   // Milked through her pregnancy.
   await addLactation(owner, herd.id, ina.id, isoDate(-400), 2)
@@ -89,17 +106,29 @@ test('records twins: kids become goats, the dam starts a new lactation and shows
   await expect(page.getByRole('link', { name: /Ivy/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Ina kid 2/ })).toBeVisible()
 
-  const kids = await admin.from('goats').select('barn_name, sex, birth_date, sire_id, breed').eq('dam_id', ina.id).order('barn_name')
+  const kids = await admin
+    .from('goats')
+    .select('barn_name, sex, birth_date, sire_id, breed')
+    .eq('dam_id', ina.id)
+    .order('barn_name')
   expect(kids.data).toEqual([
     { barn_name: 'Ina kid 2', sex: 'buck', birth_date: isoDate(), sire_id: rex.id, breed: 'Nigerian Dwarf' },
     { barn_name: 'Ivy', sex: 'doe', birth_date: isoDate(), sire_id: rex.id, breed: 'Nigerian Dwarf' },
   ])
-  const kidRows = await admin.from('kids').select('birth_weight_g, outcome').eq('herd_id', herd.id).order('birth_weight_g', { nullsFirst: true })
+  const kidRows = await admin
+    .from('kids')
+    .select('birth_weight_g, outcome')
+    .eq('herd_id', herd.id)
+    .order('birth_weight_g', { nullsFirst: true })
   expect(kidRows.data?.filter((k) => k.birth_weight_g !== null)).toEqual([
     { birth_weight_g: lbToGrams(2.4), outcome: 'alive' },
     { birth_weight_g: lbToGrams(2.9), outcome: 'alive' },
   ])
-  const lactations = await admin.from('lactations').select('lactation_number, freshened_on, dried_off_on').eq('goat_id', ina.id).order('freshened_on')
+  const lactations = await admin
+    .from('lactations')
+    .select('lactation_number, freshened_on, dried_off_on')
+    .eq('goat_id', ina.id)
+    .order('freshened_on')
   expect(lactations.data).toEqual([
     { lactation_number: 2, freshened_on: isoDate(-400), dried_off_on: isoDate(-1) },
     { lactation_number: 3, freshened_on: isoDate(), dried_off_on: null },
@@ -137,7 +166,12 @@ test('pen breeding gives a due window across the exposure', async ({ page, owner
   await expect(dialog.getByText('Due around Aug 8, 2026 (Jul 24, 2026 – Aug 23, 2026)')).toBeVisible()
 })
 
-test('a kidding saved with no signal waits, says so, and goes through once back online', async ({ page, context, owner, herd }) => {
+test('a kidding saved with no signal waits, says so, and goes through once back online', async ({
+  page,
+  context,
+  owner,
+  herd,
+}) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   await page.goto(`/breeding/kidding?doe=${ina.id}`)
   await expect(page.getByPlaceholder('Search does…')).toHaveValue(/Ina/)

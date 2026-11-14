@@ -41,9 +41,16 @@ watch(open, (isOpen) => {
   })
 })
 
-const routeOptions = [{ label: 'Not recorded', value: 'none' }, ...Object.entries(ROUTE_LABELS).map(([value, label]) => ({ label, value }))]
+const routeOptions = [
+  { label: 'Not recorded', value: 'none' },
+  ...Object.entries(ROUTE_LABELS).map(([value, label]) => ({ label, value })),
+]
 const through = computed(() =>
-  withholdThrough({ started_on: form.started_on, ended_on: form.ended_on || null, milk_withdrawal_days: Number(form.milk_withdrawal_days) || 0 }),
+  withholdThrough({
+    started_on: form.started_on,
+    ended_on: form.ended_on || null,
+    milk_withdrawal_days: Number(form.milk_withdrawal_days) || 0,
+  }),
 )
 
 async function submit() {
@@ -80,7 +87,9 @@ async function remove() {
   <UModal v-model:open="open" :title="treatment ? 'Edit treatment' : 'Add treatment'">
     <template #body>
       <form id="treatment-form" class="space-y-3" @submit.prevent="submit">
-        <UFormField v-if="!goatId && !treatment" label="Goat" required><HerdGoatPicker v-model="form.goat_id" sex="any" /></UFormField>
+        <UFormField v-if="!goatId && !treatment" label="Goat" required
+          ><HerdGoatPicker v-model="form.goat_id" sex="any"
+        /></UFormField>
         <div class="grid grid-cols-2 gap-3">
           <UFormField label="Medication" required class="col-span-2">
             <UInput v-model="form.medication" required maxlength="120" class="w-full" />

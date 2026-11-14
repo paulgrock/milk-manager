@@ -23,14 +23,14 @@ npm run dev             # http://localhost:5173
 
 Sign-in emails don't go out locally. They're captured by Mailpit at http://127.0.0.1:54324.
 
-| Command | What it does |
-|---|---|
-| `npm run build` | Type-check and build to `dist/` |
-| `npm test` | Unit tests (Vitest) |
+| Command            | What it does                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `npm run build`    | Type-check and build to `dist/`                                                       |
+| `npm test`         | Unit tests (Vitest)                                                                   |
 | `npm run test:e2e` | Browser tests (Playwright, `e2e/`), against a production build and the local Supabase |
-| `npm run db:test` | Database permission tests (pgTAP, `supabase/tests`) |
-| `npm run db:reset` | Wipe the local DB and re-run migrations |
-| `npm run db:types` | Regenerate `src/lib/database.types.ts` after a schema change |
+| `npm run db:test`  | Database permission tests (pgTAP, `supabase/tests`)                                   |
+| `npm run db:reset` | Wipe the local DB and re-run migrations                                               |
+| `npm run db:types` | Regenerate `src/lib/database.types.ts` after a schema change                          |
 
 ## Tests
 

@@ -60,7 +60,10 @@ const cancelled = computed(() => seasonReservations.value.filter((r) => r.cancel
 
 // One line per doe with reservations or kids this season, then "any doe".
 const groups = computed(() => {
-  const does = new Set<string>([...active.value.map((r) => r.doe_id).filter((d): d is string => !!d), ...kids.value.map((k) => k.kidding.doe_id)])
+  const does = new Set<string>([
+    ...active.value.map((r) => r.doe_id).filter((d): d is string => !!d),
+    ...kids.value.map((k) => k.kidding.doe_id),
+  ])
   const list = [...does]
     .map((doeId) => ({ doeId: doeId as string | null, title: doeName(doeId), status: doeStatus(doeId) }))
     .sort((a, b) => a.title.localeCompare(b.title))
@@ -77,7 +80,10 @@ function doeStatus(doeId: string) {
   if (born.length) {
     const doelings = born.filter((k) => k.kid.sex === 'doe').length
     const bucklings = born.length - doelings
-    const parts = [doelings && `${doelings} ${doelings === 1 ? 'doeling' : 'doelings'}`, bucklings && `${bucklings} ${bucklings === 1 ? 'buckling' : 'bucklings'}`]
+    const parts = [
+      doelings && `${doelings} ${doelings === 1 ? 'doeling' : 'doelings'}`,
+      bucklings && `${bucklings} ${bucklings === 1 ? 'buckling' : 'bucklings'}`,
+    ]
     return `Kidded ${formatDate(born[0]!.kidding.kidded_on)} · ${parts.filter(Boolean).join(', ')}`
   }
   const due = doeBreedingState(doeId, breeding.value, today).current?.due.expected
@@ -102,7 +108,8 @@ function saleLabel(s: Sale) {
 }
 
 // Kids that fit a reservation: from its doe (or any doe), the sex it wants, not already taken.
-const fitting = (r: Reservation) => freeKids.value.filter((k) => (!r.doe_id || k.kidding.doe_id === r.doe_id) && kidFits(k.kid, r.wants))
+const fitting = (r: Reservation) =>
+  freeKids.value.filter((k) => (!r.doe_id || k.kidding.doe_id === r.doe_id) && kidFits(k.kid, r.wants))
 function matchItems(r: Reservation) {
   return fitting(r).map((k) => ({ label: k.label, onSelect: () => match(r, k) }))
 }
@@ -113,13 +120,17 @@ function match(r: Reservation, k: SeasonKid) {
   )
 }
 function unmatch(s: Sale) {
-  removeSale.mutate(s.id, { onError: (e) => toast.add({ color: 'error', title: 'Could not unmatch', description: e.message }) })
+  removeSale.mutate(s.id, {
+    onError: (e) => toast.add({ color: 'error', title: 'Could not unmatch', description: e.message }),
+  })
 }
 function move(line: Reservation[], index: number, by: number) {
   const ids = line.map((r) => r.id)
   const [id] = ids.splice(index, 1)
   ids.splice(index + by, 0, id!)
-  setLineOrder.mutate(ids, { onError: (e) => toast.add({ color: 'error', title: 'Could not reorder', description: e.message }) })
+  setLineOrder.mutate(ids, {
+    onError: (e) => toast.add({ color: 'error', title: 'Could not reorder', description: e.message }),
+  })
 }
 
 // Kids count toward the season they were born in, whenever they're adopted; other goats by the year adopted.
@@ -139,19 +150,45 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
 </script>
 
 <template>
-  <UAlert v-if="!isOwner" color="neutral" variant="subtle" icon="i-lucide-lock" title="Only owners can see adoptions." />
+  <UAlert
+    v-if="!isOwner"
+    color="neutral"
+    variant="subtle"
+    icon="i-lucide-lock"
+    title="Only owners can see adoptions."
+  />
   <div v-else class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
-      <UButton to="/breeding" color="neutral" variant="ghost" icon="i-lucide-arrow-left" aria-label="Back to breeding" />
+      <UButton
+        to="/breeding"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-arrow-left"
+        aria-label="Back to breeding"
+      />
       <h1 class="text-2xl font-semibold flex-1">Adoptions</h1>
       <UButton icon="i-lucide-plus" @click="reservationModal = { open: true }">New reservation</UButton>
-      <UButton variant="soft" icon="i-lucide-heart-handshake" @click="saleModal = { open: true }">Record an adoption</UButton>
+      <UButton variant="soft" icon="i-lucide-heart-handshake" @click="saleModal = { open: true }"
+        >Record an adoption</UButton
+      >
     </div>
 
     <div class="flex items-center gap-1">
-      <UButton color="neutral" variant="outline" icon="i-lucide-chevron-left" aria-label="Previous season" @click="goToSeason(season - 1)" />
+      <UButton
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-chevron-left"
+        aria-label="Previous season"
+        @click="goToSeason(season - 1)"
+      />
       <span class="px-3 font-medium tabular-nums">{{ season }} kidding season</span>
-      <UButton color="neutral" variant="outline" icon="i-lucide-chevron-right" aria-label="Next season" @click="goToSeason(season + 1)" />
+      <UButton
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-chevron-right"
+        aria-label="Next season"
+        @click="goToSeason(season + 1)"
+      />
     </div>
 
     <div v-if="loading" class="space-y-2"><USkeleton v-for="i in 3" :key="i" class="h-20 w-full" /></div>
@@ -172,16 +209,31 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
           <li v-for="(r, i) in g.line" :key="r.id" class="px-4 py-3 space-y-2">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span class="w-5 text-sm text-muted tabular-nums">{{ i + 1 }}.</span>
-              <button type="button" class="flex-1 min-w-40 text-start" @click="reservationModal = { open: true, reservation: r }">
+              <button
+                type="button"
+                class="flex-1 min-w-40 text-start"
+                @click="reservationModal = { open: true, reservation: r }"
+              >
                 <span class="font-medium">{{ buyerName(r.buyer_id) }}</span>
                 <span class="text-muted"> · {{ wantsText(r) }}</span>
                 <span class="block text-xs text-muted">{{ depositText(r) }}</span>
               </button>
               <div class="flex items-center gap-1 ms-auto">
-                <UDropdownMenu v-if="reservationProgress(r, data.sales).open && fitting(r).length" :items="matchItems(r)">
+                <UDropdownMenu
+                  v-if="reservationProgress(r, data.sales).open && fitting(r).length"
+                  :items="matchItems(r)"
+                >
                   <UButton size="xs" variant="soft" icon="i-lucide-link">Match a kid</UButton>
                 </UDropdownMenu>
-                <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-up" :aria-label="`Move ${buyerName(r.buyer_id)} up`" :disabled="i === 0" @click="move(g.line, i, -1)" />
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-arrow-up"
+                  :aria-label="`Move ${buyerName(r.buyer_id)} up`"
+                  :disabled="i === 0"
+                  @click="move(g.line, i, -1)"
+                />
                 <UButton
                   size="xs"
                   color="neutral"
@@ -204,7 +256,14 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
                 </template>
                 <template v-else>
                   <UButton size="xs" @click="saleModal = { open: true, sale: s }">Mark adopted</UButton>
-                  <UButton size="xs" color="neutral" variant="ghost" :aria-label="`Unmatch ${saleLabel(s)}`" icon="i-lucide-x" @click="unmatch(s)" />
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    :aria-label="`Unmatch ${saleLabel(s)}`"
+                    icon="i-lucide-x"
+                    @click="unmatch(s)"
+                  />
                 </template>
               </li>
             </ul>
@@ -216,19 +275,34 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
           </li>
         </ol>
         <div v-if="g.doeId" class="px-4 py-2 border-t border-default">
-          <UButton size="xs" color="neutral" variant="link" icon="i-lucide-plus" @click="reservationModal = { open: true, doeId: g.doeId }">
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="link"
+            icon="i-lucide-plus"
+            @click="reservationModal = { open: true, doeId: g.doeId }"
+          >
             Add to {{ g.title }}’s line
           </UButton>
         </div>
       </UCard>
 
       <div v-if="cancelled.length">
-        <UButton color="neutral" variant="link" :icon="showCancelled ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" @click="showCancelled = !showCancelled">
+        <UButton
+          color="neutral"
+          variant="link"
+          :icon="showCancelled ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+          @click="showCancelled = !showCancelled"
+        >
           Cancelled ({{ cancelled.length }})
         </UButton>
         <ul v-if="showCancelled" class="divide-y divide-default rounded-lg border border-default">
           <li v-for="r in cancelled" :key="r.id">
-            <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50" @click="reservationModal = { open: true, reservation: r }">
+            <button
+              type="button"
+              class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50"
+              @click="reservationModal = { open: true, reservation: r }"
+            >
               {{ buyerName(r.buyer_id) }} · {{ r.doe_id ? doeName(r.doe_id) : 'Any doe' }} · {{ depositText(r) }}
             </button>
           </li>
@@ -239,17 +313,25 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
         <template #header>
           <div class="flex items-baseline">
             <h2 class="font-semibold flex-1">Adopted this season</h2>
-            <span v-if="seasonSales.length" class="text-sm text-muted tabular-nums">{{ formatMoney(seasonTotal) }}</span>
+            <span v-if="seasonSales.length" class="text-sm text-muted tabular-nums">{{
+              formatMoney(seasonTotal)
+            }}</span>
           </div>
         </template>
         <p v-if="!seasonSales.length" class="p-4 text-muted">No adoptions yet.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="s in seasonSales" :key="s.id">
-            <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50 flex flex-wrap gap-x-3" @click="saleModal = { open: true, sale: s }">
+            <button
+              type="button"
+              class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50 flex flex-wrap gap-x-3"
+              @click="saleModal = { open: true, sale: s }"
+            >
               <span class="w-24 text-muted">{{ formatDate(s.sold_on) }}</span>
               <span class="flex-1">{{ saleLabel(s) }} to {{ buyerName(s.buyer_id) }}</span>
               <span class="tabular-nums">{{ formatMoney(s.price_cents ?? 0) }}</span>
-              <span v-if="s.pickup_on" class="basis-full ps-27 text-xs text-muted">Pickup {{ formatDate(s.pickup_on) }}</span>
+              <span v-if="s.pickup_on" class="basis-full ps-27 text-xs text-muted"
+                >Pickup {{ formatDate(s.pickup_on) }}</span
+              >
             </button>
           </li>
         </ul>
@@ -259,13 +341,19 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
         <template #header>
           <div class="flex items-center">
             <h2 class="font-semibold flex-1">Adopters</h2>
-            <UButton size="xs" variant="soft" icon="i-lucide-plus" @click="buyerModal = { open: true }">Add adopter</UButton>
+            <UButton size="xs" variant="soft" icon="i-lucide-plus" @click="buyerModal = { open: true }"
+              >Add adopter</UButton
+            >
           </div>
         </template>
         <p v-if="!data.buyers.length" class="p-4 text-muted">No adopters yet.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="b in data.buyers" :key="b.id">
-            <button type="button" class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50" @click="buyerModal = { open: true, buyer: b }">
+            <button
+              type="button"
+              class="w-full text-start px-4 py-2 text-sm hover:bg-elevated/50"
+              @click="buyerModal = { open: true, buyer: b }"
+            >
               <span class="font-medium">{{ b.name }}</span>
               <span v-if="b.town" class="text-muted"> · {{ b.town }}</span>
               <span v-if="purchases(b)" class="text-muted"> · adopted {{ purchases(b) }}</span>
@@ -276,7 +364,12 @@ const loading = computed(() => query.isPending.value || breedingQuery.isPending.
       </UCard>
     </template>
 
-    <ReservationModal v-model:open="reservationModal.open" :reservation="reservationModal.reservation" :doe-id="reservationModal.doeId" :season="reservationModal.reservation ? undefined : season" />
+    <ReservationModal
+      v-model:open="reservationModal.open"
+      :reservation="reservationModal.reservation"
+      :doe-id="reservationModal.doeId"
+      :season="reservationModal.reservation ? undefined : season"
+    />
     <SaleModal v-model:open="saleModal.open" :sale="saleModal.sale" :kid="saleModal.kid" :kids="freeKids" />
     <BuyerModal v-model:open="buyerModal.open" :buyer="buyerModal.buyer" />
   </div>

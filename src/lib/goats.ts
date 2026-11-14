@@ -11,7 +11,8 @@ export type GoatPhoto = Tables['goat_photos']['Row']
 export const THUMB_SIZE = 384
 
 /** The file to show a photo small: its small copy, or the photo itself if it has none yet. */
-export const iconPath = (photo: Pick<GoatPhoto, 'storage_path' | 'thumb_path'>) => photo.thumb_path ?? photo.storage_path
+export const iconPath = (photo: Pick<GoatPhoto, 'storage_path' | 'thumb_path'>) =>
+  photo.thumb_path ?? photo.storage_path
 export type GoatSex = Database['public']['Enums']['goat_sex']
 export type GoatStatus = Database['public']['Enums']['goat_status']
 export type HornStatus = Database['public']['Enums']['horn_status']
@@ -146,8 +147,9 @@ export function filterGoats(goats: Goat[], filters: GoatFilters): Goat[] {
     .filter((g) => !filters.breed || g.breed === filters.breed)
     .filter((g) => {
       if (!q) return true
-      return [g.registered_name, g.barn_name, g.registration_number, g.tattoo_left, g.tattoo_right, g.scrapie_tag]
-        .some((field) => normalize(field).includes(q))
+      return [g.registered_name, g.barn_name, g.registration_number, g.tattoo_left, g.tattoo_right, g.scrapie_tag].some(
+        (field) => normalize(field).includes(q),
+      )
     })
     .sort((a, b) => goatName(a).localeCompare(goatName(b)))
 }

@@ -8,7 +8,15 @@ import { todayISO } from '@/lib/dates'
 import { goatName, type Goat } from '@/lib/goats'
 import { CONFIDENCE_LABELS, STANDARD_DAYS, dailySeries, summarizeLactation, woodAt } from '@/lib/lactation'
 import { useMilkTests } from '@/composables/useMilkTests'
-import { dhirRequirement, officialFigures, officialProduction, productionOver, starOutlook, withTestDays, type TestPoint } from '@/lib/dhia'
+import {
+  dhirRequirement,
+  officialFigures,
+  officialProduction,
+  productionOver,
+  starOutlook,
+  withTestDays,
+  type TestPoint,
+} from '@/lib/dhia'
 import { daysInMilk } from '@/lib/milk'
 import { formatWeight, type Lactation } from '@/lib/milk'
 import LactationChart, { type CurveSeries } from '@/components/charts/LactationChart.vue'
@@ -26,7 +34,12 @@ const milkTests = useMilkTests()
 const ownTotals = {
   isPending: ownTotalsQuery.isPending,
   data: computed(() =>
-    withTestDays(ownTotalsQuery.data.value ?? [], props.goat.id, milkTests.data.value.tests, milkTests.data.value.results),
+    withTestDays(
+      ownTotalsQuery.data.value ?? [],
+      props.goat.id,
+      milkTests.data.value.tests,
+      milkTests.data.value.results,
+    ),
   ),
 }
 
@@ -61,7 +74,11 @@ const compareIds = ref<string[]>([])
 const compareOptions = computed(() =>
   (lactations.data.value ?? [])
     .filter((l) => l.id !== selectedId.value)
-    .sort((a, b) => Number(b.goat_id === props.goat.id) - Number(a.goat_id === props.goat.id) || b.freshened_on.localeCompare(a.freshened_on))
+    .sort(
+      (a, b) =>
+        Number(b.goat_id === props.goat.id) - Number(a.goat_id === props.goat.id) ||
+        b.freshened_on.localeCompare(a.freshened_on),
+    )
     .map((l) => ({ label: `${lactationLabel(l)} (${l.freshened_on.slice(0, 4)})`, value: l.id })),
 )
 watch(compareIds, (ids) => {
@@ -70,7 +87,9 @@ watch(compareIds, (ids) => {
 watch(selectedId, () => (compareIds.value = compareIds.value.filter((id) => id !== selectedId.value)))
 
 const compared = computed(() =>
-  compareIds.value.map((id) => (lactations.data.value ?? []).find((l) => l.id === id)).filter((l): l is Lactation => !!l),
+  compareIds.value
+    .map((id) => (lactations.data.value ?? []).find((l) => l.id === id))
+    .filter((l): l is Lactation => !!l),
 )
 
 // Other does' milk is only loaded when one is being compared.
@@ -85,7 +104,9 @@ const otherTotals = useHerdDayTotals(otherSince)
 
 const officialFor = (l: Lactation) => officialFigures(l, milkTests.data.value.tests, milkTests.data.value.results)
 const summary = computed(() =>
-  selected.value ? summarizeLactation(selected.value, ownTotals.data.value ?? [], today, officialFor(selected.value)) : null,
+  selected.value
+    ? summarizeLactation(selected.value, ownTotals.data.value ?? [], today, officialFor(selected.value))
+    : null,
 )
 
 const series = computed<CurveSeries[]>(() => {
@@ -118,7 +139,9 @@ const series = computed<CurveSeries[]>(() => {
   ]
 })
 
-const inMilk = computed(() => !!selected.value && (!selected.value.dried_off_on || selected.value.dried_off_on >= today))
+const inMilk = computed(
+  () => !!selected.value && (!selected.value.dried_off_on || selected.value.dried_off_on >= today),
+)
 
 // Average of her own weigh-ins over the last week; only shown once she's
 // being weighed most days, since a test day or two isn't a weekly average.
@@ -126,7 +149,9 @@ const lastWeek = computed(() => {
   const s = summary.value
   if (!inMilk.value || !s) return null
   const recent = s.points.filter((p) => p.dim > s.currentDim - 7)
-  return recent.length >= 3 ? { avgG: recent.reduce((t, p) => t + p.grams, 0) / recent.length, days: recent.length } : null
+  return recent.length >= 3
+    ? { avgG: recent.reduce((t, p) => t + p.grams, 0) / recent.length, days: recent.length }
+    : null
 })
 
 // Her test days in this lactation.
@@ -152,23 +177,44 @@ const star = computed(() => {
   const l = selected.value
   const s = summary.value
   if (!l || !s) return null
-  const requirement = dhirRequirement({ breed: props.goat.breed, birthDate: props.goat.birth_date, freshenedOn: l.freshened_on })
+  const requirement = dhirRequirement({
+    breed: props.goat.breed,
+    birthDate: props.goat.birth_date,
+    freshenedOn: l.freshened_on,
+  })
   if (!requirement) return { requirement: null }
   // The report's own figures when there are any; otherwise estimate from her
   // weights, filling the days between them the way DHI does.
   const official = officialProduction(officialFor(l), !inMilk.value)
   if (official) {
-    return { requirement, ...official, source: 'official' as const, outlook: starOutlook(requirement, official.toDate, official.projected) }
+    return {
+      requirement,
+      ...official,
+      source: 'official' as const,
+      outlook: starOutlook(requirement, official.toDate, official.projected),
+    }
   }
-  const days = dailySeries(s.points, Math.min(s.currentDim, STANDARD_DAYS), { lactationNumber: l.lactation_number, carryToEnd: !inMilk.value })
+  const days = dailySeries(s.points, Math.min(s.currentDim, STANDARD_DAYS), {
+    lactationNumber: l.lactation_number,
+    carryToEnd: !inMilk.value,
+  })
   const toDate = productionOver(days, testPoints.value)
   let projected = null
   if (inMilk.value && s.fit && s.currentDim < STANDARD_DAYS) {
     const lastDim = days.at(-1)?.dim ?? 0
-    const rest = Array.from({ length: STANDARD_DAYS - lastDim }, (_, i) => ({ dim: lastDim + i + 1, grams: woodAt(s.fit!, lastDim + i + 1) }))
+    const rest = Array.from({ length: STANDARD_DAYS - lastDim }, (_, i) => ({
+      dim: lastDim + i + 1,
+      grams: woodAt(s.fit!, lastDim + i + 1),
+    }))
     projected = productionOver([...days, ...rest], testPoints.value)
   }
-  return { requirement, toDate, projected, source: 'estimated' as const, outlook: starOutlook(requirement, toDate, projected) }
+  return {
+    requirement,
+    toDate,
+    projected,
+    source: 'estimated' as const,
+    outlook: starOutlook(requirement, toDate, projected),
+  }
 })
 const OUTLOOK = {
   earned: { label: 'Star earned', color: 'success', icon: 'i-lucide-star' },
@@ -184,7 +230,14 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
     <template #header>
       <div class="flex flex-wrap items-center gap-2">
         <h2 class="font-semibold flex-1">Lactation curve</h2>
-        <USelect v-if="own.length > 1" v-model="selectedId" :items="lactationOptions" size="sm" class="w-48" aria-label="Lactation" />
+        <USelect
+          v-if="own.length > 1"
+          v-model="selectedId"
+          :items="lactationOptions"
+          size="sm"
+          class="w-48"
+          aria-label="Lactation"
+        />
       </div>
     </template>
 
@@ -199,11 +252,14 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
           <dt class="text-xs text-muted">{{ inMilk ? 'So far' : 'Total' }}</dt>
           <dd class="text-xl font-semibold">{{ formatWeight(summary.totalG, unit, true) }}</dd>
           <dd class="text-xs text-muted">
-            {{ summary.totalSource === 'official' ? 'DHI report' : 'Estimated' }} · to day {{ summary.totalAsOfDim }}<template v-if="inMilk"> · DIM {{ summary.currentDim }}</template>
+            {{ summary.totalSource === 'official' ? 'DHI report' : 'Estimated' }} · to day {{ summary.totalAsOfDim
+            }}<template v-if="inMilk"> · DIM {{ summary.currentDim }}</template>
           </dd>
         </div>
         <div>
-          <dt class="text-xs text-muted">{{ inMilk && summary.currentDim < STANDARD_DAYS ? 'Projected 305-day' : '305-day' }}</dt>
+          <dt class="text-xs text-muted">
+            {{ inMilk && summary.currentDim < STANDARD_DAYS ? 'Projected 305-day' : '305-day' }}
+          </dt>
           <template v-if="summary.projected305G !== null">
             <dd class="text-xl font-semibold">{{ formatWeight(summary.projected305G, unit, true) }}</dd>
             <dd v-if="summary.projectedSource === 'official'">
@@ -214,7 +270,13 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
                 :color="confidenceColor[summary.confidence]"
                 variant="subtle"
                 size="sm"
-                :icon="summary.confidence === 'low' ? 'i-lucide-triangle-alert' : summary.confidence === 'high' ? 'i-lucide-circle-check' : 'i-lucide-circle-dot'"
+                :icon="
+                  summary.confidence === 'low'
+                    ? 'i-lucide-triangle-alert'
+                    : summary.confidence === 'high'
+                      ? 'i-lucide-circle-check'
+                      : 'i-lucide-circle-dot'
+                "
               >
                 {{ CONFIDENCE_LABELS[summary.confidence] }}
               </UBadge>
@@ -227,7 +289,9 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
         </div>
         <div v-if="lastWeek">
           <dt class="text-xs text-muted">Last 7 days</dt>
-          <dd class="text-xl font-semibold">{{ formatWeight(lastWeek.avgG, unit, true) }}<span class="text-sm font-normal text-muted">/day</span></dd>
+          <dd class="text-xl font-semibold">
+            {{ formatWeight(lastWeek.avgG, unit, true) }}<span class="text-sm font-normal text-muted">/day</span>
+          </dd>
           <dd class="text-xs text-muted">{{ lastWeek.days }} days weighed</dd>
         </div>
       </dl>
@@ -238,15 +302,22 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
         <div v-if="star" class="mt-4 rounded-md border border-default p-3 space-y-2">
           <div class="flex flex-wrap items-center gap-2">
             <h3 class="font-medium flex-1">DHIR star (ADGA)</h3>
-            <UBadge v-if="star.requirement" :color="OUTLOOK[star.outlook!].color" variant="subtle" :icon="OUTLOOK[star.outlook!].icon">
+            <UBadge
+              v-if="star.requirement"
+              :color="OUTLOOK[star.outlook!].color"
+              variant="subtle"
+              :icon="OUTLOOK[star.outlook!].icon"
+            >
               {{ OUTLOOK[star.outlook!].label }}
             </UBadge>
           </div>
-          <p v-if="!star.requirement" class="text-sm text-muted">Add her birth date to see what she needs for a star.</p>
+          <p v-if="!star.requirement" class="text-sm text-muted">
+            Add her birth date to see what she needs for a star.
+          </p>
           <template v-else>
             <p class="text-sm text-muted">
-              Kidded at {{ star.requirement.ageAtKidding.years }} yr {{ star.requirement.ageAtKidding.months }} mo
-              · {{ star.requirement.miniature ? 'miniature' : 'standard' }} breed · any one of these in 305 days or less:
+              Kidded at {{ star.requirement.ageAtKidding.years }} yr {{ star.requirement.ageAtKidding.months }} mo ·
+              {{ star.requirement.miniature ? 'miniature' : 'standard' }} breed · any one of these in 305 days or less:
             </p>
             <table class="w-full text-sm tabular-nums">
               <thead>
@@ -258,27 +329,56 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="m in [
-                  { label: 'Milk', need: star.requirement.milkLb, now: star.toDate!.milkLb, proj: star.projected?.milkLb },
-                  { label: 'Butterfat', need: star.requirement.butterfatLb, now: star.toDate!.butterfatLb, proj: star.projected?.butterfatLb },
-                  { label: 'Protein', need: star.requirement.proteinLb, now: star.toDate!.proteinLb, proj: star.projected?.proteinLb },
-                ]" :key="m.label" class="border-t border-default">
+                <tr
+                  v-for="m in [
+                    {
+                      label: 'Milk',
+                      need: star.requirement.milkLb,
+                      now: star.toDate!.milkLb,
+                      proj: star.projected?.milkLb,
+                    },
+                    {
+                      label: 'Butterfat',
+                      need: star.requirement.butterfatLb,
+                      now: star.toDate!.butterfatLb,
+                      proj: star.projected?.butterfatLb,
+                    },
+                    {
+                      label: 'Protein',
+                      need: star.requirement.proteinLb,
+                      now: star.toDate!.proteinLb,
+                      proj: star.projected?.proteinLb,
+                    },
+                  ]"
+                  :key="m.label"
+                  class="border-t border-default"
+                >
                   <td class="py-1">{{ m.label }}</td>
                   <td class="py-1 text-end">{{ m.need.toLocaleString() }} lb</td>
-                  <td class="py-1 text-end" :class="m.now !== null && m.now >= m.need ? 'text-success font-semibold' : ''">
+                  <td
+                    class="py-1 text-end"
+                    :class="m.now !== null && m.now >= m.need ? 'text-success font-semibold' : ''"
+                  >
                     {{ m.now === null ? 'needs a test' : `${m.now.toLocaleString()} lb` }}
                   </td>
-                  <td v-if="star.projected" class="py-1 text-end" :class="m.proj != null && m.proj >= m.need ? 'text-success font-semibold' : ''">
+                  <td
+                    v-if="star.projected"
+                    class="py-1 text-end"
+                    :class="m.proj != null && m.proj >= m.need ? 'text-success font-semibold' : ''"
+                  >
                     {{ m.proj == null ? '—' : `${m.proj.toLocaleString()} lb` }}
                   </td>
                 </tr>
               </tbody>
             </table>
             <p class="text-xs text-muted">
-              <template v-if="star.source === 'official'">From your DHI report's lactation-to-date and projected 305-day figures.</template>
+              <template v-if="star.source === 'official'"
+                >From your DHI report's lactation-to-date and projected 305-day figures.</template
+              >
               <template v-else>
-                Estimated from your weights<template v-if="testPoints.length"> and {{ testPoints.length }} test {{ testPoints.length === 1 ? 'day' : 'days' }}</template>.
-                Your DHI processing center's lactation record is the official one.
+                Estimated from your weights<template v-if="testPoints.length">
+                  and {{ testPoints.length }} test {{ testPoints.length === 1 ? 'day' : 'days' }}</template
+                >. Your DHI processing center's lactation record is the official one.
               </template>
             </p>
           </template>

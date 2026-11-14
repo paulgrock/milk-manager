@@ -23,7 +23,11 @@ const ICONS: Record<EventKind, string> = {
 </script>
 
 <template>
-  <RouterLink :to="event.href" class="flex items-start gap-3 px-4 py-2 hover:bg-elevated/50" :class="event.done ? 'text-muted' : ''">
+  <RouterLink
+    :to="event.href"
+    class="flex items-start gap-3 px-4 py-2 hover:bg-elevated/50"
+    :class="event.done ? 'text-muted' : ''"
+  >
     <UIcon :name="ICONS[event.kind]" class="size-4 mt-0.5 shrink-0" :class="event.overdue ? 'text-warning' : ''" />
     <span class="flex-1 min-w-0">
       <span class="block" :class="event.done ? '' : 'font-medium'">{{ event.title }}</span>

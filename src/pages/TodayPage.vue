@@ -25,7 +25,9 @@ const unit = computed(() => herd.value?.weight_unit ?? 'lb')
 
 const { goats } = useHerdGoats()
 const inMilk = computed(
-  () => (goats.data.value ?? []).filter((g) => inHerdOn(g, today) && lactationOn(lactations.data.value ?? [], g.id, today)).length,
+  () =>
+    (goats.data.value ?? []).filter((g) => inHerdOn(g, today) && lactationOn(lactations.data.value ?? [], g.id, today))
+      .length,
 )
 const milk = computed(() => {
   const rows = day.data.value ?? []
@@ -56,7 +58,9 @@ const weekday = (iso: string) => {
     <div class="flex flex-wrap items-end gap-2">
       <div class="flex-1">
         <h1 class="text-2xl font-semibold">Today</h1>
-        <p class="text-muted">{{ formatDate(today) }} · {{ role === 'owner' ? 'Owner' : 'Helper' }} of {{ herd?.name }}</p>
+        <p class="text-muted">
+          {{ formatDate(today) }} · {{ role === 'owner' ? 'Owner' : 'Helper' }} of {{ herd?.name }}
+        </p>
       </div>
       <UButton to="/milk" icon="i-lucide-milk">Enter milk</UButton>
       <UButton variant="soft" icon="i-lucide-clipboard-check" @click="careOpen = true">Log care</UButton>
@@ -70,7 +74,9 @@ const weekday = (iso: string) => {
             <p class="text-sm text-muted">Milk today · {{ inMilk }} {{ inMilk === 1 ? 'doe' : 'does' }} in milk</p>
             <p class="text-3xl font-semibold tabular-nums">{{ formatWeight(milk.total, unit, true) }}</p>
           </div>
-          <div class="text-sm text-muted tabular-nums">AM {{ formatWeight(milk.am, unit) }} · PM {{ formatWeight(milk.pm, unit) }}</div>
+          <div class="text-sm text-muted tabular-nums">
+            AM {{ formatWeight(milk.am, unit) }} · PM {{ formatWeight(milk.pm, unit) }}
+          </div>
           <UIcon name="i-lucide-chevron-right" class="ms-auto size-5 text-muted" />
         </div>
       </UCard>

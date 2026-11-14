@@ -14,11 +14,7 @@ export const membershipsKey = (userId: string) => ['memberships', userId] as con
 
 async function fetchMemberships(userId: string): Promise<Membership[]> {
   const rows = unwrap(
-    await supabase
-      .from('herd_members')
-      .select('role, herd:herds!inner(*)')
-      .eq('user_id', userId)
-      .order('created_at'),
+    await supabase.from('herd_members').select('role, herd:herds!inner(*)').eq('user_id', userId).order('created_at'),
   )
   return rows.map(({ role, herd }) => ({ role, herd }))
 }

@@ -27,7 +27,11 @@ const withCurrent = computed(() => byType.value.filter((t) => t.current.length))
 const others = computed(() => byType.value.filter((t) => !t.current.length && (t.total || !t.type.hidden)))
 const months = computed(() => monthlyTotals(data.value.makes).slice(0, 6))
 
-const monthLabel = (m: string) => new Date(Number(m.slice(0, 4)), Number(m.slice(5)) - 1, 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+const monthLabel = (m: string) =>
+  new Date(Number(m.slice(0, 4)), Number(m.slice(5)) - 1, 1).toLocaleDateString(undefined, {
+    month: 'short',
+    year: 'numeric',
+  })
 
 const modalOpen = ref(false)
 
@@ -36,11 +40,17 @@ const draft = reactive({ name: '', days: 0 })
 async function addType() {
   if (!draft.name.trim()) return
   try {
-    await saveType.mutateAsync({ values: { name: draft.name.trim(), aging_days: draft.days, sort_order: data.value.types.length + 1 } })
+    await saveType.mutateAsync({
+      values: { name: draft.name.trim(), aging_days: draft.days, sort_order: data.value.types.length + 1 },
+    })
     Object.assign(draft, { name: '', days: 0 })
   } catch (e) {
     const message = (e as Error).message
-    toast.add({ color: 'error', title: 'Could not add', description: message.includes('duplicate') ? 'That cheese is already in the list.' : message })
+    toast.add({
+      color: 'error',
+      title: 'Could not add',
+      description: message.includes('duplicate') ? 'That cheese is already in the list.' : message,
+    })
   }
 }
 </script>
@@ -62,15 +72,23 @@ async function addType() {
       <UCard v-for="{ type, current } in withCurrent" :key="type.id" :ui="{ header: 'p-0 sm:p-0', body: 'p-0 sm:p-0' }">
         <template #header>
           <RouterLink :to="`/cheese/types/${type.id}`" class="flex items-center gap-2 px-4 py-3 hover:bg-elevated/50">
-            <h2 class="font-semibold flex-1">{{ type.name }} <span class="text-muted font-normal">({{ current.length }})</span></h2>
+            <h2 class="font-semibold flex-1">
+              {{ type.name }} <span class="text-muted font-normal">({{ current.length }})</span>
+            </h2>
             <UIcon name="i-lucide-chevron-right" class="text-muted size-5" />
           </RouterLink>
         </template>
         <ul class="divide-y divide-default">
           <li v-for="make in current" :key="make.id">
-            <RouterLink :to="`/cheese/makes/${make.id}`" class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <RouterLink
+              :to="`/cheese/makes/${make.id}`"
+              class="px-4 py-3 hover:bg-elevated/50 flex flex-wrap items-center gap-x-3 gap-y-1"
+            >
               <span class="flex-1 min-w-40">
-                Made {{ formatDate(make.made_on) }}<span v-if="milkLabel(make)" class="text-muted"> · <span class="whitespace-nowrap">{{ milkLabel(make) }}</span></span>
+                Made {{ formatDate(make.made_on)
+                }}<span v-if="milkLabel(make)" class="text-muted">
+                  · <span class="whitespace-nowrap">{{ milkLabel(make) }}</span></span
+                >
               </span>
               <UBadge
                 :color="makeStatus(make, today) === 'aging' ? 'neutral' : 'primary'"
@@ -92,7 +110,9 @@ async function addType() {
           <li v-for="{ type, total } in others" :key="type.id">
             <RouterLink :to="`/cheese/types/${type.id}`" class="px-4 py-2 hover:bg-elevated/50 flex items-center gap-3">
               <span class="flex-1 font-medium">{{ type.name }}</span>
-              <span class="text-sm text-muted">{{ total ? `${total} make${total === 1 ? '' : 's'}` : 'No makes yet' }}</span>
+              <span class="text-sm text-muted">{{
+                total ? `${total} make${total === 1 ? '' : 's'}` : 'No makes yet'
+              }}</span>
               <UIcon name="i-lucide-chevron-right" class="text-muted size-4" />
             </RouterLink>
           </li>
@@ -132,7 +152,8 @@ async function addType() {
         <template #header>
           <h2 class="font-semibold">Cheeses we make</h2>
           <p class="text-sm text-muted">
-            How long each usually ages; a new make’s ready date starts from this. {{ isOwner ? '' : 'Only owners can rename or hide these.' }}
+            How long each usually ages; a new make’s ready date starts from this.
+            {{ isOwner ? '' : 'Only owners can rename or hide these.' }}
           </p>
         </template>
         <ul class="divide-y divide-default -my-2">

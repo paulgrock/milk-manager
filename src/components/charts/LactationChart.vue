@@ -29,7 +29,8 @@ function projectionPoints(s: CurveSeries): [number, number][] {
   const fit = s.summary.fit
   if (!s.showProjection || !fit || s.summary.currentDim >= STANDARD_DAYS) return []
   const out: [number, number][] = []
-  for (let dim = Math.max(1, s.summary.currentDim); dim <= STANDARD_DAYS; dim += 2) out.push([dim, toUnit(woodAt(fit, dim))])
+  for (let dim = Math.max(1, s.summary.currentDim); dim <= STANDARD_DAYS; dim += 2)
+    out.push([dim, toUnit(woodAt(fit, dim))])
   return out
 }
 
@@ -38,7 +39,8 @@ function valuesAt(dim: number) {
   return props.series.map((s, i) => {
     const raw = s.summary.points.find((p) => p.dim === dim)
     const smooth = s.summary.smoothed.find((p) => p.dim === dim)
-    const projected = s.showProjection && s.summary.fit && dim > s.summary.currentDim ? woodAt(s.summary.fit, dim) : undefined
+    const projected =
+      s.showProjection && s.summary.fit && dim > s.summary.currentDim ? woodAt(s.summary.fit, dim) : undefined
     return { label: s.label, color: theme.value.series[i]!, raw: raw?.grams, smooth: smooth?.grams, projected }
   })
 }
@@ -190,10 +192,18 @@ const tableRows = computed(() => {
       />
     </div>
     <div class="flex items-center gap-3 mt-1 text-xs text-muted">
-      <span class="inline-flex items-center gap-1"><span class="inline-block size-1.5 rounded-full bg-current opacity-50" /> daily weigh-in</span>
-      <span class="inline-flex items-center gap-1"><span class="inline-block w-4 h-0.5 bg-current" /> 7-day average</span>
-      <span class="inline-flex items-center gap-1"><span class="inline-block w-4 border-t-2 border-dashed border-current" /> projected</span>
-      <span v-if="series.some((s) => s.testPoints?.length)" class="inline-flex items-center gap-1"><span class="inline-block size-2 rotate-45 bg-current" /> test day</span>
+      <span class="inline-flex items-center gap-1"
+        ><span class="inline-block size-1.5 rounded-full bg-current opacity-50" /> daily weigh-in</span
+      >
+      <span class="inline-flex items-center gap-1"
+        ><span class="inline-block w-4 h-0.5 bg-current" /> 7-day average</span
+      >
+      <span class="inline-flex items-center gap-1"
+        ><span class="inline-block w-4 border-t-2 border-dashed border-current" /> projected</span
+      >
+      <span v-if="series.some((s) => s.testPoints?.length)" class="inline-flex items-center gap-1"
+        ><span class="inline-block size-2 rotate-45 bg-current" /> test day</span
+      >
       <UButton size="xs" variant="link" color="neutral" class="ms-auto" @click="showTable = !showTable">
         {{ showTable ? 'Hide table' : 'Show as table' }}
       </UButton>
@@ -203,7 +213,9 @@ const tableRows = computed(() => {
         <thead class="sticky top-0 bg-default">
           <tr class="text-muted text-start">
             <th class="px-2 py-1 text-start font-normal">Days in milk</th>
-            <th v-for="s in series" :key="s.id" class="px-2 py-1 text-end font-normal">{{ s.label }} ({{ unit }}/day)</th>
+            <th v-for="s in series" :key="s.id" class="px-2 py-1 text-end font-normal">
+              {{ s.label }} ({{ unit }}/day)
+            </th>
           </tr>
         </thead>
         <tbody>

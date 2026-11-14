@@ -23,7 +23,9 @@ export type DeleteCareVars = { herdId: string; id: string }
 const scope = { id: 'care' }
 
 function update(herdId: string, change: (events: CareEvent[]) => CareEvent[]) {
-  queryClient.setQueryData<HealthData>(healthKey(herdId), (data) => (data ? { ...data, careEvents: change(data.careEvents) } : data))
+  queryClient.setQueryData<HealthData>(healthKey(herdId), (data) =>
+    data ? { ...data, careEvents: change(data.careEvents) } : data,
+  )
 }
 
 queryClient.setMutationDefaults<unknown, Error, LogCareVars>(LOG_CARE, {
@@ -34,12 +36,10 @@ queryClient.setMutationDefaults<unknown, Error, LogCareVars>(LOG_CARE, {
   // replayed log harmless.
   mutationFn: async (v) =>
     unwrap(
-      await supabase
-        .from('care_events')
-        .upsert(
-          v.events.map(({ created_at: _c, created_by: _b, ...e }) => e),
-          { onConflict: 'id', ignoreDuplicates: true },
-        ),
+      await supabase.from('care_events').upsert(
+        v.events.map(({ created_at: _c, created_by: _b, ...e }) => e),
+        { onConflict: 'id', ignoreDuplicates: true },
+      ),
     ),
   onMutate: async (v) => {
     await queryClient.cancelQueries({ queryKey: healthKey(v.herdId) })

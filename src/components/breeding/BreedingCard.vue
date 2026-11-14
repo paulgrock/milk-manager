@@ -44,19 +44,34 @@ const events = computed<Event[]>(() => {
   const d = data.value
   const mine = new Set(d.breedings.filter((b) => b.doe_id === props.goat.id).map((b) => b.id))
   return [
-    ...d.heats.filter((h) => h.goat_id === props.goat.id).map((heat) => ({ kind: 'heat' as const, date: heat.observed_on, heat })),
+    ...d.heats
+      .filter((h) => h.goat_id === props.goat.id)
+      .map((heat) => ({ kind: 'heat' as const, date: heat.observed_on, heat })),
     ...d.breedings
       .filter((b) => mine.has(b.id))
-      .map((breeding) => ({ kind: 'breeding' as const, date: breeding.bred_on, breeding, status: breedingStatus(breeding, d, today) })),
-    ...d.checks.filter((c) => mine.has(c.breeding_id)).map((check) => ({ kind: 'check' as const, date: check.checked_on, check })),
+      .map((breeding) => ({
+        kind: 'breeding' as const,
+        date: breeding.bred_on,
+        breeding,
+        status: breedingStatus(breeding, d, today),
+      })),
+    ...d.checks
+      .filter((c) => mine.has(c.breeding_id))
+      .map((check) => ({ kind: 'check' as const, date: check.checked_on, check })),
     ...d.kiddings
       .filter((k) => k.doe_id === props.goat.id)
       .map((k) => {
         const kids = d.kids.filter((x) => x.kidding_id === k.id)
         const parts = kids.map(
-          (x) => `${x.sex === 'doe' ? 'doeling' : 'buckling'}${x.birth_weight_g ? ` ${formatWeight(x.birth_weight_g, unit.value, true)}` : ''}${x.outcome !== 'alive' ? ` (${x.outcome})` : ''}`,
+          (x) =>
+            `${x.sex === 'doe' ? 'doeling' : 'buckling'}${x.birth_weight_g ? ` ${formatWeight(x.birth_weight_g, unit.value, true)}` : ''}${x.outcome !== 'alive' ? ` (${x.outcome})` : ''}`,
         )
-        return { kind: 'kidding' as const, date: k.kidded_on, id: k.id, summary: `${kids.length} ${kids.length === 1 ? 'kid' : 'kids'}${parts.length ? `: ${parts.join(', ')}` : ''}` }
+        return {
+          kind: 'kidding' as const,
+          date: k.kidded_on,
+          id: k.id,
+          summary: `${kids.length} ${kids.length === 1 ? 'kid' : 'kids'}${parts.length ? `: ${parts.join(', ')}` : ''}`,
+        }
       }),
   ].sort((a, b) => b.date.localeCompare(a.date))
 })
@@ -78,7 +93,9 @@ const CHECK_METHODS = { blood: 'Blood test', ultrasound: 'Ultrasound', observati
     <div class="space-y-3">
       <div v-if="state.current" class="rounded-md border border-default p-3 space-y-1">
         <div class="flex items-center gap-2">
-          <UBadge :color="STATUS_COLOR[state.current.status]" variant="subtle">{{ STATUS_LABELS[state.current.status] }}</UBadge>
+          <UBadge :color="STATUS_COLOR[state.current.status]" variant="subtle">{{
+            STATUS_LABELS[state.current.status]
+          }}</UBadge>
           <span class="text-sm">to {{ buckName(state.current.breeding.buck_id) }}</span>
         </div>
         <p class="text-lg font-semibold">
@@ -86,7 +103,8 @@ const CHECK_METHODS = { blood: 'Blood test', ultrasound: 'Ultrasound', observati
           <span class="text-sm font-normal text-muted">({{ relativeDays(state.current.daysToDue) }})</span>
         </p>
         <p class="text-sm text-muted">
-          Could kid {{ formatDate(state.current.due.earliest) }} – {{ formatDate(state.current.due.latest) }} · dry off by
+          Could kid {{ formatDate(state.current.due.earliest) }} – {{ formatDate(state.current.due.latest) }} · dry off
+          by
           {{ formatDate(state.current.dryOffBy) }}
         </p>
       </div>
@@ -101,7 +119,9 @@ const CHECK_METHODS = { blood: 'Blood test', ultrasound: 'Ultrasound', observati
 
       <div class="flex flex-wrap gap-2">
         <UButton size="sm" variant="soft" icon="i-lucide-flame" @click="heatModal = { open: true }">Log heat</UButton>
-        <UButton size="sm" variant="soft" icon="i-lucide-heart" @click="breedingModal = { open: true }">Record breeding</UButton>
+        <UButton size="sm" variant="soft" icon="i-lucide-heart" @click="breedingModal = { open: true }"
+          >Record breeding</UButton
+        >
         <UButton
           v-if="state.current"
           size="sm"
@@ -115,14 +135,20 @@ const CHECK_METHODS = { blood: 'Blood test', ultrasound: 'Ultrasound', observati
           size="sm"
           variant="soft"
           icon="i-lucide-baby"
-          :to="{ path: '/breeding/kidding', query: { doe: goat.id, ...(state.current ? { breeding: state.current.breeding.id } : {}) } }"
+          :to="{
+            path: '/breeding/kidding',
+            query: { doe: goat.id, ...(state.current ? { breeding: state.current.breeding.id } : {}) },
+          }"
         >
           Record kidding
         </UButton>
       </div>
 
       <ul v-if="events.length" class="divide-y divide-default border-t border-default">
-        <li v-for="e in events" :key="`${e.kind}-${e.date}-${'id' in e ? e.id : e.kind === 'heat' ? e.heat.id : e.kind === 'breeding' ? e.breeding.id : e.check.id}`">
+        <li
+          v-for="e in events"
+          :key="`${e.kind}-${e.date}-${'id' in e ? e.id : e.kind === 'heat' ? e.heat.id : e.kind === 'breeding' ? e.breeding.id : e.check.id}`"
+        >
           <button
             type="button"
             class="w-full py-2 flex gap-3 text-start text-sm hover:bg-elevated/50 rounded disabled:hover:bg-transparent"
@@ -139,7 +165,9 @@ const CHECK_METHODS = { blood: 'Blood test', ultrasound: 'Ultrasound', observati
           >
             <span class="w-24 shrink-0 text-muted">{{ formatDate(e.date) }}</span>
             <span class="flex-1">
-              <template v-if="e.kind === 'heat'">In heat<template v-if="e.heat.signs"> · {{ e.heat.signs }}</template></template>
+              <template v-if="e.kind === 'heat'"
+                >In heat<template v-if="e.heat.signs"> · {{ e.heat.signs }}</template></template
+              >
               <template v-else-if="e.kind === 'breeding'">
                 {{ METHOD_LABELS[e.breeding.method] }} to {{ buckName(e.breeding.buck_id) }}
                 <span class="text-muted">· due {{ formatDate(dueWindow(e.breeding).expected) }}</span>

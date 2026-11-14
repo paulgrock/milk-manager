@@ -29,9 +29,15 @@ export function useBreedingData() {
     queryKey: computed(() => breedingKey(herdId.value)),
     queryFn: async (): Promise<BreedingData & { kids: Kid[] }> => {
       const page = <T>(table: 'heats' | 'breedings' | 'pregnancy_checks' | 'kiddings' | 'kids') =>
-        fetchAll<T>((from, to) =>
-          // Same shape for each table; typed per call by T.
-          supabase.from(table as 'heats').select('*').eq('herd_id', herdId.value).order('id').range(from, to) as never,
+        fetchAll<T>(
+          (from, to) =>
+            // Same shape for each table; typed per call by T.
+            supabase
+              .from(table as 'heats')
+              .select('*')
+              .eq('herd_id', herdId.value)
+              .order('id')
+              .range(from, to) as never,
         )
       const [heats, breedings, checks, kiddings, kids] = await Promise.all([
         page<Heat>('heats'),

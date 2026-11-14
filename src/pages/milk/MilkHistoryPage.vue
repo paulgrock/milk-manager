@@ -58,13 +58,20 @@ const week = computed(() => {
 
     <ul v-else class="divide-y divide-default rounded-lg border border-default">
       <li v-for="d in days" :key="d.date">
-        <RouterLink :to="{ path: '/milk', query: { date: d.date } }" class="flex items-center gap-3 px-3 py-2 hover:bg-elevated/50">
+        <RouterLink
+          :to="{ path: '/milk', query: { date: d.date } }"
+          class="flex items-center gap-3 px-3 py-2 hover:bg-elevated/50"
+        >
           <span class="w-28 shrink-0 text-sm">{{ formatDate(d.date) }}</span>
           <span class="flex-1 h-2 rounded bg-elevated overflow-hidden" aria-hidden="true">
             <span class="block h-full bg-primary rounded" :style="{ width: `${(d.totalG / maxG) * 100}%` }" />
           </span>
-          <span class="w-20 text-end tabular-nums font-medium">{{ d.totalG ? formatWeight(d.totalG, unit) : '—' }}</span>
-          <span class="w-14 text-end text-xs text-muted">{{ d.does ? `${d.does} ${d.does === 1 ? 'doe' : 'does'}` : '' }}</span>
+          <span class="w-20 text-end tabular-nums font-medium">{{
+            d.totalG ? formatWeight(d.totalG, unit) : '—'
+          }}</span>
+          <span class="w-14 text-end text-xs text-muted">{{
+            d.does ? `${d.does} ${d.does === 1 ? 'doe' : 'does'}` : ''
+          }}</span>
         </RouterLink>
         <p v-if="d.incomplete.length" class="px-3 pb-2 -mt-1 text-xs text-warning">
           Missing a milking: {{ d.incomplete.join(', ') }}

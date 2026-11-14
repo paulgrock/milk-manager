@@ -3,7 +3,15 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useCheeseData, useCheeseMutations } from '@/composables/useCheese'
 import { formatDate, todayISO } from '@/lib/dates'
-import { MILK_TREATMENT_LABELS, agingLabel, parseGallons, readyDate, type CheeseMake, type CheeseType, type MilkTreatment } from '@/lib/cheese'
+import {
+  MILK_TREATMENT_LABELS,
+  agingLabel,
+  parseGallons,
+  readyDate,
+  type CheeseMake,
+  type CheeseType,
+  type MilkTreatment,
+} from '@/lib/cheese'
 
 // typeId picks the cheese for a new make, as from a cheese type's page.
 const props = defineProps<{ make?: CheeseMake; typeId?: string }>()
@@ -73,13 +81,18 @@ async function addType() {
     newType.value = undefined
   } catch (e) {
     const message = (e as Error).message
-    toast.add({ color: 'error', title: 'Could not add cheese', description: message.includes('duplicate') ? 'That cheese is already in the list.' : message })
+    toast.add({
+      color: 'error',
+      title: 'Could not add cheese',
+      description: message.includes('duplicate') ? 'That cheese is already in the list.' : message,
+    })
   }
 }
 
 async function submit() {
   if (!form.typeId) return toast.add({ color: 'error', title: 'Pick the cheese' })
-  if (form.readyOn < form.madeOn) return toast.add({ color: 'error', title: 'Ready date can’t be before the day it was made' })
+  if (form.readyOn < form.madeOn)
+    return toast.add({ color: 'error', title: 'Ready date can’t be before the day it was made' })
   const gallons = parseGallons(form.gallons)
   if (!gallons.ok) return toast.add({ color: 'error', title: gallons.message })
   try {
@@ -125,7 +138,9 @@ async function onDelete() {
           />
         </UFormField>
         <div v-if="newType" class="rounded-md border border-default p-3 space-y-2">
-          <p class="text-sm">Add <strong>{{ newType.name }}</strong> to your cheeses</p>
+          <p class="text-sm">
+            Add <strong>{{ newType.name }}</strong> to your cheeses
+          </p>
           <div class="flex items-end gap-2">
             <UFormField label="Usually ages (days)" class="flex-1">
               <UInputNumber v-model="newType.days" :min="0" :max="1095" class="w-full" />
@@ -140,7 +155,14 @@ async function onDelete() {
             <UInput v-model="form.madeOn" type="date" required class="w-full" />
           </UFormField>
           <UFormField label="Ready" required :hint="type && !readyEdited ? agingLabel(type.aging_days) : undefined">
-            <UInput v-model="form.readyOn" type="date" :min="form.madeOn" required class="w-full" @update:model-value="readyEdited = true" />
+            <UInput
+              v-model="form.readyOn"
+              type="date"
+              :min="form.madeOn"
+              required
+              class="w-full"
+              @update:model-value="readyEdited = true"
+            />
           </UFormField>
           <UFormField label="Milk used" hint="Optional">
             <UInput v-model="form.gallons" inputmode="decimal" class="w-full">
@@ -157,13 +179,17 @@ async function onDelete() {
         <UCheckbox
           v-if="make"
           v-model="form.finished"
-          :label="make.finished_on ? `Finished ${formatDate(make.finished_on)}` : 'Finished: all eaten, sold or given away'"
+          :label="
+            make.finished_on ? `Finished ${formatDate(make.finished_on)}` : 'Finished: all eaten, sold or given away'
+          "
         />
       </form>
     </template>
     <template #footer>
       <div class="flex gap-2 w-full">
-        <UButton v-if="make" color="error" variant="ghost" :loading="removeMake.isPending.value" @click="onDelete">Delete</UButton>
+        <UButton v-if="make" color="error" variant="ghost" :loading="removeMake.isPending.value" @click="onDelete"
+          >Delete</UButton
+        >
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>
         <UButton type="submit" form="make-form" :loading="saveMake.isPending.value">Save</UButton>
       </div>

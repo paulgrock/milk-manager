@@ -33,7 +33,10 @@ const { data: goats, error } = await db
   .not('title_suffix', 'is', null)
   .order('registered_name')
 if (error) throw error
-const { data: existing } = await db.from('linear_appraisals').select('goat_id, appraised_on, final_score').eq('herd_id', herdId)
+const { data: existing } = await db
+  .from('linear_appraisals')
+  .select('goat_id, appraised_on, final_score')
+  .eq('herd_id', herdId)
 const have = new Set((existing ?? []).map((a) => `${a.goat_id}|${a.appraised_on}|${a.final_score}`))
 
 const found = goats.flatMap((g) => {
@@ -41,7 +44,12 @@ const found = goats.flatMap((g) => {
   return appraisal ? [{ goat: g, titles, appraisal }] : []
 })
 for (const { goat, titles, appraisal } of found) {
-  const codes = [appraisal.general_appearance, appraisal.dairy_strength, appraisal.body_capacity, appraisal.mammary_system].join('')
+  const codes = [
+    appraisal.general_appearance,
+    appraisal.dairy_strength,
+    appraisal.body_capacity,
+    appraisal.mammary_system,
+  ].join('')
   console.log(
     `${goat.registered_name ?? goat.barn_name}: "${goat.title_suffix}" → titles "${titles ?? ''}", appraisal ${codes} ${appraisal.final_score}` +
       (appraisal.age ? ` (${appraisal.age})` : ''),
@@ -57,9 +65,13 @@ let added = 0
 for (const { goat, titles, appraisal } of found) {
   const { age, ...scores } = appraisal
   if (!have.has(`${goat.id}|${appraisedOn}|${scores.final_score}`)) {
-    const { error } = await db
-      .from('linear_appraisals')
-      .insert({ herd_id: herdId, goat_id: goat.id, appraised_on: appraisedOn, ...scores, notes: age ? `Listed as ${age}` : null })
+    const { error } = await db.from('linear_appraisals').insert({
+      herd_id: herdId,
+      goat_id: goat.id,
+      appraised_on: appraisedOn,
+      ...scores,
+      notes: age ? `Listed as ${age}` : null,
+    })
     if (error) throw new Error(`${goat.registered_name} appraisal: ${error.message}`)
     added += 1
   }

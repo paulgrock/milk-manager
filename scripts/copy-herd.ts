@@ -22,7 +22,9 @@ const arg = (name: string) => {
 const herdId = arg('herd')
 const apply = args.includes('--apply')
 if (!herdId || !process.env.TARGET_SUPABASE_URL || !process.env.TARGET_SUPABASE_SECRET_KEY) {
-  console.error('Usage: TARGET_SUPABASE_URL=... TARGET_SUPABASE_SECRET_KEY=... node scripts/copy-herd.ts --herd <herd id> [--apply]')
+  console.error(
+    'Usage: TARGET_SUPABASE_URL=... TARGET_SUPABASE_SECRET_KEY=... node scripts/copy-herd.ts --herd <herd id> [--apply]',
+  )
   process.exit(1)
 }
 
@@ -151,7 +153,10 @@ for (const table of TABLES) {
   }
   if (table === 'goats') {
     for (const g of data.get('goats')!.filter((g) => g.sire_id || g.dam_id)) {
-      const { error } = await to.from('goats').update({ sire_id: g.sire_id, dam_id: g.dam_id }).eq('id', g.id as string)
+      const { error } = await to
+        .from('goats')
+        .update({ sire_id: g.sire_id, dam_id: g.dam_id })
+        .eq('id', g.id as string)
       if (error) throw new Error(`Parents of ${g.registered_name ?? g.barn_name}: ${error.message}`)
     }
   }
@@ -165,7 +170,9 @@ const files = photos.flatMap((p) => [p.storage_path as string, ...(p.thumb_path 
 for (const path of files) {
   const { data: file, error } = await from.storage.from('goat-photos').download(path)
   if (error) throw new Error(`Download ${path}: ${error.message}`)
-  const { error: upError } = await to.storage.from('goat-photos').upload(path, file, { contentType: file.type, upsert: true })
+  const { error: upError } = await to.storage
+    .from('goat-photos')
+    .upload(path, file, { contentType: file.type, upsert: true })
   if (upError) throw new Error(`Upload ${path}: ${upError.message}`)
 }
 console.log(`  copied ${files.length} photo files`)

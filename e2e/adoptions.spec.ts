@@ -4,12 +4,20 @@ import { addGoat, isoDate } from './seed.ts'
 const season = Number(isoDate().slice(0, 4)) + 1
 
 async function finances(herdId: string) {
-  const { data } = await admin.from('finance_entries').select('category, amount_cents, party, description').eq('herd_id', herdId).order('amount_cents')
+  const { data } = await admin
+    .from('finance_entries')
+    .select('category, amount_cents, party, description')
+    .eq('herd_id', herdId)
+    .order('amount_cents')
   return data ?? []
 }
 async function kidOf(herdId: string, doeId: string, sexes: ('doe' | 'buck')[]) {
   const kidded_on = `${season}-02-20`
-  const { data: kidding } = await admin.from('kiddings').insert({ herd_id: herdId, doe_id: doeId, kidded_on }).select().single()
+  const { data: kidding } = await admin
+    .from('kiddings')
+    .insert({ herd_id: herdId, doe_id: doeId, kidded_on })
+    .select()
+    .single()
   await admin.from('kids').insert(sexes.map((sex) => ({ herd_id: herdId, kidding_id: kidding!.id, sex })))
 }
 
@@ -35,10 +43,21 @@ test('a reservation with a new adopter and a deposit puts the deposit in Finance
   await dialog.getByRole('button', { name: 'Save' }).click()
   await expect(dialog).toBeHidden()
 
-  const clover = page.getByRole('main').locator('div').filter({ has: page.getByRole('heading', { name: 'Clover' }) }).first()
+  const clover = page
+    .getByRole('main')
+    .locator('div')
+    .filter({ has: page.getByRole('heading', { name: 'Clover' }) })
+    .first()
   await expect(clover.getByRole('button', { name: /Jo Smith · 1 doeling/ })).toContainText('$100.00 deposit held')
   await expect(page.getByRole('button', { name: /Jo Smith.*555-0100/ })).toBeVisible()
-  expect(await finances(herd.id)).toEqual([{ category: 'kid_sale', amount_cents: 10000, party: 'Jo Smith', description: `Deposit for ${season} kids from Clover` }])
+  expect(await finances(herd.id)).toEqual([
+    {
+      category: 'kid_sale',
+      amount_cents: 10000,
+      party: 'Jo Smith',
+      description: `Deposit for ${season} kids from Clover`,
+    },
+  ])
 
   // It's in the books, but changed from Sales.
   await page.goto(`/finances?year=${isoDate().slice(0, 4)}`)
@@ -47,12 +66,31 @@ test('a reservation with a new adopter and a deposit puts the deposit in Finance
   await expect(page.getByRole('dialog').getByRole('button', { name: 'Delete' })).toHaveCount(0)
 })
 
-test('kids are matched to the line in order, adopted less the deposit, and leave the herd', async ({ page, owner, herd }) => {
+test('kids are matched to the line in order, adopted less the deposit, and leave the herd', async ({
+  page,
+  owner,
+  herd,
+}) => {
   const clover = await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe' })
-  const { data: buyers } = await admin.from('buyers').insert([{ herd_id: herd.id, name: 'Jo Smith' }, { herd_id: herd.id, name: 'Sam Lee' }]).select()
+  const { data: buyers } = await admin
+    .from('buyers')
+    .insert([
+      { herd_id: herd.id, name: 'Jo Smith' },
+      { herd_id: herd.id, name: 'Sam Lee' },
+    ])
+    .select()
   const [jo, sam] = [buyers!.find((b) => b.name === 'Jo Smith')!, buyers!.find((b) => b.name === 'Sam Lee')!]
   await admin.from('reservations').insert([
-    { herd_id: herd.id, buyer_id: jo.id, season, doe_id: clover.id, wants: 'doeling', position: 1, deposit_cents: 10000, deposit_on: isoDate() },
+    {
+      herd_id: herd.id,
+      buyer_id: jo.id,
+      season,
+      doe_id: clover.id,
+      wants: 'doeling',
+      position: 1,
+      deposit_cents: 10000,
+      deposit_on: isoDate(),
+    },
     { herd_id: herd.id, buyer_id: sam.id, season, doe_id: clover.id, wants: 'any', position: 2 },
   ])
   await kidOf(herd.id, clover.id, ['doe', 'buck'])
@@ -81,10 +119,17 @@ test('kids are matched to the line in order, adopted less the deposit, and leave
   await expect(dialog).toBeHidden()
   await expect(joRow).toContainText('$100.00 deposit used on an adoption')
   await expect(page.getByRole('button', { name: /Clover's doeling .* to Jo Smith/ })).toContainText('$450.00')
-  expect((await finances(herd.id)).map((f) => [f.amount_cents, f.description])).toEqual([[10000, `Deposit for ${season} kids from Clover`], [35000, 'Adoption, less deposit']])
+  expect((await finances(herd.id)).map((f) => [f.amount_cents, f.description])).toEqual([
+    [10000, `Deposit for ${season} kids from Clover`],
+    [35000, 'Adoption, less deposit'],
+  ])
 
   // The buckling nobody matched can be sold on its own.
-  await page.getByRole('listitem').filter({ hasText: 'not matched yet' }).getByRole('button', { name: 'Mark adopted' }).click()
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'not matched yet' })
+    .getByRole('button', { name: 'Mark adopted' })
+    .click()
   const second = page.getByRole('dialog', { name: 'Record an adoption' })
   await second.getByRole('combobox', { name: 'Adopter' }).click()
   await page.getByRole('option', { name: 'Sam Lee' }).click()
@@ -109,8 +154,14 @@ test('adopting out a goat from the herd marks it sold and books a goat sale', as
   await dialog.getByRole('button', { name: 'Save adoption' }).click()
   await expect(dialog).toBeHidden()
 
-  expect(await finances(herd.id)).toEqual([{ category: 'goat_sale', amount_cents: 60000, party: 'Pat Jones', description: 'Adoption' }])
-  const { data: goat } = await admin.from('goats').select('status, left_herd_on, left_herd_reason').eq('id', rosie.id).single()
+  expect(await finances(herd.id)).toEqual([
+    { category: 'goat_sale', amount_cents: 60000, party: 'Pat Jones', description: 'Adoption' },
+  ])
+  const { data: goat } = await admin
+    .from('goats')
+    .select('status, left_herd_on, left_herd_reason')
+    .eq('id', rosie.id)
+    .single()
   expect(goat).toEqual({ status: 'sold', left_herd_on: isoDate(), left_herd_reason: 'Adopted by Pat Jones' })
   await page.goto(`/goats/${rosie.id}`)
   await expect(page.getByText(/^Adopted \w{3} \d+, \d{4}$/)).toBeVisible()
@@ -124,7 +175,9 @@ test('adopting out a goat from the herd marks it sold and books a goat sale', as
 test('helpers don’t see adoptions', async ({ browser, herd }) => {
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const page = await ctx.newPage()

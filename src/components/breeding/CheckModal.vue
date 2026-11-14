@@ -40,7 +40,13 @@ async function submit() {
   try {
     await saveCheck.mutateAsync({
       id: props.check?.id,
-      values: { breeding_id: props.breedingId, checked_on: form.checked_on, method: form.method, result: form.result, notes: form.notes.trim() || null },
+      values: {
+        breeding_id: props.breedingId,
+        checked_on: form.checked_on,
+        method: form.method,
+        result: form.result,
+        notes: form.notes.trim() || null,
+      },
     })
     open.value = false
   } catch (e) {

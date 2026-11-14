@@ -23,7 +23,12 @@ const db = adminClient(target)
 
 const photos: { id: string; storage_path: string }[] = []
 for (let start = 0; ; start += 1000) {
-  const { data, error } = await db.from('goat_photos').select('id, storage_path').is('thumb_path', null).order('id').range(start, start + 999)
+  const { data, error } = await db
+    .from('goat_photos')
+    .select('id, storage_path')
+    .is('thumb_path', null)
+    .order('id')
+    .range(start, start + 999)
   if (error) throw error
   photos.push(...data)
   if (data.length < 1000) break
@@ -46,9 +51,15 @@ try {
     const original = join(work, 'original')
     const small = join(work, 'small.jpg')
     writeFileSync(original, Buffer.from(await file.arrayBuffer()))
-    execFileSync('sips', ['-Z', String(THUMB_SIZE), '-s', 'format', 'jpeg', '-s', 'formatOptions', '80', original, '--out', small], { stdio: 'ignore' })
+    execFileSync(
+      'sips',
+      ['-Z', String(THUMB_SIZE), '-s', 'format', 'jpeg', '-s', 'formatOptions', '80', original, '--out', small],
+      { stdio: 'ignore' },
+    )
     const thumbPath = photo.storage_path.replace(/\.[^./]+$/, '') + '-thumb.jpg'
-    const { error: upError } = await db.storage.from(BUCKET).upload(thumbPath, readFileSync(small), { contentType: 'image/jpeg', upsert: true })
+    const { error: upError } = await db.storage
+      .from(BUCKET)
+      .upload(thumbPath, readFileSync(small), { contentType: 'image/jpeg', upsert: true })
     if (upError) throw new Error(`Upload ${thumbPath}: ${upError.message}`)
     const { error: rowError } = await db.from('goat_photos').update({ thumb_path: thumbPath }).eq('id', photo.id)
     if (rowError) throw new Error(`Photo ${photo.id}: ${rowError.message}`)
