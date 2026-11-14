@@ -12,7 +12,8 @@ const { user } = useAuth()
 const route = useRoute()
 const router = useRouter()
 watch(user, (u) => {
-  if (!u && !route.meta.public) void router.replace({ path: '/login', query: route.fullPath === '/' ? {} : { redirect: route.fullPath } })
+  if (!u && !route.meta.public)
+    void router.replace({ path: '/login', query: route.fullPath === '/' ? {} : { redirect: route.fullPath } })
 })
 </script>
 

@@ -31,7 +31,10 @@ const MAX_TREND_DAYS = 3650
 
 const today = todayISO()
 // Kept per device, like other view preferences.
-const range = useLocalStorage<{ amount: number; unit: RangeUnit }>('production-trend-range', { amount: 90, unit: 'days' })
+const range = useLocalStorage<{ amount: number; unit: RangeUnit }>('production-trend-range', {
+  amount: 90,
+  unit: 'days',
+})
 const rangeAmount = computed({
   get: () => range.value.amount,
   set: (v) => (range.value = { ...range.value, amount: Math.max(1, Math.round(v || 1)) }),
@@ -70,8 +73,8 @@ const active = computed(() =>
 )
 
 // Enough history for the trend and for every current lactation's curve.
-const since = computed(() =>
-  [shiftDate(today, -(trendDays.value + 7)), ...active.value.map((x) => x.lactation!.freshened_on)].sort()[0]!,
+const since = computed(
+  () => [shiftDate(today, -(trendDays.value + 7)), ...active.value.map((x) => x.lactation!.freshened_on)].sort()[0]!,
 )
 const totals = useHerdDayTotals(since)
 

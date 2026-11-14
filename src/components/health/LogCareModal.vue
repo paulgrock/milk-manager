@@ -62,9 +62,13 @@ async function submit() {
   if (dose !== null && !(dose > 0)) return toast.add({ color: 'error', title: 'Dose must be a number above 0' })
   const count = form.selected.size
   // Doesn't wait for the server: with no signal it's kept on the phone and sent later.
-  void logCare({ careTypeId: type.value.id, goatIds: [...form.selected], doneOn: form.doneOn, dose, notes: form.notes }).catch((e: Error) =>
-    toast.add({ color: 'error', title: 'Could not save care', description: e.message }),
-  )
+  void logCare({
+    careTypeId: type.value.id,
+    goatIds: [...form.selected],
+    doneOn: form.doneOn,
+    dose,
+    notes: form.notes,
+  }).catch((e: Error) => toast.add({ color: 'error', title: 'Could not save care', description: e.message }))
   toast.add({ color: 'success', title: `${type.value.name} logged for ${count} ${count === 1 ? 'goat' : 'goats'}` })
   open.value = false
 }
@@ -89,7 +93,14 @@ async function submit() {
         <fieldset>
           <legend class="text-sm font-medium mb-1">Goats ({{ form.selected.size }})</legend>
           <div class="flex flex-wrap gap-1 mb-2">
-            <UButton v-for="g in groups" :key="g.label" size="xs" variant="soft" color="neutral" @click="selectGroup(g.pick)">
+            <UButton
+              v-for="g in groups"
+              :key="g.label"
+              size="xs"
+              variant="soft"
+              color="neutral"
+              @click="selectGroup(g.pick)"
+            >
               {{ g.label }}
             </UButton>
             <UButton size="xs" variant="ghost" color="neutral" @click="form.selected = new Set()">None</UButton>

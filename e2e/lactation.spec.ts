@@ -1,7 +1,11 @@
 import { expect, test } from './fixtures.ts'
 import { addDoeInMilk, addMilkCurve } from './seed.ts'
 
-test('a doe page shows her lactation curve, a projected 305-day total and comparisons', async ({ page, owner, herd }) => {
+test('a doe page shows her lactation curve, a projected 305-day total and comparisons', async ({
+  page,
+  owner,
+  herd,
+}) => {
   const { goat: ina } = await addDoeInMilk(owner, herd.id, 'Ina', 120)
   await addMilkCurve(herd.id, ina.id, 120, { a: 1150, b: 0.26, c: 0.005 })
   const { goat: clover } = await addDoeInMilk(owner, herd.id, 'Clover', 90)
@@ -15,7 +19,10 @@ test('a doe page shows her lactation curve, a projected 305-day total and compar
   await expect(chart.locator('svg path').first()).toBeAttached()
   expect((await chart.boundingBox())!.height).toBeGreaterThan(150)
 
-  const projected = page.locator('div').filter({ has: page.getByText('Projected 305-day', { exact: true }) }).last()
+  const projected = page
+    .locator('div')
+    .filter({ has: page.getByText('Projected 305-day', { exact: true }) })
+    .last()
   await expect(projected).toContainText(/\d[\d,]* lb/)
   await expect(projected.getByText('Medium confidence')).toBeVisible()
   await expect(page.getByText('Estimated · to day 119 · DIM 120')).toBeVisible()
@@ -49,8 +56,16 @@ test('the production page ranks does and totals the herd', async ({ page, owner,
   await addMilkCurve(herd.id, pepper.id, 100, { a: 800, b: 0.3, c: 0.006 })
 
   await page.goto('/milk/production')
-  await expect(page.getByRole('img', { name: /Herd milk per day/ }).locator('svg path').first()).toBeAttached()
-  const ranked = page.getByRole('table').getByRole('row').filter({ has: page.getByRole('link') })
+  await expect(
+    page
+      .getByRole('img', { name: /Herd milk per day/ })
+      .locator('svg path')
+      .first(),
+  ).toBeAttached()
+  const ranked = page
+    .getByRole('table')
+    .getByRole('row')
+    .filter({ has: page.getByRole('link') })
   await expect(ranked).toHaveCount(2)
   await expect(ranked.nth(0)).toContainText('Ina')
   await expect(ranked.nth(1)).toContainText('Pepper')

@@ -82,8 +82,14 @@ describe('parseWeightInput', () => {
   })
 
   it('gives an example in the unit being typed', () => {
-    expect(parseWeightInput('abc', 'oz')).toEqual({ kind: 'invalid', message: 'Use numbers like 54, or 30 + 24 for parts' })
-    expect(parseWeightInput('abc', 'lb')).toEqual({ kind: 'invalid', message: 'Use numbers like 3.4, or 2.1 + 1.3 for parts' })
+    expect(parseWeightInput('abc', 'oz')).toEqual({
+      kind: 'invalid',
+      message: 'Use numbers like 54, or 30 + 24 for parts',
+    })
+    expect(parseWeightInput('abc', 'lb')).toEqual({
+      kind: 'invalid',
+      message: 'Use numbers like 3.4, or 2.1 + 1.3 for parts',
+    })
   })
 
   it('rejects junk and impossible weights', () => {
@@ -94,8 +100,15 @@ describe('parseWeightInput', () => {
   })
 
   it('takes a different limit for other weights', () => {
-    expect(parseWeightInput('62', 'lb', { grams: 200_000, message: 'too heavy' })).toEqual({ kind: 'ok', grams: toGrams(62, 'lb'), portions: null })
-    expect(parseWeightInput('30', 'lb', { grams: 10_000, message: 'too heavy' })).toEqual({ kind: 'invalid', message: 'too heavy' })
+    expect(parseWeightInput('62', 'lb', { grams: 200_000, message: 'too heavy' })).toEqual({
+      kind: 'ok',
+      grams: toGrams(62, 'lb'),
+      portions: null,
+    })
+    expect(parseWeightInput('30', 'lb', { grams: 10_000, message: 'too heavy' })).toEqual({
+      kind: 'invalid',
+      message: 'too heavy',
+    })
   })
 
   it('shows saved parts back the way they were typed', () => {
@@ -105,7 +118,13 @@ describe('parseWeightInput', () => {
 })
 
 describe('applyRecord (mirrors record_milking)', () => {
-  const input = (milking: number, grams: number) => ({ goatId: 'g', milkedOn: '2026-10-21', milking, grams, portions: null })
+  const input = (milking: number, grams: number) => ({
+    goatId: 'g',
+    milkedOn: '2026-10-21',
+    milking,
+    grams,
+    portions: null,
+  })
   const summary = (rows: MilkRow[]) => rows.map((r) => `${r.milking}:${r.weight_g}`).join(' ')
 
   it('adds and replaces milkings', () => {

@@ -45,7 +45,13 @@ export interface CalendarEvent {
   href: string
 }
 
-export const GROUP_LABELS: Record<EventGroup, string> = { breeding: 'Breeding', health: 'Health', milk: 'Milk', cheese: 'Cheese', chores: 'Chores' }
+export const GROUP_LABELS: Record<EventGroup, string> = {
+  breeding: 'Breeding',
+  health: 'Health',
+  milk: 'Milk',
+  cheese: 'Cheese',
+  chores: 'Chores',
+}
 
 /** A blood test is reliable about 30 days after breeding. */
 export const PREG_CHECK_AFTER_DAYS = 30
@@ -138,8 +144,9 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
           kind: 'heat',
           group: 'breeding',
           goatId: goat.id,
-          title: state.nextHeat.reason === 'return' ? `${name(goat.id)}: back in heat?` : `${name(goat.id)} heat expected`,
-          detail: state.nextHeat.reason === 'return' ? 'If she comes back into heat, she didn\'t settle' : undefined,
+          title:
+            state.nextHeat.reason === 'return' ? `${name(goat.id)}: back in heat?` : `${name(goat.id)} heat expected`,
+          detail: state.nextHeat.reason === 'return' ? "If she comes back into heat, she didn't settle" : undefined,
           done: false,
           href: goatHref,
         })
@@ -196,7 +203,15 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
   // --- Already happened -------------------------------------------------------------
 
   for (const k of input.breeding.kiddings) {
-    add({ date: k.kidded_on, kind: 'kidded', group: 'breeding', goatId: k.doe_id, title: `${name(k.doe_id)} kidded`, done: true, href: pathOf(k.doe_id) })
+    add({
+      date: k.kidded_on,
+      kind: 'kidded',
+      group: 'breeding',
+      goatId: k.doe_id,
+      title: `${name(k.doe_id)} kidded`,
+      done: true,
+      href: pathOf(k.doe_id),
+    })
   }
   for (const b of input.breeding.breedings) {
     const buck = b.buck_id ? name(b.buck_id) : undefined
@@ -206,7 +221,8 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
       group: 'breeding',
       goatId: b.doe_id,
       title: `${name(b.doe_id)} bred${buck ? ` to ${buck}` : ''}`,
-      detail: breedingStatus(b, input.breeding, today) === 'kidded' ? undefined : `Due ${formatDate(dueWindow(b).expected)}`,
+      detail:
+        breedingStatus(b, input.breeding, today) === 'kidded' ? undefined : `Due ${formatDate(dueWindow(b).expected)}`,
       done: true,
       href: pathOf(b.doe_id),
     })
@@ -232,10 +248,26 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
     })
   }
   for (const t of input.treatments) {
-    add({ date: t.started_on, kind: 'treated', group: 'health', goatId: t.goat_id, title: `${name(t.goat_id)}: ${t.medication}`, detail: t.reason ?? undefined, done: true, href: pathOf(t.goat_id) })
+    add({
+      date: t.started_on,
+      kind: 'treated',
+      group: 'health',
+      goatId: t.goat_id,
+      title: `${name(t.goat_id)}: ${t.medication}`,
+      detail: t.reason ?? undefined,
+      done: true,
+      href: pathOf(t.goat_id),
+    })
   }
   for (const t of input.tests) {
-    add({ date: t.tested_on, kind: 'test-day', group: 'milk', title: 'Milk test day', done: true, href: `/milk/tests/${t.id}` })
+    add({
+      date: t.tested_on,
+      kind: 'test-day',
+      group: 'milk',
+      title: 'Milk test day',
+      done: true,
+      href: `/milk/tests/${t.id}`,
+    })
   }
 
   // Cheese coming ready. One that's been ready a while isn't a job to chase, so past dates are records, not overdue.
@@ -258,13 +290,34 @@ export function buildEvents(input: CalendarInput, from: string, to: string): Cal
   for (const chore of (input.chores ?? []).filter((c) => !c.hidden)) {
     const s = choreStatus(chore, input.choresDone ?? [], today)
     if (!s.nextDue) continue
-    add({ date: s.nextDue, kind: 'chore-due', group: 'chores', title: chore.name, done: false, overdue: s.state === 'overdue', href: '/chores' })
+    add({
+      date: s.nextDue,
+      kind: 'chore-due',
+      group: 'chores',
+      title: chore.name,
+      done: false,
+      overdue: s.state === 'overdue',
+      href: '/chores',
+    })
   }
   for (const d of input.choresDone ?? []) {
-    add({ date: d.done_on, kind: 'chore-done', group: 'chores', title: `${choreNames.get(d.chore_id) ?? 'Chore'} done`, detail: d.notes ?? undefined, done: true, href: '/chores' })
+    add({
+      date: d.done_on,
+      kind: 'chore-done',
+      group: 'chores',
+      title: `${choreNames.get(d.chore_id) ?? 'Chore'} done`,
+      detail: d.notes ?? undefined,
+      done: true,
+      href: '/chores',
+    })
   }
 
-  return events.sort((a, b) => a.date.localeCompare(b.date) || Number(b.overdue ?? false) - Number(a.overdue ?? false) || a.title.localeCompare(b.title))
+  return events.sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      Number(b.overdue ?? false) - Number(a.overdue ?? false) ||
+      a.title.localeCompare(b.title),
+  )
 }
 
 /** Things to deal with now: overdue, or due today. */

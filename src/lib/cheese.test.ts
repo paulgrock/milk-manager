@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { agingLabel, isReadySoon, milkLabel, makeStatus, monthlyTotals, parseGallons, readyDate, readyLabel } from './cheese'
+import {
+  agingLabel,
+  isReadySoon,
+  milkLabel,
+  makeStatus,
+  monthlyTotals,
+  parseGallons,
+  readyDate,
+  readyLabel,
+} from './cheese'
 
 describe('readyDate', () => {
   it('adds the aging time in days', () => {
@@ -31,7 +40,9 @@ describe('makeStatus', () => {
     expect(makeStatus({ made_on: '2026-10-20', ready_on: '2026-10-20', finished_on: null }, today)).toBe('fresh')
   })
   it('a finished make stays finished, ready or not', () => {
-    expect(makeStatus({ made_on: '2026-10-01', ready_on: '2026-12-30', finished_on: '2026-10-30' }, today)).toBe('finished')
+    expect(makeStatus({ made_on: '2026-10-01', ready_on: '2026-12-30', finished_on: '2026-10-30' }, today)).toBe(
+      'finished',
+    )
     expect(makeStatus({ made_on: today, ready_on: today, finished_on: today }, today)).toBe('finished')
   })
 })
@@ -64,7 +75,11 @@ describe('parseGallons', () => {
 
 describe('isReadySoon', () => {
   const today = '2026-11-09'
-  const make = (made_on: string, ready_on: string, finished_on: string | null = null) => ({ made_on, ready_on, finished_on })
+  const make = (made_on: string, ready_on: string, finished_on: string | null = null) => ({
+    made_on,
+    ready_on,
+    finished_on,
+  })
   it('is coming ready today or in the next week', () => {
     expect(isReadySoon(make('2026-08-01', today), today)).toBe(true)
     expect(isReadySoon(make('2026-08-01', '2026-11-16'), today)).toBe(true)

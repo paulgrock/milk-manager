@@ -17,7 +17,11 @@ export function isoDate(daysFromToday = 0): string {
 }
 
 export async function addGoat(owner: TestUser, herdId: string, goat: Omit<GoatInsert, 'herd_id'>) {
-  const { data, error } = await owner.client.from('goats').insert({ ...goat, herd_id: herdId }).select().single()
+  const { data, error } = await owner.client
+    .from('goats')
+    .insert({ ...goat, herd_id: herdId })
+    .select()
+    .single()
   if (error) throw error
   return data
 }
@@ -32,7 +36,13 @@ export async function addLactation(
 ) {
   const { data, error } = await owner.client
     .from('lactations')
-    .insert({ herd_id: herdId, goat_id: goatId, freshened_on: freshenedOn, lactation_number: lactationNumber, dried_off_on: driedOffOn })
+    .insert({
+      herd_id: herdId,
+      goat_id: goatId,
+      freshened_on: freshenedOn,
+      lactation_number: lactationNumber,
+      dried_off_on: driedOffOn,
+    })
     .select()
     .single()
   if (error) throw error

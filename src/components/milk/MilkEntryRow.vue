@@ -68,7 +68,8 @@ const summary = computed(() =>
 
 const placeholder = computed(() => {
   if (locked.value) return formatWeight(status.value.totalG, props.entryUnit)
-  if (dayTotalRow.value && props.milking !== DAY_TOTAL) return `of ${formatWeight(dayTotalRow.value.weight_g, props.entryUnit)}`
+  if (dayTotalRow.value && props.milking !== DAY_TOTAL)
+    return `of ${formatWeight(dayTotalRow.value.weight_g, props.entryUnit)}`
   return '—'
 })
 
@@ -107,13 +108,21 @@ const menu = computed<DropdownMenuItem[]>(() => [
       </p>
       <p class="text-xs text-muted truncate">
         <template v-if="summary">{{ summary }}</template>
-        <template v-if="rows.length > 1 || (rows.length && !current)"> · Day {{ formatWeight(status.totalG, unit, true) }}</template>
+        <template v-if="rows.length > 1 || (rows.length && !current)">
+          · Day {{ formatWeight(status.totalG, unit, true) }}</template
+        >
       </p>
       <UBadge v-if="withheldThrough" color="warning" variant="subtle" size="sm" icon="i-lucide-milk-off" class="me-1">
         Withhold · through {{ formatDate(withheldThrough) }}
       </UBadge>
       <p v-if="error" class="text-xs text-error">{{ error }}</p>
-      <UBadge v-else-if="status.missing && !(isToday && status.missing === 'PM')" color="warning" variant="subtle" size="sm">{{ status.missing }} missing</UBadge>
+      <UBadge
+        v-else-if="status.missing && !(isToday && status.missing === 'PM')"
+        color="warning"
+        variant="subtle"
+        size="sm"
+        >{{ status.missing }} missing</UBadge
+      >
     </div>
 
     <div class="flex items-center gap-1 shrink-0">
@@ -143,7 +152,9 @@ const menu = computed<DropdownMenuItem[]>(() => [
         @blur="commit"
         @keydown.enter.prevent="onEnter"
       >
-        <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
+        <template #trailing
+          ><span class="text-xs text-muted">{{ entryUnit }}</span></template
+        >
       </UInput>
       <UDropdownMenu :items="menu">
         <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis-vertical" aria-label="More" />

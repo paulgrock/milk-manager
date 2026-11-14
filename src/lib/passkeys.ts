@@ -15,10 +15,12 @@ export function deviceName(userAgent: string): string {
 /** What to tell someone when a passkey prompt fails. */
 export function passkeyErrorMessage(error: unknown): string {
   const e = error as { code?: string; name?: string; message?: string; cause?: { name?: string } }
-  if (e?.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED') return 'This device already has a passkey for your account.'
+  if (e?.code === 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED')
+    return 'This device already has a passkey for your account.'
   if (e?.code === 'ERROR_CEREMONY_ABORTED' || e?.name === 'NotAllowedError' || e?.cause?.name === 'NotAllowedError') {
     return 'Cancelled, or there is no passkey for Milk Manager on this device. Use an email code instead.'
   }
-  if (e?.code === 'ERROR_INVALID_DOMAIN' || e?.code === 'ERROR_INVALID_RP_ID') return 'Passkeys are not set up for this web address.'
+  if (e?.code === 'ERROR_INVALID_DOMAIN' || e?.code === 'ERROR_INVALID_RP_ID')
+    return 'Passkeys are not set up for this web address.'
   return e?.message || 'Something went wrong with the passkey.'
 }

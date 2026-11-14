@@ -15,7 +15,9 @@ describe('passkeyErrorMessage', () => {
   it('explains a cancelled or missing passkey', () => {
     expect(passkeyErrorMessage({ code: 'ERROR_CEREMONY_ABORTED' })).toMatch(/Cancelled/)
     expect(passkeyErrorMessage({ name: 'NotAllowedError' })).toMatch(/Cancelled/)
-    expect(passkeyErrorMessage({ code: 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY', cause: { name: 'NotAllowedError' } })).toMatch(/Cancelled/)
+    expect(
+      passkeyErrorMessage({ code: 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY', cause: { name: 'NotAllowedError' } }),
+    ).toMatch(/Cancelled/)
   })
 
   it('explains a second passkey on the same device', () => {

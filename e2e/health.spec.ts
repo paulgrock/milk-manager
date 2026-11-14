@@ -29,7 +29,10 @@ test('a new herd has the usual routine, and care can be logged for everyone at o
   await expect(page.getByRole('heading', { name: 'Hoof trim', exact: true })).toBeHidden()
 
   await expect
-    .poll(async () => (await admin.from('care_events').select('id').eq('herd_id', herd.id).eq('done_on', isoDate())).data?.length)
+    .poll(
+      async () =>
+        (await admin.from('care_events').select('id').eq('herd_id', herd.id).eq('done_on', isoDate())).data?.length,
+    )
     .toBe(3)
 })
 
@@ -68,7 +71,9 @@ test('a copper bolus records its dose and shows on the goat', async ({ page, own
 test('logged care can be deleted from the goat', async ({ page, owner, herd }) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   const hoof = await careTypeId(herd.id, 'Hoof trim')
-  await admin.from('care_events').insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: hoof, done_on: isoDate(-3), notes: 'Logged by mistake' })
+  await admin
+    .from('care_events')
+    .insert({ herd_id: herd.id, goat_id: ina.id, care_type_id: hoof, done_on: isoDate(-3), notes: 'Logged by mistake' })
 
   await page.goto(`/goats/${ina.id}`)
   await expect(page.getByText('Hoof trim · Logged by mistake')).toBeVisible()
@@ -86,7 +91,9 @@ test('logged care can be deleted from the goat', async ({ page, owner, herd }) =
   await confirm.getByRole('button', { name: 'Delete' }).click()
   await expect(page.getByText('Hoof trim · Logged by mistake')).toBeHidden()
 
-  await expect.poll(async () => (await admin.from('care_events').select('id').eq('goat_id', ina.id)).data?.length).toBe(0)
+  await expect
+    .poll(async () => (await admin.from('care_events').select('id').eq('goat_id', ina.id)).data?.length)
+    .toBe(0)
   await page.reload()
   await expect(page.getByText('Hoof trim · Logged by mistake')).toBeHidden()
 })
@@ -111,10 +118,16 @@ test('recent care is listed on the health page and can be deleted there', async 
   await confirm.getByRole('button', { name: 'Delete' }).click()
 
   await expect(card.getByRole('listitem')).toHaveText([/Clover · Copper bolus/])
-  await expect.poll(async () => (await admin.from('care_events').select('goat_id').eq('herd_id', herd.id)).data).toEqual([{ goat_id: clover.id }])
+  await expect
+    .poll(async () => (await admin.from('care_events').select('goat_id').eq('herd_id', herd.id)).data)
+    .toEqual([{ goat_id: clover.id }])
 })
 
-test('a treatment withholds her milk: banner on her page, badge on milk entry, withheld total', async ({ page, owner, herd }) => {
+test('a treatment withholds her milk: banner on her page, badge on milk entry, withheld total', async ({
+  page,
+  owner,
+  herd,
+}) => {
   const { goat: ina } = await addDoeInMilk(owner, herd.id, 'Ina')
   const through = isoDate(10)
 
@@ -145,8 +158,18 @@ test('a treatment withholds her milk: banner on her page, badge on milk entry, w
   await page.goto('/health')
   await expect(page.getByRole('link', { name: new RegExp(`Ina.*Penicillin.*${shown(through)}`) })).toBeVisible()
 
-  const saved = await admin.from('treatments').select('medication, reason, dose, lot_number, milk_withdrawal_days').eq('goat_id', ina.id).single()
-  expect(saved.data).toEqual({ medication: 'Penicillin', reason: 'Mastitis', dose: '5 ml', lot_number: 'LOT-42', milk_withdrawal_days: 10 })
+  const saved = await admin
+    .from('treatments')
+    .select('medication, reason, dose, lot_number, milk_withdrawal_days')
+    .eq('goat_id', ina.id)
+    .single()
+  expect(saved.data).toEqual({
+    medication: 'Penicillin',
+    reason: 'Mastitis',
+    dose: '5 ml',
+    lot_number: 'LOT-42',
+    milk_withdrawal_days: 10,
+  })
 })
 
 test('disease testing is logged as routine care, due again in a year', async ({ page, owner, herd }) => {
@@ -177,11 +200,19 @@ test('owners set the care routine; helpers only see it', async ({ page, browser,
   await expect(page.getByText('Deworming', { exact: true })).toBeVisible()
   await page.getByRole('spinbutton', { name: 'Hoof trim every how many days' }).fill('42')
   await page.getByRole('spinbutton', { name: 'Hoof trim every how many days' }).blur()
-  await expect.poll(async () => (await admin.from('care_types').select('interval_days').eq('herd_id', herd.id).eq('name', 'Hoof trim').single()).data?.interval_days).toBe(42)
+  await expect
+    .poll(
+      async () =>
+        (await admin.from('care_types').select('interval_days').eq('herd_id', herd.id).eq('name', 'Hoof trim').single())
+          .data?.interval_days,
+    )
+    .toBe(42)
 
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const helperPage = await ctx.newPage()
@@ -213,7 +244,9 @@ test('care logged with no signal is kept on the phone and sent later', async ({ 
 
   await context.setOffline(false)
   await expect
-    .poll(async () => (await admin.from('care_events').select('done_on').eq('goat_id', ina.id)).data, { timeout: 30_000 })
+    .poll(async () => (await admin.from('care_events').select('done_on').eq('goat_id', ina.id)).data, {
+      timeout: 30_000,
+    })
     .toEqual([{ done_on: isoDate() }])
   await expect(page.getByText('saved on this phone')).toBeHidden({ timeout: 10_000 })
 })

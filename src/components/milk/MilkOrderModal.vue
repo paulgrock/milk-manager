@@ -39,7 +39,15 @@ function save() {
         <li v-for="(goat, i) in order" :key="goat.id" class="flex items-center gap-2 px-3 py-1.5">
           <span class="w-6 text-sm text-muted tabular-nums">{{ i + 1 }}</span>
           <span class="flex-1 font-medium">{{ name(goat) }}</span>
-          <UButton size="sm" color="neutral" variant="ghost" icon="i-lucide-arrow-up" :aria-label="`Move ${name(goat)} up`" :disabled="i === 0" @click="move(i, -1)" />
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-arrow-up"
+            :aria-label="`Move ${name(goat)} up`"
+            :disabled="i === 0"
+            @click="move(i, -1)"
+          />
           <UButton
             size="sm"
             color="neutral"

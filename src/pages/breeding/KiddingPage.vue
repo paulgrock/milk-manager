@@ -58,8 +58,22 @@ const sire = computed(() => {
 })
 const doe = computed(() => (doeId.value ? byId.value.get(doeId.value) : undefined))
 
-type KidRow = { sex: 'doe' | 'buck'; outcome: KidInput['outcome']; weight: string; name: string; add_to_herd: boolean; error: string }
-const newKid = (sex: 'doe' | 'buck' = 'doe'): KidRow => ({ sex, outcome: 'alive', weight: '', name: '', add_to_herd: true, error: '' })
+type KidRow = {
+  sex: 'doe' | 'buck'
+  outcome: KidInput['outcome']
+  weight: string
+  name: string
+  add_to_herd: boolean
+  error: string
+}
+const newKid = (sex: 'doe' | 'buck' = 'doe'): KidRow => ({
+  sex,
+  outcome: 'alive',
+  weight: '',
+  name: '',
+  add_to_herd: true,
+  error: '',
+})
 const kids = reactive<KidRow[]>([newKid()])
 
 const sexOptions = [
@@ -82,7 +96,10 @@ async function submit() {
   let ok = true
   const kidInputs: KidInput[] = kids.map((k) => {
     k.error = ''
-    const parsed = parseWeightInput(k.weight, unit.value, { grams: 10_000, message: 'That is heavier than a newborn kid' })
+    const parsed = parseWeightInput(k.weight, unit.value, {
+      grams: 10_000,
+      message: 'That is heavier than a newborn kid',
+    })
     if (parsed.kind === 'invalid' || (parsed.kind === 'ok' && parsed.portions)) {
       k.error = parsed.kind === 'invalid' ? parsed.message : 'Birth weight should be one number, like 2.4'
       ok = false
@@ -143,13 +160,23 @@ async function submit() {
         <template #header>
           <div class="flex items-center">
             <h2 class="font-semibold flex-1">Kids</h2>
-            <UButton v-if="kids.length < 8" size="sm" variant="soft" icon="i-lucide-plus" @click="kids.push(newKid('buck'))">
+            <UButton
+              v-if="kids.length < 8"
+              size="sm"
+              variant="soft"
+              icon="i-lucide-plus"
+              @click="kids.push(newKid('buck'))"
+            >
               Add kid
             </UButton>
           </div>
         </template>
         <div class="space-y-4">
-          <fieldset v-for="(kid, i) in kids" :key="i" class="space-y-2 border-b border-default pb-4 last:border-0 last:pb-0">
+          <fieldset
+            v-for="(kid, i) in kids"
+            :key="i"
+            class="space-y-2 border-b border-default pb-4 last:border-0 last:pb-0"
+          >
             <legend class="sr-only">Kid {{ i + 1 }}</legend>
             <div class="flex flex-wrap items-end gap-2">
               <span class="font-medium w-12">Kid {{ i + 1 }}</span>
@@ -157,7 +184,12 @@ async function submit() {
                 <USelect v-model="kid.sex" :items="sexOptions" class="w-full" :aria-label="`Kid ${i + 1} sex`" />
               </UFormField>
               <UFormField label="Born" class="w-32">
-                <USelect v-model="kid.outcome" :items="outcomeOptions" class="w-full" :aria-label="`Kid ${i + 1} outcome`" />
+                <USelect
+                  v-model="kid.outcome"
+                  :items="outcomeOptions"
+                  class="w-full"
+                  :aria-label="`Kid ${i + 1} outcome`"
+                />
               </UFormField>
               <UFormField :label="`Weight (${unit})`" class="w-28" :error="kid.error || undefined">
                 <UInput v-model="kid.weight" inputmode="decimal" class="w-full" :aria-label="`Kid ${i + 1} weight`" />
@@ -190,7 +222,14 @@ async function submit() {
         <div class="space-y-3">
           <UCheckbox v-model="startLactation" label="Start her new lactation (adds her to the milk line)" />
           <UFormField label="Notes">
-            <UTextarea v-model="notes" :rows="2" autoresize maxlength="10000" class="w-full" placeholder="Presentation, help needed, anything to remember" />
+            <UTextarea
+              v-model="notes"
+              :rows="2"
+              autoresize
+              maxlength="10000"
+              class="w-full"
+              placeholder="Presentation, help needed, anything to remember"
+            />
           </UFormField>
         </div>
       </UCard>

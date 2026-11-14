@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { componentGrams, componentPctOn, dhirRequirement, formatScc, isMiniature, oneDayPoints, parseScc, productionOver, starOutlook } from './dhia'
+import {
+  componentGrams,
+  componentPctOn,
+  dhirRequirement,
+  formatScc,
+  isMiniature,
+  oneDayPoints,
+  parseScc,
+  productionOver,
+  starOutlook,
+} from './dhia'
 
 const lb = (n: number) => Math.round(n * 453.59237)
 
@@ -64,7 +74,9 @@ describe('DHIR star requirements (ADGA rule 19a)', () => {
       proteinLb: 45,
       miniature: false,
     })
-    expect(dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-01', freshenedOn: '2026-03-01' })).toMatchObject({
+    expect(
+      dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-01', freshenedOn: '2026-03-01' }),
+    ).toMatchObject({
       milkLb: 600,
       butterfatLb: 21,
       proteinLb: 18,

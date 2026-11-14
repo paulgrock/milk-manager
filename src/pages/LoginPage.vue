@@ -79,7 +79,15 @@ async function submitCode() {
         <UButton type="submit" block size="xl" :loading="busy">Email me a code</UButton>
         <template v-if="passkeysSupported">
           <USeparator label="or" />
-          <UButton block size="xl" color="neutral" variant="outline" icon="i-lucide-fingerprint" :loading="busy" @click="usePasskey">
+          <UButton
+            block
+            size="xl"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-fingerprint"
+            :loading="busy"
+            @click="usePasskey"
+          >
             Sign in with a passkey
           </UButton>
         </template>
@@ -96,11 +104,21 @@ async function submitCode() {
           icon="i-lucide-mail-search"
           title="This is the local test setup"
           description="Sign-in emails aren't really sent here. They're caught by the local mail inbox."
-          :actions="[{ label: 'Open local inbox', to: localMailInbox, target: '_blank', trailingIcon: 'i-lucide-external-link' }]"
+          :actions="[
+            { label: 'Open local inbox', to: localMailInbox, target: '_blank', trailingIcon: 'i-lucide-external-link' },
+          ]"
         />
         <UPinInput v-model="code" :length="6" otp type="number" size="xl" autofocus @complete="submitCode" />
         <UButton type="submit" block size="xl" :loading="busy" :disabled="code.join('').length < 6">Sign in</UButton>
-        <UButton variant="link" color="neutral" @click="step = 'email'; code = []">Use a different email</UButton>
+        <UButton
+          variant="link"
+          color="neutral"
+          @click="
+            step = 'email'
+            code = []
+          "
+          >Use a different email</UButton
+        >
       </form>
 
       <UAlert v-if="error" class="mt-4" color="error" variant="subtle" :description="error" />

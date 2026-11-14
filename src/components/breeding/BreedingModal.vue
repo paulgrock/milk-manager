@@ -38,13 +38,16 @@ watch(open, (isOpen) => {
 
 const methodOptions = Object.entries(METHOD_LABELS).map(([value, label]) => ({ label, value }))
 const due = computed(() =>
-  form.bred_on ? dueWindow({ bred_on: form.bred_on, exposure_end: form.method === 'pen' ? form.exposure_end || null : null }) : null,
+  form.bred_on
+    ? dueWindow({ bred_on: form.bred_on, exposure_end: form.method === 'pen' ? form.exposure_end || null : null })
+    : null,
 )
 
 async function submit() {
   if (!form.doe_id) return toast.add({ color: 'error', title: 'Pick a doe' })
   const fee = form.fee.trim() ? Math.round(Number(form.fee) * 100) : null
-  if (fee !== null && (!Number.isFinite(fee) || fee < 0)) return toast.add({ color: 'error', title: 'Fee must be an amount like 50 or 75.00' })
+  if (fee !== null && (!Number.isFinite(fee) || fee < 0))
+    return toast.add({ color: 'error', title: 'Fee must be an amount like 50 or 75.00' })
   try {
     await saveBreeding.mutateAsync({
       id: props.breeding?.id,
@@ -96,8 +99,10 @@ async function remove() {
           <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
         </UFormField>
         <p v-if="due" class="text-sm text-muted">
-          Due around <strong class="text-default">{{ formatDate(due.expected) }}</strong>
-          ({{ formatDate(due.earliest) }} – {{ formatDate(due.latest) }})
+          Due around <strong class="text-default">{{ formatDate(due.expected) }}</strong> ({{
+            formatDate(due.earliest)
+          }}
+          – {{ formatDate(due.latest) }})
         </p>
       </form>
     </template>

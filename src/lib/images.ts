@@ -43,7 +43,11 @@ export async function resizeImage(file: File, maxSize: number, quality = 0.85): 
   canvas.getContext('2d')!.drawImage(image.source, 0, 0, canvas.width, canvas.height)
   image.close()
   return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not process image'))), 'image/jpeg', quality),
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Could not process image'))),
+      'image/jpeg',
+      quality,
+    ),
   )
 }
 

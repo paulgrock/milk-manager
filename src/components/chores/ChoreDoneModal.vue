@@ -32,7 +32,10 @@ function submit() {
   markDone({ choreId: props.chore.id, doneOn: form.doneOn, notes: form.notes }).saved.catch((e: Error) =>
     toast.add({ color: 'error', title: 'Could not save', description: e.message }),
   )
-  toast.add({ color: 'success', title: `${props.chore.name} done ${form.doneOn === today ? 'today' : formatDate(form.doneOn)}` })
+  toast.add({
+    color: 'success',
+    title: `${props.chore.name} done ${form.doneOn === today ? 'today' : formatDate(form.doneOn)}`,
+  })
   open.value = false
 }
 </script>

@@ -29,10 +29,14 @@ const pickedMonth = computed({
 
 // The filters switched off, so a filter added later (like Cheese) starts on.
 const hiddenGroups = useLocalStorage<EventGroup[]>('calendar.hiddenGroups', [])
-const groups = computed(() => (Object.keys(GROUP_LABELS) as EventGroup[]).filter((g) => !hiddenGroups.value.includes(g)))
+const groups = computed(() =>
+  (Object.keys(GROUP_LABELS) as EventGroup[]).filter((g) => !hiddenGroups.value.includes(g)),
+)
 const showDone = useLocalStorage('calendar.showDone', true)
 function toggle(g: EventGroup) {
-  hiddenGroups.value = hiddenGroups.value.includes(g) ? hiddenGroups.value.filter((x) => x !== g) : [...hiddenGroups.value, g]
+  hiddenGroups.value = hiddenGroups.value.includes(g)
+    ? hiddenGroups.value.filter((x) => x !== g)
+    : [...hiddenGroups.value, g]
 }
 
 const { events, loading } = useCalendarEvents(first, last)
@@ -57,7 +61,8 @@ const weekdays = computed(() =>
   Array.from({ length: 7 }, (_, i) => new Date(2026, 1, i + 1).toLocaleDateString(undefined, { weekday: 'short' })),
 )
 const agenda = computed(() => [...byDay.value].sort(([a], [b]) => a.localeCompare(b)))
-const dayLabel = (iso: string) => parseDate(iso).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+const dayLabel = (iso: string) =>
+  parseDate(iso).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 
 // Phone grid: a dot per event (up to three), overdue first so it isn't the one cut off.
 const dotRank = (e: CalendarEvent) => (e.overdue ? 0 : e.done ? 2 : 1)
@@ -81,10 +86,28 @@ function pickDay(date: string) {
       <!-- Kept together so the arrows never wrap apart from the month. -->
       <div class="flex items-center gap-1 ms-auto">
         <!-- Left of the arrows, so they don't move when it appears. -->
-        <UButton v-if="month !== today.slice(0, 7)" variant="link" class="whitespace-nowrap px-1" @click="router.replace({ query: {} })">This month</UButton>
-        <UButton color="neutral" variant="outline" icon="i-lucide-chevron-left" aria-label="Previous month" @click="goMonth(-1)" />
+        <UButton
+          v-if="month !== today.slice(0, 7)"
+          variant="link"
+          class="whitespace-nowrap px-1"
+          @click="router.replace({ query: {} })"
+          >This month</UButton
+        >
+        <UButton
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-chevron-left"
+          aria-label="Previous month"
+          @click="goMonth(-1)"
+        />
         <MonthYearPicker v-model="pickedMonth" class="w-40" />
-        <UButton color="neutral" variant="outline" icon="i-lucide-chevron-right" aria-label="Next month" @click="goMonth(1)" />
+        <UButton
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-chevron-right"
+          aria-label="Next month"
+          @click="goMonth(1)"
+        />
       </div>
     </div>
 
@@ -120,7 +143,10 @@ function pickDay(date: string) {
               :aria-pressed="selectedDay === date"
               @click="pickDay(date)"
             >
-              <span class="inline-flex size-6 items-center justify-center rounded-full" :class="date === today ? 'bg-primary text-inverted font-semibold' : ''">
+              <span
+                class="inline-flex size-6 items-center justify-center rounded-full"
+                :class="date === today ? 'bg-primary text-inverted font-semibold' : ''"
+              >
                 {{ Number(date.slice(8)) }}
               </span>
               <span class="flex h-1.5 gap-0.5" aria-hidden="true">
@@ -128,29 +154,44 @@ function pickDay(date: string) {
                   v-for="(e, j) in dots(date)"
                   :key="j"
                   class="size-1.5 rounded-full"
-                  :class="e.overdue ? 'bg-warning' : e.done ? 'border border-(--ui-text-dimmed)' : 'bg-(--ui-text-toned)'"
+                  :class="
+                    e.overdue ? 'bg-warning' : e.done ? 'border border-(--ui-text-dimmed)' : 'bg-(--ui-text-toned)'
+                  "
                 />
               </span>
             </button>
             <div v-else class="flex h-11 justify-center pt-1 text-sm" aria-hidden="true">
-              <span class="inline-flex size-6 items-center justify-center rounded-full" :class="date === today ? 'bg-primary text-inverted font-semibold' : 'text-dimmed'">
+              <span
+                class="inline-flex size-6 items-center justify-center rounded-full"
+                :class="date === today ? 'bg-primary text-inverted font-semibold' : 'text-dimmed'"
+              >
                 {{ Number(date.slice(8)) }}
               </span>
             </div>
           </template>
         </div>
         <div class="mt-1 flex gap-3 text-xs text-muted" aria-hidden="true">
-          <span class="flex items-center gap-1"><span class="size-1.5 rounded-full bg-(--ui-text-toned)" />Upcoming</span>
+          <span class="flex items-center gap-1"
+            ><span class="size-1.5 rounded-full bg-(--ui-text-toned)" />Upcoming</span
+          >
           <span class="flex items-center gap-1"><span class="size-1.5 rounded-full bg-warning" />Overdue</span>
-          <span class="flex items-center gap-1"><span class="size-1.5 rounded-full border border-(--ui-text-dimmed)" />Done</span>
+          <span class="flex items-center gap-1"
+            ><span class="size-1.5 rounded-full border border-(--ui-text-dimmed)" />Done</span
+          >
         </div>
       </div>
 
-      <div class="hidden md:grid grid-cols-7 gap-px rounded-lg border border-default bg-(--ui-border) overflow-hidden" aria-hidden="true">
+      <div
+        class="hidden md:grid grid-cols-7 gap-px rounded-lg border border-default bg-(--ui-border) overflow-hidden"
+        aria-hidden="true"
+      >
         <div v-for="w in weekdays" :key="w" class="bg-elevated/60 px-2 py-1 text-xs text-muted">{{ w }}</div>
         <div v-for="(date, i) in cells" :key="i" class="bg-default min-h-24 p-1.5 text-xs">
           <template v-if="date">
-            <span class="inline-flex size-6 items-center justify-center rounded-full" :class="date === today ? 'bg-primary text-inverted font-semibold' : 'text-muted'">
+            <span
+              class="inline-flex size-6 items-center justify-center rounded-full"
+              :class="date === today ? 'bg-primary text-inverted font-semibold' : 'text-muted'"
+            >
               {{ Number(date.slice(8)) }}
             </span>
             <ul class="mt-1 space-y-0.5">
@@ -162,7 +203,9 @@ function pickDay(date: string) {
               >
                 {{ e.title }}
               </li>
-              <li v-if="(byDay.get(date)?.length ?? 0) > 3" class="text-muted px-1">+{{ byDay.get(date)!.length - 3 }} more</li>
+              <li v-if="(byDay.get(date)?.length ?? 0) > 3" class="text-muted px-1">
+                +{{ byDay.get(date)!.length - 3 }} more
+              </li>
             </ul>
           </template>
         </div>
@@ -178,7 +221,10 @@ function pickDay(date: string) {
           :class="selectedDay === date ? 'bg-primary/10' : ''"
           :data-selected="selectedDay === date || undefined"
         >
-          <h2 class="px-4 pt-3 text-xs font-medium uppercase tracking-wide" :class="date === today ? 'text-primary' : 'text-muted'">
+          <h2
+            class="px-4 pt-3 text-xs font-medium uppercase tracking-wide"
+            :class="date === today ? 'text-primary' : 'text-muted'"
+          >
             {{ date === today ? 'Today · ' : '' }}{{ dayLabel(date) }}
           </h2>
           <ul>
@@ -186,7 +232,10 @@ function pickDay(date: string) {
           </ul>
         </section>
       </UCard>
-      <p class="text-xs text-muted">Upcoming dates are worked out from your records, so they update as soon as something is recorded. {{ formatDate(first) }} – {{ formatDate(last) }}.</p>
+      <p class="text-xs text-muted">
+        Upcoming dates are worked out from your records, so they update as soon as something is recorded.
+        {{ formatDate(first) }} – {{ formatDate(last) }}.
+      </p>
     </template>
   </div>
 </template>

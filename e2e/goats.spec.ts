@@ -2,7 +2,12 @@ import { admin, expect, test } from './fixtures.ts'
 import { addDoeInMilk, addGoat, addLactation, isoDate } from './seed.ts'
 
 test('adds a goat with an outside sire and an in-herd dam, then sees her pedigree', async ({ page, owner, herd }) => {
-  const ds = await addGoat(owner, herd.id, { registered_name: 'Castle Rock Roxstar', title_suffix: '+*B', sex: 'buck', status: 'reference' })
+  const ds = await addGoat(owner, herd.id, {
+    registered_name: 'Castle Rock Roxstar',
+    title_suffix: '+*B',
+    sex: 'buck',
+    status: 'reference',
+  })
   await addGoat(owner, herd.id, {
     registered_name: 'Harley Hillside Dime Piece',
     title_suffix: '4*M',
@@ -43,7 +48,12 @@ test('adds a goat with an outside sire and an in-herd dam, then sees her pedigre
   await expect(page.getByRole('link', { name: 'Harley Hillside Dime Piece 4*M' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Castle Rock Roxstar +*B' })).toBeVisible()
 
-  const sire = await admin.from('goats').select('sex, status').eq('registered_name', 'Curbstone Valley Tigris').eq('herd_id', herd.id).single()
+  const sire = await admin
+    .from('goats')
+    .select('sex, status')
+    .eq('registered_name', 'Curbstone Valley Tigris')
+    .eq('herd_id', herd.id)
+    .single()
   expect(sire.data).toEqual({ sex: 'buck', status: 'reference' })
 })
 
@@ -51,7 +61,10 @@ test('records a linear appraisal and shows it pedigree-style', async ({ page, ow
   const ina = await addGoat(owner, herd.id, { registered_name: 'Ina May', sex: 'doe', birth_date: '2019-05-08' })
   await page.goto(`/goats/${ina.id}`)
 
-  const card = page.locator('div').filter({ has: page.getByRole('heading', { name: 'Linear appraisal' }) }).last()
+  const card = page
+    .locator('div')
+    .filter({ has: page.getByRole('heading', { name: 'Linear appraisal' }) })
+    .last()
   await card.getByRole('button', { name: 'Add' }).click()
   const dialog = page.getByRole('dialog', { name: 'Add appraisal' })
   await dialog.getByLabel('Date').fill('2021-06-01')
@@ -115,7 +128,11 @@ test('the In milk view lists only does milking today', async ({ page, owner, her
   await expect(rows.first()).toContainText('Clover')
 })
 
-test('a doe who dies leaves the milk line and care lists but keeps her page and pedigree', async ({ page, owner, herd }) => {
+test('a doe who dies leaves the milk line and care lists but keeps her page and pedigree', async ({
+  page,
+  owner,
+  herd,
+}) => {
   const { goat: chimi } = await addDoeInMilk(owner, herd.id, 'Chimi', 100)
   await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe', dam_id: chimi.id })
 
@@ -165,17 +182,24 @@ test('an uploaded photo becomes her picture, as a rounded square like the app ic
     g.fillRect(100, 120, 200, 160)
     return c.toDataURL('image/png').split(',')[1]!
   })
-  await page.locator('input[type=file]').setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await expect(page.getByRole('img', { name: /Ina May, / })).toBeVisible()
 
   // A small copy is saved alongside, for icons and tiles: the full photo isn't downloaded just to show it small.
-  const { data: saved } = await admin.from('goat_photos').select('storage_path, thumb_path').eq('goat_id', ina.id).single()
+  const { data: saved } = await admin
+    .from('goat_photos')
+    .select('storage_path, thumb_path')
+    .eq('goat_id', ina.id)
+    .single()
   expect(saved!.thumb_path).toBe(saved!.storage_path.replace('.jpg', '-thumb.jpg'))
   const { data: small } = await admin.storage.from('goat-photos').download(saved!.thumb_path!)
   expect(small!.size).toBeLessThan(60_000)
 
   // The first photo is her main one, shown at the top of her page and on the goat list.
-  const avatarRadius = (img: import('@playwright/test').Locator) => img.evaluate((el) => getComputedStyle(el.parentElement!).borderTopLeftRadius)
+  const avatarRadius = (img: import('@playwright/test').Locator) =>
+    img.evaluate((el) => getComputedStyle(el.parentElement!).borderTopLeftRadius)
   const header = page.getByRole('img', { name: 'Ina May', exact: true })
   await expect(header).toBeVisible()
   expect(await avatarRadius(header)).toBe('22%')
@@ -187,9 +211,17 @@ test('an uploaded photo becomes her picture, as a rounded square like the app ic
 })
 
 test("a goat's page is at her name, and older links with her id still get there", async ({ page, owner, herd }) => {
-  const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', registered_name: "Bird's Eye Farm Ina May", sex: 'doe' })
+  const ina = await addGoat(owner, herd.id, {
+    barn_name: 'Ina',
+    registered_name: "Bird's Eye Farm Ina May",
+    sex: 'doe',
+  })
   const other = await addGoat(owner, herd.id, { barn_name: 'Ina', registered_name: 'Other Farm Ina', sex: 'doe' })
-  const outside = await addGoat(owner, herd.id, { registered_name: 'Castle Rock Bugatti', sex: 'buck', status: 'reference' })
+  const outside = await addGoat(owner, herd.id, {
+    registered_name: 'Castle Rock Bugatti',
+    sex: 'buck',
+    status: 'reference',
+  })
 
   // No barn name: the registered name.
   await page.goto(`/goats/${outside.id}`)
@@ -209,7 +241,11 @@ test("a goat's page is at her name, and older links with her id still get there"
   await expect(page).toHaveURL(/\/goats\/pearl$/)
 })
 
-test("the edit page waits for the goat to load, so it can't be typed over or saved as a new goat", async ({ page, owner, herd }) => {
+test("the edit page waits for the goat to load, so it can't be typed over or saved as a new goat", async ({
+  page,
+  owner,
+  herd,
+}) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   // A slow connection: hold the goats list until we say so.
   let release!: () => void

@@ -3,7 +3,11 @@ import { addDoeInMilk, addGoat, isoDate, lbToGrams, milkRows, ozToGrams } from '
 
 const today = isoDate()
 
-test('enters AM weights in ounces by keyboard, including a milking weighed in parts; totals are in pounds', async ({ page, owner, herd }) => {
+test('enters AM weights in ounces by keyboard, including a milking weighed in parts; totals are in pounds', async ({
+  page,
+  owner,
+  herd,
+}) => {
   const { goat: clover } = await addDoeInMilk(owner, herd.id, 'Clover')
   const { goat: pepper } = await addDoeInMilk(owner, herd.id, 'Pepper')
 
@@ -21,7 +25,9 @@ test('enters AM weights in ounces by keyboard, including a milking weighed in pa
   await expect(page.getByText('AM · 2/2 does')).toBeVisible()
   await expect(page.getByText('6.31 lb').first()).toBeVisible()
 
-  await expect.poll(() => milkRows(clover.id, today)).toEqual([{ milking: 1, weight_g: ozToGrams(54), portions_g: null }])
+  await expect
+    .poll(() => milkRows(clover.id, today))
+    .toEqual([{ milking: 1, weight_g: ozToGrams(54), portions_g: null }])
   await expect
     .poll(() => milkRows(pepper.id, today))
     .toEqual([{ milking: 1, weight_g: ozToGrams(34) + ozToGrams(13), portions_g: [ozToGrams(34), ozToGrams(13)] }])
@@ -40,7 +46,9 @@ test('weights can be typed in pounds instead, and the choice is remembered', asy
   await page.getByRole('tab', { name: 'lb' }).click()
   await page.getByLabel('Clover AM').fill('3.4')
   await page.keyboard.press('Tab')
-  await expect.poll(() => milkRows(clover.id, today)).toEqual([{ milking: 1, weight_g: lbToGrams(3.4), portions_g: null }])
+  await expect
+    .poll(() => milkRows(clover.id, today))
+    .toEqual([{ milking: 1, weight_g: lbToGrams(3.4), portions_g: null }])
   await expect(page.getByText('3.4 lb').first()).toBeVisible()
 
   await page.reload()
@@ -70,7 +78,9 @@ test('a day total splits into AM and PM when AM is entered later', async ({ page
   await page.getByRole('tab', { name: 'Day total' }).click()
   await page.getByLabel('Ina Day total').fill('104')
   await page.keyboard.press('Tab')
-  await expect.poll(() => milkRows(goat.id, today)).toEqual([{ milking: 0, weight_g: ozToGrams(104), portions_g: null }])
+  await expect
+    .poll(() => milkRows(goat.id, today))
+    .toEqual([{ milking: 0, weight_g: ozToGrams(104), portions_g: null }])
   await expect(page.getByText('6.5 lb').first()).toBeVisible()
 
   await page.getByRole('tab', { name: 'AM' }).click()
@@ -123,7 +133,11 @@ test('adds a doe to the milk line and dries one off', async ({ page, owner, herd
 
   await expect(page.getByLabel(/^Ina /)).toBeVisible()
   await expect(page.getByText('Ina DIM 0')).toBeVisible()
-  const lactation = await admin.from('lactations').select('freshened_on, lactation_number').eq('goat_id', ina.id).single()
+  const lactation = await admin
+    .from('lactations')
+    .select('freshened_on, lactation_number')
+    .eq('goat_id', ina.id)
+    .single()
   expect(lactation.data).toEqual({ freshened_on: today, lactation_number: 1 })
 
   // Dry Clover off yesterday: she leaves today's line.
@@ -139,7 +153,12 @@ test('adds a doe to the milk line and dries one off', async ({ page, owner, herd
 
 test('flags a past day with only one milking', async ({ page, owner, herd }) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Clover')
-  await owner.client.rpc('record_milking', { p_goat_id: goat.id, p_milked_on: isoDate(-1), p_milking: 1, p_weight_g: 1500 })
+  await owner.client.rpc('record_milking', {
+    p_goat_id: goat.id,
+    p_milked_on: isoDate(-1),
+    p_milking: 1,
+    p_weight_g: 1500,
+  })
 
   await page.goto(`/milk?date=${isoDate(-1)}`)
   await expect(page.getByText('PM missing')).toBeVisible()
@@ -150,7 +169,8 @@ test('flags a past day with only one milking', async ({ page, owner, herd }) => 
 
 test('the milk line can be put in milking order, and Enter follows it', async ({ page, owner, herd }) => {
   for (const name of ['Apple', 'Clover', 'Pepper']) await addDoeInMilk(owner, herd.id, name)
-  const lineOrder = () => page.getByLabel(/^\w+ AM$/).evaluateAll((inputs) => inputs.map((i) => i.getAttribute('aria-label')))
+  const lineOrder = () =>
+    page.getByLabel(/^\w+ AM$/).evaluateAll((inputs) => inputs.map((i) => i.getAttribute('aria-label')))
 
   await page.goto('/milk')
   await page.getByRole('tab', { name: 'AM' }).click()
@@ -169,7 +189,11 @@ test('the milk line can be put in milking order, and Enter follows it', async ({
 
   // It's kept for the herd, not just this phone.
   await expect
-    .poll(async () => (await admin.from('goats').select('barn_name').eq('herd_id', herd.id).order('milking_position')).data?.map((g) => g.barn_name))
+    .poll(async () =>
+      (await admin.from('goats').select('barn_name').eq('herd_id', herd.id).order('milking_position')).data?.map(
+        (g) => g.barn_name,
+      ),
+    )
     .toEqual(['Pepper', 'Apple', 'Clover'])
   await page.reload()
   await page.getByRole('tab', { name: 'AM' }).click()

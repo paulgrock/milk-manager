@@ -5,7 +5,14 @@ import { useBreedingData } from '@/composables/useBreeding'
 import { useSalesData, useSalesMutations } from '@/composables/useSales'
 import { todayISO } from '@/lib/dates'
 import { parseMoney } from '@/lib/finances'
-import { DEPOSIT_LABELS, WANTS_LABELS, defaultSeason, reservationProgress, type DepositStatus, type Reservation } from '@/lib/sales'
+import {
+  DEPOSIT_LABELS,
+  WANTS_LABELS,
+  defaultSeason,
+  reservationProgress,
+  type DepositStatus,
+  type Reservation,
+} from '@/lib/sales'
 import BuyerPicker from './BuyerPicker.vue'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
 
@@ -61,17 +68,22 @@ const wantsOptions = Object.entries(WANTS_LABELS).map(([value, label]) => ({ lab
 // Once an adoption has used the deposit, it's settled there.
 const depositLocked = computed(() => props.reservation?.deposit_status === 'applied')
 const statusOptions = (['held', 'refunded', 'kept'] as const).map((value) => ({ label: DEPOSIT_LABELS[value], value }))
-const progress = computed(() => (props.reservation ? reservationProgress(props.reservation, data.value.sales) : undefined))
+const progress = computed(() =>
+  props.reservation ? reservationProgress(props.reservation, data.value.sales) : undefined,
+)
 
 async function submit() {
   if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick an adopter' })
   const deposit = parseMoney(form.deposit)
   if (deposit === 'invalid') return toast.add({ color: 'error', title: 'Deposit must be an amount like 100 or 100.00' })
   // A new reservation goes to the end of its doe's line.
-  const line = data.value.reservations.filter((r) => r.season === form.season && r.doe_id === form.doe_id && r.id !== props.reservation?.id)
-  const position = props.reservation && props.reservation.season === form.season && props.reservation.doe_id === form.doe_id
-    ? props.reservation.position
-    : Math.max(0, ...line.map((r) => r.position)) + 1
+  const line = data.value.reservations.filter(
+    (r) => r.season === form.season && r.doe_id === form.doe_id && r.id !== props.reservation?.id,
+  )
+  const position =
+    props.reservation && props.reservation.season === form.season && props.reservation.doe_id === form.doe_id
+      ? props.reservation.position
+      : Math.max(0, ...line.map((r) => r.position)) + 1
   try {
     await saveReservation.mutateAsync({
       id: props.reservation?.id,
@@ -84,7 +96,11 @@ async function submit() {
         position,
         ...(depositLocked.value
           ? {}
-          : { deposit_cents: deposit, deposit_on: deposit ? form.deposit_on : null, deposit_status: deposit ? form.deposit_status : 'held' }),
+          : {
+              deposit_cents: deposit,
+              deposit_on: deposit ? form.deposit_on : null,
+              deposit_status: deposit ? form.deposit_status : 'held',
+            }),
         cancelled_on: form.cancelled ? (props.reservation?.cancelled_on ?? today) : null,
         notes: form.notes.trim() || null,
       },
@@ -115,7 +131,13 @@ async function remove() {
         </UFormField>
         <div class="grid grid-cols-3 gap-3">
           <UFormField label="Season">
-            <UInputNumber v-model="form.season" :min="2000" :max="2100" :format-options="{ useGrouping: false }" class="w-full" />
+            <UInputNumber
+              v-model="form.season"
+              :min="2000"
+              :max="2100"
+              :format-options="{ useGrouping: false }"
+              class="w-full"
+            />
           </UFormField>
           <UFormField label="Wants">
             <USelect v-model="form.wants" :items="wantsOptions" class="w-full" />

@@ -6,18 +6,34 @@ async function choreId(herdId: string, name: string) {
   return data!.id
 }
 async function doneOn(herdId: string) {
-  const { data } = await admin.from('chores_done').select('done_on, notes, chores(name)').eq('herd_id', herdId).order('done_on')
+  const { data } = await admin
+    .from('chores_done')
+    .select('done_on, notes, chores(name)')
+    .eq('herd_id', herdId)
+    .order('done_on')
   return data ?? []
 }
 async function displayName(herdId: string, userId: string) {
-  const { data } = await admin.from('herd_members').select('display_name').eq('herd_id', herdId).eq('user_id', userId).single()
+  const { data } = await admin
+    .from('herd_members')
+    .select('display_name')
+    .eq('herd_id', herdId)
+    .eq('user_id', userId)
+    .single()
   return data!.display_name
 }
-const row = (page: import('@playwright/test').Page, name: string) => page.getByRole('listitem').filter({ has: page.getByRole('button', { name: new RegExp(`^${name}`) }) })
+const row = (page: import('@playwright/test').Page, name: string) =>
+  page.getByRole('listitem').filter({ has: page.getByRole('button', { name: new RegExp(`^${name}`) }) })
 
 test('a new herd starts with the farm’s chores, not recorded yet and off Today', async ({ page, herd }) => {
   await page.goto('/chores')
-  for (const name of ['Clean milking equipment', 'Fill waterers', 'Refill mineral feeder', 'Clean stalls', 'Clean coop']) {
+  for (const name of [
+    'Clean milking equipment',
+    'Fill waterers',
+    'Refill mineral feeder',
+    'Clean stalls',
+    'Clean coop',
+  ]) {
     await expect(row(page, name)).toContainText('Not recorded yet')
   }
   await expect(row(page, 'Fill waterers')).toContainText('every other week')
@@ -36,7 +52,9 @@ test('one tap marks a chore done today, with who did it, and can be undone', asy
   await expect(equipment).toContainText(`Last done today by ${who} · every week`)
   await expect(equipment).toContainText('Due in 7 days')
   await expect(equipment.getByRole('button', { name: 'Done', exact: true })).toBeDisabled()
-  await expect.poll(() => doneOn(herd.id)).toEqual([{ done_on: isoDate(), notes: null, chores: { name: 'Clean milking equipment' } }])
+  await expect
+    .poll(() => doneOn(herd.id))
+    .toEqual([{ done_on: isoDate(), notes: null, chores: { name: 'Clean milking equipment' } }])
 
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(equipment).toContainText('Not recorded yet')
@@ -60,7 +78,11 @@ test('overdue chores show on Today and on the calendar; doing them clears Today'
   await expect(page.getByRole('main').getByRole('listitem').first()).toContainText('Fill waterers')
 
   await page.goto('/')
-  const attention = page.getByRole('main').locator('section, div').filter({ has: page.getByRole('heading', { name: 'Needs attention' }) }).first()
+  const attention = page
+    .getByRole('main')
+    .locator('section, div')
+    .filter({ has: page.getByRole('heading', { name: 'Needs attention' }) })
+    .first()
   await expect(attention.getByRole('link', { name: /Fill waterers.*Overdue/ })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Clean stalls' })).toBeVisible()
 
@@ -90,10 +112,14 @@ test('a past date and a note can be entered, and shows in the history', async ({
   await expect(dialog).toBeHidden()
   await expect(row(page, 'Clean coop')).toContainText('Due in 20 days')
 
-  await row(page, 'Clean coop').getByRole('button', { name: /^Clean coop/ }).click()
+  await row(page, 'Clean coop')
+    .getByRole('button', { name: /^Clean coop/ })
+    .click()
   await expect(dialog.getByText('New shavings')).toBeVisible()
   await expect(dialog.getByText(await displayName(herd.id, owner.id))).toBeVisible()
-  expect(await doneOn(herd.id)).toEqual([{ done_on: isoDate(-10), notes: 'New shavings', chores: { name: 'Clean coop' } }])
+  expect(await doneOn(herd.id)).toEqual([
+    { done_on: isoDate(-10), notes: 'New shavings', chores: { name: 'Clean coop' } },
+  ])
 
   await dialog.getByRole('button', { name: /^Delete/ }).click()
   await expect(dialog.getByText('Not recorded yet.')).toBeVisible()
@@ -104,16 +130,28 @@ test('owners rename, change and hide chores; helpers can add and mark done', asy
   await page.goto('/chores')
   await page.getByRole('spinbutton', { name: 'Clean coop every how many days' }).fill('21')
   await page.getByRole('spinbutton', { name: 'Clean coop every how many days' }).blur()
-  await expect.poll(async () => (await admin.from('chores').select('interval_days').eq('herd_id', herd.id).eq('name', 'Clean coop').single()).data?.interval_days).toBe(21)
+  await expect
+    .poll(
+      async () =>
+        (await admin.from('chores').select('interval_days').eq('herd_id', herd.id).eq('name', 'Clean coop').single())
+          .data?.interval_days,
+    )
+    .toBe(21)
   await page.getByLabel('Clean stalls name').fill('Muck out stalls')
   await page.getByLabel('Clean stalls name').blur()
   await expect(row(page, 'Muck out stalls')).toBeVisible()
-  await page.getByRole('listitem').filter({ has: page.getByLabel('Refill mineral feeder name') }).getByRole('button', { name: 'Hide' }).click()
+  await page
+    .getByRole('listitem')
+    .filter({ has: page.getByLabel('Refill mineral feeder name') })
+    .getByRole('button', { name: 'Hide' })
+    .click()
   await expect(row(page, 'Refill mineral feeder')).toHaveCount(0)
 
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'Sam', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'Sam', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const helperPage = await ctx.newPage()

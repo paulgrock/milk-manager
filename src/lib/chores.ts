@@ -34,7 +34,10 @@ const ORDER: Record<ChoreState, number> = { overdue: 0, due: 1, ok: 2, never: 3 
 /** Most pressing first: overdue, due soon, the rest by due date, then the ones not recorded yet. */
 export function sortByDue(statuses: ChoreStatus[]): ChoreStatus[] {
   return [...statuses].sort(
-    (a, b) => ORDER[a.state] - ORDER[b.state] || (a.daysUntilDue ?? 0) - (b.daysUntilDue ?? 0) || a.chore.sort_order - b.chore.sort_order,
+    (a, b) =>
+      ORDER[a.state] - ORDER[b.state] ||
+      (a.daysUntilDue ?? 0) - (b.daysUntilDue ?? 0) ||
+      a.chore.sort_order - b.chore.sort_order,
   )
 }
 

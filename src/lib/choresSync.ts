@@ -19,7 +19,9 @@ export type DeleteDoneVars = { herdId: string; id: string }
 const scope = { id: 'chores' }
 
 function update(herdId: string, change: (done: ChoreDone[]) => ChoreDone[]) {
-  queryClient.setQueryData<ChoresData>(choresKey(herdId), (data) => (data ? { ...data, done: change(data.done) } : data))
+  queryClient.setQueryData<ChoresData>(choresKey(herdId), (data) =>
+    data ? { ...data, done: change(data.done) } : data,
+  )
 }
 
 queryClient.setMutationDefaults<unknown, Error, MarkDoneVars>(MARK_DONE, {

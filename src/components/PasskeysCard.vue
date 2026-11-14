@@ -30,7 +30,11 @@ const add = useMutation({
   },
   onSuccess: async () => {
     await refresh()
-    toast.add({ color: 'success', title: 'Passkey added', description: 'Next time, sign in with your face, fingerprint or device PIN.' })
+    toast.add({
+      color: 'success',
+      title: 'Passkey added',
+      description: 'Next time, sign in with your face, fingerprint or device PIN.',
+    })
   },
   onError: (e) => toast.add({ color: 'error', title: 'Could not add passkey', description: passkeyErrorMessage(e) }),
 })
@@ -61,7 +65,9 @@ const remove = useMutation({
   <UCard>
     <template #header>
       <h2 class="font-semibold">Passkeys</h2>
-      <p class="text-sm text-muted">Sign in with Face ID, Touch ID, a fingerprint or your device PIN instead of an email code.</p>
+      <p class="text-sm text-muted">
+        Sign in with Face ID, Touch ID, a fingerprint or your device PIN instead of an email code.
+      </p>
     </template>
 
     <p v-if="!passkeysSupported" class="text-muted text-sm">This browser doesn't support passkeys.</p>
@@ -78,11 +84,25 @@ const remove = useMutation({
             <span class="flex-1 min-w-32">
               <span class="block font-medium">{{ p.friendly_name || 'Passkey' }}</span>
               <span class="block text-xs text-muted">
-                Added {{ formatDate(p.created_at.slice(0, 10)) }}<template v-if="p.last_used_at"> · last used {{ formatDate(p.last_used_at.slice(0, 10)) }}</template>
+                Added {{ formatDate(p.created_at.slice(0, 10))
+                }}<template v-if="p.last_used_at"> · last used {{ formatDate(p.last_used_at.slice(0, 10)) }}</template>
               </span>
             </span>
-            <UButton size="xs" color="neutral" variant="ghost" @click="renaming = { id: p.id, name: p.friendly_name ?? '' }">Rename</UButton>
-            <UButton size="xs" color="error" variant="ghost" :aria-label="`Remove ${p.friendly_name || 'passkey'}`" @click="remove.mutate(p.id)">Remove</UButton>
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              @click="renaming = { id: p.id, name: p.friendly_name ?? '' }"
+              >Rename</UButton
+            >
+            <UButton
+              size="xs"
+              color="error"
+              variant="ghost"
+              :aria-label="`Remove ${p.friendly_name || 'passkey'}`"
+              @click="remove.mutate(p.id)"
+              >Remove</UButton
+            >
           </template>
         </li>
       </ul>
@@ -90,7 +110,8 @@ const remove = useMutation({
         Add a passkey on this device
       </UButton>
       <p class="mt-2 text-xs text-muted">
-        Each device gets its own passkey (or shares one through iCloud Keychain or Google Password Manager). You can still sign in with an email code any time.
+        Each device gets its own passkey (or shares one through iCloud Keychain or Google Password Manager). You can
+        still sign in with an email code any time.
       </p>
     </template>
   </UCard>

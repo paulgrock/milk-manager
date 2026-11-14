@@ -54,9 +54,7 @@ export function milkingLabel(milking: number): string {
 }
 
 export type ParsedWeight =
-  | { kind: 'empty' }
-  | { kind: 'invalid'; message: string }
-  | { kind: 'ok'; grams: number; portions: number[] | null }
+  { kind: 'empty' } | { kind: 'invalid'; message: string } | { kind: 'ok'; grams: number; portions: number[] | null }
 
 /** Most a goat gives in one milking. */
 export const MAX_MILKING_GRAMS = 20000
@@ -69,13 +67,19 @@ export const MAX_MILKING_GRAMS = 20000
 export function parseWeightInput(
   text: string,
   unit: EntryUnit,
-  max: { grams: number; message: string } = { grams: MAX_MILKING_GRAMS, message: 'That is more than a goat gives in one milking' },
+  max: { grams: number; message: string } = {
+    grams: MAX_MILKING_GRAMS,
+    message: 'That is more than a goat gives in one milking',
+  },
 ): ParsedWeight {
   const trimmed = text.trim()
   if (!trimmed) return { kind: 'empty' }
   const parts = trimmed.split('+').map((p) => p.trim().replace(',', '.'))
   if (parts.some((p) => !/^\d*\.?\d+$/.test(p))) {
-    return { kind: 'invalid', message: `Use numbers like ${unit === 'oz' ? '54' : '3.4'}, or ${partsExample(unit)} for parts` }
+    return {
+      kind: 'invalid',
+      message: `Use numbers like ${unit === 'oz' ? '54' : '3.4'}, or ${partsExample(unit)} for parts`,
+    }
   }
   if (parts.length > 20) return { kind: 'invalid', message: 'Too many parts' }
   // Round each part first so the stored parts always add up to the total exactly.

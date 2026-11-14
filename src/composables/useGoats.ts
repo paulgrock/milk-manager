@@ -29,7 +29,9 @@ export function useHerdGoats() {
     queryKey: computed(() => goatKeys.goats(herdId.value)),
     // Paged, like every list: reference goats from pedigree imports add up past Supabase's 1,000-row limit.
     queryFn: () =>
-      fetchAll<Goat>((from, to) => supabase.from('goats').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
+      fetchAll<Goat>((from, to) =>
+        supabase.from('goats').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+      ),
     enabled,
   })
 
@@ -52,7 +54,13 @@ export function useHerdGoats() {
     queryKey: computed(() => goatKeys.photos(herdId.value)),
     queryFn: () =>
       fetchAll<GoatPhoto>((from, to) =>
-        supabase.from('goat_photos').select('*').eq('herd_id', herdId.value).order('created_at').order('id').range(from, to),
+        supabase
+          .from('goat_photos')
+          .select('*')
+          .eq('herd_id', herdId.value)
+          .order('created_at')
+          .order('id')
+          .range(from, to),
       ),
     enabled,
   })
@@ -139,7 +147,17 @@ export function useGoatMutations() {
   })
 
   const uploadPhoto = useMutation({
-    mutationFn: async ({ goat, file, kind, makePrimary }: { goat: Goat; file: File; kind: PhotoKind; makePrimary: boolean }) => {
+    mutationFn: async ({
+      goat,
+      file,
+      kind,
+      makePrimary,
+    }: {
+      goat: Goat
+      file: File
+      kind: PhotoKind
+      makePrimary: boolean
+    }) => {
       const [blob, thumb] = await Promise.all([resizeImage(file, 1600), resizeImage(file, THUMB_SIZE, 0.8)])
       const id = crypto.randomUUID()
       const path = `${goat.herd_id}/${goat.id}/${id}.jpg`
@@ -189,5 +207,14 @@ export function useGoatMutations() {
     onSettled: () => refresh(goatKeys.goats(herdId.value)),
   })
 
-  return { saveGoat, deleteGoat, saveAppraisal, deleteAppraisal, uploadPhoto, deletePhoto, setPrimaryPhoto, setMilkingOrder }
+  return {
+    saveGoat,
+    deleteGoat,
+    saveAppraisal,
+    deleteAppraisal,
+    uploadPhoto,
+    deletePhoto,
+    setPrimaryPhoto,
+    setMilkingOrder,
+  }
 }

@@ -35,7 +35,11 @@ const option = computed<EChartsOption>(() => {
     xAxis: {
       type: 'category',
       data: props.days.map((d) => d.date),
-      axisLabel: { color: t.muted, formatter: (v: string) => formatDate(v).replace(/,? \d{4}$/, ''), hideOverlap: true },
+      axisLabel: {
+        color: t.muted,
+        formatter: (v: string) => formatDate(v).replace(/,? \d{4}$/, ''),
+        hideOverlap: true,
+      },
       axisLine: { lineStyle: { color: t.axis } },
       axisTick: { show: false },
     },

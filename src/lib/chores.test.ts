@@ -40,15 +40,32 @@ describe('choreStatus', () => {
   })
 
   it('is not recorded yet when never done, and ignores other chores', () => {
-    expect(choreStatus(chore(), [done('2026-10-30', { chore_id: 'coop' })], '2026-10-31')).toEqual({ chore: chore(), state: 'never' })
+    expect(choreStatus(chore(), [done('2026-10-30', { chore_id: 'coop' })], '2026-10-31')).toEqual({
+      chore: chore(),
+      state: 'never',
+    })
   })
 })
 
 describe('sortByDue', () => {
   it('puts overdue first, then due soon, then by due date, then not recorded yet', () => {
-    const chores = [chore({ id: 'never', name: 'Never' }), chore({ id: 'ok' }), chore({ id: 'late' }), chore({ id: 'soon' })]
-    const log = [done('2026-10-25', { chore_id: 'ok' }), done('2026-10-01', { chore_id: 'late' }), done('2026-10-19', { chore_id: 'soon' })]
-    expect(sortByDue(chores.map((c) => choreStatus(c, log, '2026-10-31'))).map((s) => s.chore.id)).toEqual(['late', 'soon', 'ok', 'never'])
+    const chores = [
+      chore({ id: 'never', name: 'Never' }),
+      chore({ id: 'ok' }),
+      chore({ id: 'late' }),
+      chore({ id: 'soon' }),
+    ]
+    const log = [
+      done('2026-10-25', { chore_id: 'ok' }),
+      done('2026-10-01', { chore_id: 'late' }),
+      done('2026-10-19', { chore_id: 'soon' }),
+    ]
+    expect(sortByDue(chores.map((c) => choreStatus(c, log, '2026-10-31'))).map((s) => s.chore.id)).toEqual([
+      'late',
+      'soon',
+      'ok',
+      'never',
+    ])
   })
 })
 

@@ -26,7 +26,12 @@ async function waitForSavedCache(page: import('@playwright/test').Page) {
     .toBeGreaterThan(3)
 }
 
-test('weak signal: a save that keeps failing survives a reload and uploads later', async ({ page, context, owner, herd }) => {
+test('weak signal: a save that keeps failing survives a reload and uploads later', async ({
+  page,
+  context,
+  owner,
+  herd,
+}) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Clover')
   await page.goto('/milk')
   await page.getByRole('tab', { name: 'PM' }).click()
@@ -83,7 +88,12 @@ test('no signal at all: the app opens from the device, queues the weight, and se
     .toEqual([{ milking: 1, weight_g: ozToGrams(50), portions_g: null }])
 })
 
-test('a correction made offline lands after the original weight, not before', async ({ page, context, owner, herd }) => {
+test('a correction made offline lands after the original weight, not before', async ({
+  page,
+  context,
+  owner,
+  herd,
+}) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Clover')
   await page.goto('/milk')
   await page.getByRole('tab', { name: 'AM' }).click()
@@ -102,7 +112,12 @@ test('a correction made offline lands after the original weight, not before', as
     .toEqual([{ milking: 1, weight_g: ozToGrams(56), portions_g: null }])
 })
 
-test('goat photos seen once still show with no signal, and are cleared on sign-out', async ({ page, context, owner, herd }) => {
+test('goat photos seen once still show with no signal, and are cleared on sign-out', async ({
+  page,
+  context,
+  owner,
+  herd,
+}) => {
   const { goat } = await addDoeInMilk(owner, herd.id, 'Ina')
   await page.goto(`/goats/${goat.slug}`)
   const png = await page.evaluate(() => {
@@ -111,7 +126,9 @@ test('goat photos seen once still show with no signal, and are cleared on sign-o
     c.getContext('2d')!.fillRect(0, 0, 300, 300)
     return c.toDataURL('image/png').split(',')[1]!
   })
-  await page.locator('input[type=file]').setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'ina.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   const shown = (p: typeof page) => p.getByRole('img', { name: 'Ina', exact: true })
   await expect(shown(page)).toBeVisible()
   await page.goto('/milk')

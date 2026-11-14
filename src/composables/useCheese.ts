@@ -21,8 +21,12 @@ export function useCheeseData() {
     queryKey: computed(() => cheeseKey(herdId.value)),
     queryFn: async (): Promise<CheeseData> => {
       const [types, makes] = await Promise.all([
-        fetchAll<CheeseType>((from, to) => supabase.from('cheese_types').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
-        fetchAll<CheeseMake>((from, to) => supabase.from('cheese_makes').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
+        fetchAll<CheeseType>((from, to) =>
+          supabase.from('cheese_types').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
+        fetchAll<CheeseMake>((from, to) =>
+          supabase.from('cheese_makes').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
       ])
       // Alphabetical, ignoring case and accents (Chèvre sits with the Cs).
       types.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
@@ -42,7 +46,13 @@ export function useCheeseMutations() {
   const saveMake = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: MakeValues }) => {
       if (id) return unwrap(await supabase.from('cheese_makes').update(values).eq('id', id).select().single())
-      return unwrap(await supabase.from('cheese_makes').insert({ ...values, herd_id: herdId.value }).select().single())
+      return unwrap(
+        await supabase
+          .from('cheese_makes')
+          .insert({ ...values, herd_id: herdId.value })
+          .select()
+          .single(),
+      )
     },
     onSuccess,
   })
@@ -53,7 +63,13 @@ export function useCheeseMutations() {
   const saveType = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: TypeValues }): Promise<CheeseType> => {
       if (id) return unwrap(await supabase.from('cheese_types').update(values).eq('id', id).select().single())
-      return unwrap(await supabase.from('cheese_types').insert({ ...values, herd_id: herdId.value }).select().single())
+      return unwrap(
+        await supabase
+          .from('cheese_types')
+          .insert({ ...values, herd_id: herdId.value })
+          .select()
+          .single(),
+      )
     },
     onSuccess,
   })

@@ -66,7 +66,15 @@ describe('toCsv', () => {
   it('writes a spreadsheet-safe file with signed amounts', () => {
     const csv = toCsv(
       [
-        entry({ kind: 'income', category: 'kid_sale', occurred_on: '2026-05-01', amount_cents: 45000, goat_id: 'ivy', description: 'Doeling, "Ivy"', party: 'Smith, J' }),
+        entry({
+          kind: 'income',
+          category: 'kid_sale',
+          occurred_on: '2026-05-01',
+          amount_cents: 45000,
+          goat_id: 'ivy',
+          description: 'Doeling, "Ivy"',
+          party: 'Smith, J',
+        }),
         entry({ occurred_on: '2026-01-15', amount_cents: 30000, notes: 'line one\nline two' }),
       ],
       (id) => (id === 'ivy' ? 'Ivy' : undefined),

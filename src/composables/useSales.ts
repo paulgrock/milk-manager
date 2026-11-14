@@ -25,9 +25,15 @@ export function useSalesData() {
     queryKey: computed(() => salesKey(herdId.value)),
     queryFn: async (): Promise<SalesData> => {
       const [buyers, reservations, sales] = await Promise.all([
-        fetchAll<Buyer>((from, to) => supabase.from('buyers').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
-        fetchAll<Reservation>((from, to) => supabase.from('reservations').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
-        fetchAll<Sale>((from, to) => supabase.from('sales').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
+        fetchAll<Buyer>((from, to) =>
+          supabase.from('buyers').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
+        fetchAll<Reservation>((from, to) =>
+          supabase.from('reservations').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
+        fetchAll<Sale>((from, to) =>
+          supabase.from('sales').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
       ])
       buyers.sort((a, b) => a.name.localeCompare(b.name))
       return { buyers, reservations, sales }
@@ -41,12 +47,22 @@ export function useSalesData() {
 export function useSalesMutations() {
   const { herdId } = useHerd()
   const onSuccess = () =>
-    Promise.all([refreshQueries(salesKey(herdId.value)), refreshQueries(financesKey(herdId.value)), refreshQueries(goatKeys.goats(herdId.value))])
+    Promise.all([
+      refreshQueries(salesKey(herdId.value)),
+      refreshQueries(financesKey(herdId.value)),
+      refreshQueries(goatKeys.goats(herdId.value)),
+    ])
 
   const saveBuyer = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: BuyerValues }): Promise<Buyer> => {
       if (id) return unwrap(await supabase.from('buyers').update(values).eq('id', id).select().single())
-      return unwrap(await supabase.from('buyers').insert({ ...values, herd_id: herdId.value }).select().single())
+      return unwrap(
+        await supabase
+          .from('buyers')
+          .insert({ ...values, herd_id: herdId.value })
+          .select()
+          .single(),
+      )
     },
     onSuccess,
   })
@@ -68,7 +84,14 @@ export function useSalesMutations() {
   /** Renumbers a line of reservations in the order given. */
   const setLineOrder = useMutation({
     mutationFn: async (ids: string[]) => {
-      const results = await Promise.all(ids.map((id, i) => supabase.from('reservations').update({ position: i + 1 }).eq('id', id)))
+      const results = await Promise.all(
+        ids.map((id, i) =>
+          supabase
+            .from('reservations')
+            .update({ position: i + 1 })
+            .eq('id', id),
+        ),
+      )
       results.forEach((r) => unwrap(r))
     },
     onSuccess,

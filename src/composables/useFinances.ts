@@ -16,7 +16,13 @@ export function useFinances() {
     queryKey: computed(() => financesKey(herdId.value)),
     queryFn: () =>
       fetchAll<FinanceEntry>((from, to) =>
-        supabase.from('finance_entries').select('*').eq('herd_id', herdId.value).order('occurred_on', { ascending: false }).order('id').range(from, to),
+        supabase
+          .from('finance_entries')
+          .select('*')
+          .eq('herd_id', herdId.value)
+          .order('occurred_on', { ascending: false })
+          .order('id')
+          .range(from, to),
       ),
     enabled: computed(() => !!herdId.value && isOwner.value),
   })

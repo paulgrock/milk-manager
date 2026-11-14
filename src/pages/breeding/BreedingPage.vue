@@ -23,7 +23,9 @@ const { query, data } = useBreedingData()
 const lactations = useLactations()
 
 const name = (g: Goat) => g.barn_name || goatName(g)
-const does = computed(() => (goats.data.value ?? []).filter((g) => g.sex === 'doe' && CURRENT_STATUSES.includes(g.status)))
+const does = computed(() =>
+  (goats.data.value ?? []).filter((g) => g.sex === 'doe' && CURRENT_STATUSES.includes(g.status)),
+)
 const states = computed(() => does.value.map((goat) => ({ goat, state: doeBreedingState(goat.id, data.value, today) })))
 
 type WithCurrent = { goat: Goat; state: DoeBreedingState & { current: NonNullable<DoeBreedingState['current']> } }
@@ -39,8 +41,8 @@ const dueSoon = computed(() =>
     })),
 )
 
-const bredLater = computed(() =>
-  states.value.filter((x) => x.state.current && x.state.current.daysToDue > DUE_WITHIN_DAYS).length,
+const bredLater = computed(
+  () => states.value.filter((x) => x.state.current && x.state.current.daysToDue > DUE_WITHIN_DAYS).length,
 )
 
 const heatWatch = computed(() =>
@@ -75,7 +77,9 @@ const breedingOpen = ref(false)
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
       <h1 class="text-2xl font-semibold flex-1">Breeding</h1>
-      <UButton v-if="isOwner" to="/breeding/adoptions" color="neutral" variant="ghost" icon="i-lucide-heart-handshake">Adoptions</UButton>
+      <UButton v-if="isOwner" to="/breeding/adoptions" color="neutral" variant="ghost" icon="i-lucide-heart-handshake"
+        >Adoptions</UButton
+      >
       <UButton variant="soft" icon="i-lucide-flame" @click="heatOpen = true">Log heat</UButton>
       <UButton variant="soft" icon="i-lucide-heart" @click="breedingOpen = true">Record breeding</UButton>
       <UButton icon="i-lucide-baby" to="/breeding/kidding">Record kidding</UButton>
@@ -96,19 +100,33 @@ const breedingOpen = ref(false)
         <p v-if="!dueSoon.length" class="p-4 text-muted">Nobody is due in the next {{ DUE_WITHIN_DAYS }} days.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="{ goat, state, dryOffNow } in dueSoon" :key="goat.id">
-            <RouterLink :to="`/goats/${goat.slug}`" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-elevated/50">
+            <RouterLink
+              :to="`/goats/${goat.slug}`"
+              class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-elevated/50"
+            >
               <span class="font-medium min-w-24">{{ name(goat) }}</span>
               <UBadge :color="STATUS_COLOR[state.current.status]" variant="subtle" size="sm">
                 {{ STATUS_LABELS[state.current.status] }}
               </UBadge>
               <span class="text-sm text-muted flex-1 min-w-40">
-                to {{ state.current.breeding.buck_id && byId.get(state.current.breeding.buck_id) ? goatFullName(byId.get(state.current.breeding.buck_id)!) : 'unknown buck' }}
+                to
+                {{
+                  state.current.breeding.buck_id && byId.get(state.current.breeding.buck_id)
+                    ? goatFullName(byId.get(state.current.breeding.buck_id)!)
+                    : 'unknown buck'
+                }}
               </span>
               <span class="text-end">
                 <span class="block font-medium">{{ formatDate(state.current.due.expected) }}</span>
                 <span class="block text-xs text-muted">{{ relativeDays(state.current.daysToDue) }}</span>
               </span>
-              <UBadge v-if="dryOffNow" color="warning" variant="subtle" icon="i-lucide-moon" class="basis-full sm:basis-auto w-fit">
+              <UBadge
+                v-if="dryOffNow"
+                color="warning"
+                variant="subtle"
+                icon="i-lucide-moon"
+                class="basis-full sm:basis-auto w-fit"
+              >
                 Dry off now (by {{ formatDate(state.current.dryOffBy) }})
               </UBadge>
             </RouterLink>
@@ -127,10 +145,14 @@ const breedingOpen = ref(false)
             <li v-for="{ goat, state } in heatWatch" :key="goat.id">
               <RouterLink :to="`/goats/${goat.slug}`" class="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50">
                 <span class="font-medium flex-1">{{ name(goat) }}</span>
-                <span class="text-sm text-muted">{{ state.nextHeat!.reason === 'return' ? 'Did she settle?' : 'Cycle' }}</span>
+                <span class="text-sm text-muted">{{
+                  state.nextHeat!.reason === 'return' ? 'Did she settle?' : 'Cycle'
+                }}</span>
                 <span class="text-end">
                   <span class="block">{{ formatDate(state.nextHeat!.date) }}</span>
-                  <span class="block text-xs text-muted">{{ relativeDays(daysBetween(today, state.nextHeat!.date)) }}</span>
+                  <span class="block text-xs text-muted">{{
+                    relativeDays(daysBetween(today, state.nextHeat!.date))
+                  }}</span>
                 </span>
               </RouterLink>
             </li>
@@ -162,7 +184,9 @@ const breedingOpen = ref(false)
         <ul v-else class="divide-y divide-default">
           <li v-for="{ kidding, doe, kids } in recentKiddings" :key="kidding.id" class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <RouterLink v-if="doe" :to="`/goats/${doe.slug}`" class="font-medium hover:underline">{{ name(doe) }}</RouterLink>
+              <RouterLink v-if="doe" :to="`/goats/${doe.slug}`" class="font-medium hover:underline">{{
+                name(doe)
+              }}</RouterLink>
               <span class="text-sm text-muted flex-1">{{ formatDate(kidding.kidded_on) }}</span>
               <span class="text-sm">{{ kids.length }} {{ kids.length === 1 ? 'kid' : 'kids' }}</span>
             </div>
@@ -170,7 +194,9 @@ const breedingOpen = ref(false)
               <li v-for="kid in kids" :key="kid.id">
                 <UBadge :color="kid.outcome === 'alive' ? 'neutral' : 'error'" variant="outline" size="sm">
                   <RouterLink v-if="kid.goat_id" :to="pathOf(kid.goat_id)" class="hover:underline">
-                    {{ byId.get(kid.goat_id) ? name(byId.get(kid.goat_id)!) : kid.sex === 'doe' ? 'Doeling' : 'Buckling' }}
+                    {{
+                      byId.get(kid.goat_id) ? name(byId.get(kid.goat_id)!) : kid.sex === 'doe' ? 'Doeling' : 'Buckling'
+                    }}
                   </RouterLink>
                   <template v-else>{{ kid.sex === 'doe' ? 'Doeling' : 'Buckling' }}</template>
                   <template v-if="kid.birth_weight_g"> · {{ formatWeight(kid.birth_weight_g, unit, true) }}</template>

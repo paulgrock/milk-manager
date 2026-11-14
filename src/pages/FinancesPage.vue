@@ -76,13 +76,23 @@ function downloadCsv() {
       <h1 class="text-2xl font-semibold flex-1">Finances</h1>
       <template v-if="isOwner">
         <USelect v-model="year" :items="years" class="w-28" aria-label="Year" />
-        <UButton variant="soft" icon="i-lucide-download" :disabled="!yearEntries.length" @click="downloadCsv">CSV</UButton>
-        <UButton variant="soft" icon="i-lucide-plus" @click="modal = { open: true, draft: { kind: 'income' } }">Income</UButton>
+        <UButton variant="soft" icon="i-lucide-download" :disabled="!yearEntries.length" @click="downloadCsv"
+          >CSV</UButton
+        >
+        <UButton variant="soft" icon="i-lucide-plus" @click="modal = { open: true, draft: { kind: 'income' } }"
+          >Income</UButton
+        >
         <UButton icon="i-lucide-plus" @click="modal = { open: true, draft: { kind: 'expense' } }">Expense</UButton>
       </template>
     </div>
 
-    <UAlert v-if="!isOwner" color="neutral" variant="subtle" icon="i-lucide-lock" title="Only owners can see finances." />
+    <UAlert
+      v-if="!isOwner"
+      color="neutral"
+      variant="subtle"
+      icon="i-lucide-lock"
+      title="Only owners can see finances."
+    />
 
     <template v-else-if="query.isPending.value">
       <USkeleton class="h-24 w-full" />
@@ -116,7 +126,9 @@ function downloadCsv() {
         <template #description>
           <ul class="mt-2 space-y-1">
             <li v-for="b in unrecordedFees" :key="b.id" class="flex flex-wrap items-center gap-2">
-              <span class="flex-1">{{ formatDate(b.bred_on) }} · {{ goatLabel(b.doe_id) }} · {{ formatMoney(b.service_fee_cents!) }}</span>
+              <span class="flex-1"
+                >{{ formatDate(b.bred_on) }} · {{ goatLabel(b.doe_id) }} · {{ formatMoney(b.service_fee_cents!) }}</span
+              >
               <UButton size="xs" variant="soft" @click="recordFee(b)">Add as expense</UButton>
             </li>
           </ul>
@@ -130,13 +142,18 @@ function downloadCsv() {
           <ul v-else class="space-y-2">
             <li v-for="c in summary.byCategory" :key="`${c.kind}-${c.category}`" class="text-sm">
               <div class="flex justify-between gap-2">
-                <span>{{ categoryLabel(c.kind, c.category) }} <span class="text-xs text-muted">{{ c.kind }}</span></span>
+                <span
+                  >{{ categoryLabel(c.kind, c.category) }} <span class="text-xs text-muted">{{ c.kind }}</span></span
+                >
                 <span class="tabular-nums">{{ formatMoney(c.cents) }}</span>
               </div>
               <div class="h-1.5 rounded-full bg-elevated overflow-hidden mt-1" aria-hidden="true">
                 <div
                   class="h-full rounded-full"
-                  :style="{ width: `${(c.cents / maxCategory) * 100}%`, background: c.kind === 'income' ? theme.series[0] : theme.series[1] }"
+                  :style="{
+                    width: `${(c.cents / maxCategory) * 100}%`,
+                    background: c.kind === 'income' ? theme.series[0] : theme.series[1],
+                  }"
                 />
               </div>
             </li>
@@ -174,7 +191,11 @@ function downloadCsv() {
         <p v-if="!yearEntries.length" class="p-4 text-muted">No income or expenses in {{ year }} yet.</p>
         <ul v-else class="divide-y divide-default">
           <li v-for="e in yearEntries" :key="e.id">
-            <button type="button" class="w-full flex items-center gap-3 px-4 py-2 text-start text-sm hover:bg-elevated/50" @click="modal = { open: true, entry: e }">
+            <button
+              type="button"
+              class="w-full flex items-center gap-3 px-4 py-2 text-start text-sm hover:bg-elevated/50"
+              @click="modal = { open: true, entry: e }"
+            >
               <span class="w-24 shrink-0 text-muted">{{ formatDate(e.occurred_on) }}</span>
               <span class="flex-1 min-w-0">
                 <span class="block truncate">{{ e.description || categoryLabel(e.kind, e.category) }}</span>

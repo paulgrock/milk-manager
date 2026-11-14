@@ -59,7 +59,9 @@ const kindOptions = [
   { label: 'Expense', value: 'expense' },
   { label: 'Income', value: 'income' },
 ]
-const categoryOptions = computed(() => Object.entries(CATEGORIES[form.kind]).map(([value, label]) => ({ label, value })))
+const categoryOptions = computed(() =>
+  Object.entries(CATEGORIES[form.kind]).map(([value, label]) => ({ label, value })),
+)
 watch(
   () => form.kind,
   (kind) => {
@@ -69,7 +71,8 @@ watch(
 
 async function submit() {
   const cents = parseMoney(form.amount)
-  if (cents === null || cents === 'invalid') return toast.add({ color: 'error', title: 'Amount should be like 75 or 1,200.50' })
+  if (cents === null || cents === 'invalid')
+    return toast.add({ color: 'error', title: 'Amount should be like 75 or 1,200.50' })
   try {
     await save.mutateAsync({
       id: props.entry?.id,
@@ -111,36 +114,41 @@ async function onDelete() {
       />
       <form id="entry-form" class="space-y-3" @submit.prevent="submit">
         <fieldset :disabled="fromSales" class="space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <UFormField label="Type">
-            <USelect v-model="form.kind" :items="kindOptions" class="w-full" />
+          <div class="grid grid-cols-2 gap-3">
+            <UFormField label="Type">
+              <USelect v-model="form.kind" :items="kindOptions" class="w-full" />
+            </UFormField>
+            <UFormField label="Category">
+              <USelect v-model="form.category" :items="categoryOptions" class="w-full" />
+            </UFormField>
+            <UFormField label="Date" required>
+              <UInput v-model="form.occurred_on" type="date" required class="w-full" />
+            </UFormField>
+            <UFormField label="Amount" required>
+              <UInput v-model="form.amount" inputmode="decimal" placeholder="0.00" required class="w-full">
+                <template #leading><span class="text-muted">$</span></template>
+              </UInput>
+            </UFormField>
+          </div>
+          <UFormField label="What for">
+            <UInput
+              v-model="form.description"
+              maxlength="200"
+              placeholder="50 lb alfalfa pellets, doeling to the Smiths…"
+              class="w-full"
+            />
           </UFormField>
-          <UFormField label="Category">
-            <USelect v-model="form.category" :items="categoryOptions" class="w-full" />
+          <div class="grid grid-cols-2 gap-3">
+            <UFormField :label="form.kind === 'income' ? 'From' : 'Paid to'">
+              <UInput v-model="form.party" maxlength="100" class="w-full" />
+            </UFormField>
+            <UFormField label="Goat" hint="Optional">
+              <HerdGoatPicker v-model="form.goat_id" sex="any" include-former />
+            </UFormField>
+          </div>
+          <UFormField label="Notes">
+            <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
           </UFormField>
-          <UFormField label="Date" required>
-            <UInput v-model="form.occurred_on" type="date" required class="w-full" />
-          </UFormField>
-          <UFormField label="Amount" required>
-            <UInput v-model="form.amount" inputmode="decimal" placeholder="0.00" required class="w-full">
-              <template #leading><span class="text-muted">$</span></template>
-            </UInput>
-          </UFormField>
-        </div>
-        <UFormField label="What for">
-          <UInput v-model="form.description" maxlength="200" placeholder="50 lb alfalfa pellets, doeling to the Smiths…" class="w-full" />
-        </UFormField>
-        <div class="grid grid-cols-2 gap-3">
-          <UFormField :label="form.kind === 'income' ? 'From' : 'Paid to'">
-            <UInput v-model="form.party" maxlength="100" class="w-full" />
-          </UFormField>
-          <UFormField label="Goat" hint="Optional">
-            <HerdGoatPicker v-model="form.goat_id" sex="any" include-former />
-          </UFormField>
-        </div>
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-        </UFormField>
         </fieldset>
       </form>
     </template>

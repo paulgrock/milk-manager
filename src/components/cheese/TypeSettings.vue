@@ -37,7 +37,13 @@ function update(values: Partial<Pick<CheeseType, 'name' | 'aging_days' | 'hidden
         @update:model-value="(v: unknown) => update({ aging_days: Number(v) || 0 })"
       />
       <span class="text-sm text-muted">days</span>
-      <UButton size="xs" color="neutral" variant="ghost" class="w-16 justify-center" @click="update({ hidden: !type.hidden })">
+      <UButton
+        size="xs"
+        color="neutral"
+        variant="ghost"
+        class="w-16 justify-center"
+        @click="update({ hidden: !type.hidden })"
+      >
         {{ type.hidden ? 'Restore' : 'Hide' }}
       </UButton>
     </div>

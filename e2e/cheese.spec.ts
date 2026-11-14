@@ -55,11 +55,21 @@ test('a make gets its ready date from the cheese, and shows under its cheese', a
   ])
 })
 
-test('the main page keeps to cheese coming ready this week; a cheese’s page lists all its makes', async ({ page, herd }) => {
+test('the main page keeps to cheese coming ready this week; a cheese’s page lists all its makes', async ({
+  page,
+  herd,
+}) => {
   const feta = await typeId(herd.id, 'Feta')
   await admin.from('cheese_makes').insert([
     // Ready in 3 days: on the main page.
-    { herd_id: herd.id, cheese_type_id: feta, made_on: isoDate(-57), ready_on: isoDate(3), milk_gallons: 3, notes: 'Brined in the crock' },
+    {
+      herd_id: herd.id,
+      cheese_type_id: feta,
+      made_on: isoDate(-57),
+      ready_on: isoDate(3),
+      milk_gallons: 3,
+      notes: 'Brined in the crock',
+    },
     // Made two days ago but not ready for two months: only on Feta's page.
     { herd_id: herd.id, cheese_type_id: feta, made_on: isoDate(-2), ready_on: isoDate(58), milk_gallons: 2 },
     // Ready a month ago and still on hand: only on Feta's page.
@@ -105,7 +115,12 @@ test('a new make from a cheese’s page starts with that cheese', async ({ page,
 })
 
 test('fresh cheese shows only as its cheese on the main page, and has no ready reminder', async ({ page, herd }) => {
-  await admin.from('cheese_makes').insert({ herd_id: herd.id, cheese_type_id: await typeId(herd.id, 'Chèvre'), made_on: isoDate(-1), ready_on: isoDate(-1) })
+  await admin.from('cheese_makes').insert({
+    herd_id: herd.id,
+    cheese_type_id: await typeId(herd.id, 'Chèvre'),
+    made_on: isoDate(-1),
+    ready_on: isoDate(-1),
+  })
   await page.goto('/cheese')
   await expect(page.getByRole('link', { name: /Chèvre\s*1 make/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Made / })).toHaveCount(0)
@@ -133,14 +148,24 @@ test('a cheese not in the list can be added from the dropdown', async ({ page, h
   await expect(dialog).toBeHidden()
 
   await expect(page.getByText('Gouda').first()).toBeVisible()
-  const { data } = await admin.from('cheese_types').select('aging_days').eq('herd_id', herd.id).eq('name', 'Gouda').single()
+  const { data } = await admin
+    .from('cheese_types')
+    .select('aging_days')
+    .eq('herd_id', herd.id)
+    .eq('name', 'Gouda')
+    .single()
   expect(data?.aging_days).toBe(21)
 })
 
 test('a make coming ready can be marked finished, and leaves the main page', async ({ page, herd }) => {
   const { data } = await admin
     .from('cheese_makes')
-    .insert({ herd_id: herd.id, cheese_type_id: await typeId(herd.id, 'Feta'), made_on: isoDate(-58), ready_on: isoDate(2) })
+    .insert({
+      herd_id: herd.id,
+      cheese_type_id: await typeId(herd.id, 'Feta'),
+      made_on: isoDate(-58),
+      ready_on: isoDate(2),
+    })
     .select('id')
     .single()
   await page.goto('/cheese')
@@ -169,11 +194,24 @@ test('helpers can add a cheese but only owners rename, re-time or hide one', asy
   await page.goto('/cheese')
   await page.getByRole('spinbutton', { name: 'Feta aging days' }).fill('45')
   await page.getByRole('spinbutton', { name: 'Feta aging days' }).blur()
-  await expect.poll(async () => (await admin.from('cheese_types').select('aging_days').eq('id', await typeId(herd.id, 'Feta')).single()).data?.aging_days).toBe(45)
+  await expect
+    .poll(
+      async () =>
+        (
+          await admin
+            .from('cheese_types')
+            .select('aging_days')
+            .eq('id', await typeId(herd.id, 'Feta'))
+            .single()
+        ).data?.aging_days,
+    )
+    .toBe(45)
 
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const helperPage = await ctx.newPage()
@@ -207,11 +245,16 @@ test('the cheese list is alphabetical, including newly added ones', async ({ pag
   await page.getByPlaceholder('Gouda, ricotta…').fill('brie')
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(page.getByRole('textbox', { name: 'brie name' })).toBeVisible()
-  const names = await page.getByRole('textbox', { name: / name$/ }).evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+  const names = await page
+    .getByRole('textbox', { name: / name$/ })
+    .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
   expect(names).toEqual(['brie', 'Cheddar', 'Chèvre', 'Feta', 'Mozzarella', 'Tomme', 'Valençay'])
 })
 
-test('cheese coming ready shows on the calendar and Today; cheese sales are a finance category', async ({ page, herd }) => {
+test('cheese coming ready shows on the calendar and Today; cheese sales are a finance category', async ({
+  page,
+  herd,
+}) => {
   await admin.from('cheese_makes').insert({
     herd_id: herd.id,
     cheese_type_id: await typeId(herd.id, 'Valençay'),

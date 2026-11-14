@@ -10,7 +10,14 @@ function picture(width: number, height: number, solid: [number, number][]) {
 
 describe('visibleBox', () => {
   it('finds the drawing inside see-through margins', () => {
-    expect(visibleBox(picture(10, 8, [[2, 3], [6, 5]]))).toEqual({ x: 2, y: 3, w: 5, h: 3 })
+    expect(
+      visibleBox(
+        picture(10, 8, [
+          [2, 3],
+          [6, 5],
+        ]),
+      ),
+    ).toEqual({ x: 2, y: 3, w: 5, h: 3 })
   })
   it('ignores nearly see-through edge pixels', () => {
     const p = picture(4, 4, [[1, 1]])

@@ -73,7 +73,12 @@ export const STATUS_ICONS: Record<MakeStatus, string> = {
   finished: 'i-lucide-archive',
 }
 
-export const STATUS_LABELS: Record<MakeStatus, string> = { fresh: 'Fresh', aging: 'Aging', ready: 'Ready', finished: 'Finished' }
+export const STATUS_LABELS: Record<MakeStatus, string> = {
+  fresh: 'Fresh',
+  aging: 'Aging',
+  ready: 'Ready',
+  finished: 'Finished',
+}
 
 export interface MonthTotal {
   /** 'YYYY-MM' */
@@ -103,6 +108,7 @@ export function parseGallons(text: string): { ok: true; value: number | null } |
   const t = text.trim().replace(',', '.')
   if (!t) return { ok: true, value: null }
   const value = Number(t)
-  if (!/^\d*\.?\d+$/.test(t) || !(value > 0) || value > 1000) return { ok: false, message: 'Gallons must be a number above 0' }
+  if (!/^\d*\.?\d+$/.test(t) || !(value > 0) || value > 1000)
+    return { ok: false, message: 'Gallons must be a number above 0' }
   return { ok: true, value: Math.round(value * 100) / 100 }
 }

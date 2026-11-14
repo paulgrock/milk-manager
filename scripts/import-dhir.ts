@@ -57,7 +57,8 @@ const target = scriptTarget()
 const db = adminClient(target)
 
 const GRAMS_PER_LB = 453.59237
-const lbToG = (lb: number | null | undefined) => (lb === null || lb === undefined ? null : Math.round(lb * GRAMS_PER_LB))
+const lbToG = (lb: number | null | undefined) =>
+  lb === null || lb === undefined ? null : Math.round(lb * GRAMS_PER_LB)
 const addDays = (iso: string, days: number) => {
   const [y, m, d] = iso.split('-').map(Number)
   const date = new Date(Date.UTC(y!, m! - 1, d! + days))
@@ -79,22 +80,39 @@ const byReg = new Map(goats.filter((g) => g.registration_number).map((g) => [g.r
 
 const missing = report.does.filter((d) => !byReg.get(d.registration.toUpperCase()))
 if (missing.length) {
-  console.error(`Not in this herd (by registration number): ${missing.map((d) => `${d.barn ?? ''} ${d.registration}`).join(', ')}`)
+  console.error(
+    `Not in this herd (by registration number): ${missing.map((d) => `${d.barn ?? ''} ${d.registration}`).join(', ')}`,
+  )
   process.exit(1)
 }
 
 // --- Report ------------------------------------------------------------------------------
 
 const testDates = [...new Set(report.does.flatMap((d) => d.tests.map((t) => t[0])))].sort()
-console.log(`\n${report.does.length} does, ${testDates.length} test days (${testDates[0]} – ${testDates.at(-1)}), lab: ${report.lab ?? '—'}\n`)
+console.log(
+  `\n${report.does.length} does, ${testDates.length} test days (${testDates[0]} – ${testDates.at(-1)}), lab: ${report.lab ?? '—'}\n`,
+)
 for (const d of report.does) {
   const g = byReg.get(d.registration.toUpperCase())!
   console.log(`${g.barn_name ?? g.registered_name} (${d.registration})`)
   for (const l of d.lactations) {
     const dry = l.milkDays !== undefined ? addDays(l.kidded, l.milkDays) : null
-    console.log(`  Lactation ${l.number}: kidded ${l.kidded}, ${dry ? `dried off ${dry} (${l.milkDays} days)` : 'in milk'}`)
+    console.log(
+      `  Lactation ${l.number}: kidded ${l.kidded}, ${dry ? `dried off ${dry} (${l.milkDays} days)` : 'in milk'}`,
+    )
   }
-  for (const [date, milk, fat, protein, scc, dim, ltd, , , proj] of d.tests as [string, number, number, number, number | null, number?, number?, number?, number?, number?][]) {
+  for (const [date, milk, fat, protein, scc, dim, ltd, , , proj] of d.tests as [
+    string,
+    number,
+    number,
+    number,
+    number | null,
+    number?,
+    number?,
+    number?,
+    number?,
+    number?,
+  ][]) {
     console.log(
       `  Test ${date}: ${milk ?? '—'} lb, fat ${fat ?? '—'}%, protein ${protein ?? '—'}%, SCC ${scc === null ? '—' : (scc * sccFactor).toLocaleString()}` +
         (ltd !== undefined ? `  | day ${dim}, to date ${ltd} lb, projected 305 ${proj ?? '—'} lb` : ''),
@@ -124,11 +142,20 @@ for (const d of report.does) {
       official_305_fat_g: lbToG(l.record305?.fat),
       official_305_protein_g: lbToG(l.record305?.protein),
     }
-    const { data: existing } = await db.from('lactations').select('id').eq('goat_id', goat.id).eq('freshened_on', l.kidded)
+    const { data: existing } = await db
+      .from('lactations')
+      .select('id')
+      .eq('goat_id', goat.id)
+      .eq('freshened_on', l.kidded)
     if (!existing?.length) {
-      const { error } = await db
-        .from('lactations')
-        .insert({ herd_id: herdId, goat_id: goat.id, lactation_number: l.number, freshened_on: l.kidded, dried_off_on: dried, ...official })
+      const { error } = await db.from('lactations').insert({
+        herd_id: herdId,
+        goat_id: goat.id,
+        lactation_number: l.number,
+        freshened_on: l.kidded,
+        dried_off_on: dried,
+        ...official,
+      })
       if (error) throw new Error(`${goat.barn_name} lactation ${l.number}: ${error.message}`)
       lactations += 1
     } else if (l.record) {
@@ -137,9 +164,12 @@ for (const d of report.does) {
     }
     const { data: kidding } = await db.from('kiddings').select('id').eq('doe_id', goat.id).eq('kidded_on', l.kidded)
     if (!kidding?.length) {
-      const { error } = await db
-        .from('kiddings')
-        .insert({ herd_id: herdId, doe_id: goat.id, kidded_on: l.kidded, notes: `From ${report.lab ?? 'DHI'} report (lactation ${l.number})` })
+      const { error } = await db.from('kiddings').insert({
+        herd_id: herdId,
+        doe_id: goat.id,
+        kidded_on: l.kidded,
+        notes: `From ${report.lab ?? 'DHI'} report (lactation ${l.number})`,
+      })
       if (error) throw new Error(`${goat.barn_name} kidding ${l.kidded}: ${error.message}`)
       kiddings += 1
     }
@@ -150,7 +180,12 @@ for (const d of report.does) {
 const testIds = new Map<string, string>()
 let testsCreated = 0
 for (const date of testDates) {
-  const { data: found } = await db.from('milk_tests').select('id').eq('herd_id', herdId).eq('tested_on', date).eq('kind', kind)
+  const { data: found } = await db
+    .from('milk_tests')
+    .select('id')
+    .eq('herd_id', herdId)
+    .eq('tested_on', date)
+    .eq('kind', kind)
   if (found?.length) {
     testIds.set(date, found[0]!.id)
     continue
@@ -165,30 +200,50 @@ for (const date of testDates) {
   testsCreated += 1
 }
 
-type Row = [string, number | null, number | null, number | null, number | null, number?, number?, number?, number?, number?, number?, number?]
+type Row = [
+  string,
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+  number?,
+  number?,
+  number?,
+  number?,
+  number?,
+  number?,
+  number?,
+]
 const rows = report.does.flatMap((d) =>
-  (d.tests as Row[]).map(([date, milk, fat, protein, scc, dim, ltdMilk, ltdFat, ltdProtein, projMilk, projFat, projProtein]) => ({
-    herd_id: herdId,
-    test_id: testIds.get(date)!,
-    goat_id: byReg.get(d.registration.toUpperCase())!.id,
-    milk_g: lbToG(milk),
-    butterfat_pct: fat,
-    protein_pct: protein,
-    scc: scc === null ? null : Math.round(scc * sccFactor),
-    dim: dim ?? null,
-    ltd_milk_g: lbToG(ltdMilk),
-    ltd_fat_g: lbToG(ltdFat),
-    ltd_protein_g: lbToG(ltdProtein),
-    proj305_milk_g: lbToG(projMilk),
-    proj305_fat_g: lbToG(projFat),
-    proj305_protein_g: lbToG(projProtein),
-  })),
+  (d.tests as Row[]).map(
+    ([date, milk, fat, protein, scc, dim, ltdMilk, ltdFat, ltdProtein, projMilk, projFat, projProtein]) => ({
+      herd_id: herdId,
+      test_id: testIds.get(date)!,
+      goat_id: byReg.get(d.registration.toUpperCase())!.id,
+      milk_g: lbToG(milk),
+      butterfat_pct: fat,
+      protein_pct: protein,
+      scc: scc === null ? null : Math.round(scc * sccFactor),
+      dim: dim ?? null,
+      ltd_milk_g: lbToG(ltdMilk),
+      ltd_fat_g: lbToG(ltdFat),
+      ltd_protein_g: lbToG(ltdProtein),
+      proj305_milk_g: lbToG(projMilk),
+      proj305_fat_g: lbToG(projFat),
+      proj305_protein_g: lbToG(projProtein),
+    }),
+  ),
 )
-const { data: before } = await db.from('milk_test_results').select('test_id, goat_id').in('test_id', [...testIds.values()])
+const { data: before } = await db
+  .from('milk_test_results')
+  .select('test_id, goat_id')
+  .in('test_id', [...testIds.values()])
 const known = new Set((before ?? []).map((r) => `${r.test_id}|${r.goat_id}`))
 // Upsert: new results are added, existing ones get the report's figures.
 const { error: resultsError } = await db.from('milk_test_results').upsert(rows, { onConflict: 'test_id,goat_id' })
 if (resultsError) throw resultsError
 const inserted = rows.filter((r) => !known.has(`${r.test_id}|${r.goat_id}`))
 
-console.log(`\nImported: ${lactations} lactations, ${kiddings} kiddings, ${testsCreated} test days, ${inserted.length} results.`)
+console.log(
+  `\nImported: ${lactations} lactations, ${kiddings} kiddings, ${testsCreated} test days, ${inserted.length} results.`,
+)

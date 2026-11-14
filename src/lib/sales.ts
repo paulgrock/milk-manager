@@ -12,8 +12,18 @@ export type Sale = Tables['sales']['Row']
 export type Wants = 'doeling' | 'buckling' | 'wether' | 'any'
 export type DepositStatus = 'held' | 'applied' | 'refunded' | 'kept'
 
-export const WANTS_LABELS: Record<Wants, string> = { doeling: 'Doeling', buckling: 'Buckling', wether: 'Wether', any: 'Either' }
-export const DEPOSIT_LABELS: Record<DepositStatus, string> = { held: 'held', applied: 'used on an adoption', refunded: 'refunded', kept: 'kept' }
+export const WANTS_LABELS: Record<Wants, string> = {
+  doeling: 'Doeling',
+  buckling: 'Buckling',
+  wether: 'Wether',
+  any: 'Either',
+}
+export const DEPOSIT_LABELS: Record<DepositStatus, string> = {
+  held: 'held',
+  applied: 'used on an adoption',
+  refunded: 'refunded',
+  kept: 'kept',
+}
 
 /** A wether is a buckling, wethered. */
 export function kidFits(kid: Pick<Kid, 'sex'>, wants: string): boolean {
@@ -42,8 +52,12 @@ export interface SeasonKid {
 /** Live kids born in a season, named by their goat record or as "Clover's doeling 2 (Feb 20, 2027)". */
 export function seasonKids(kiddings: Kidding[], kids: Kid[], goats: Map<string, Goat>, season: number): SeasonKid[] {
   const out: SeasonKid[] = []
-  for (const kidding of kiddings.filter((k) => k.kidded_on.startsWith(`${season}-`)).sort((a, b) => a.kidded_on.localeCompare(b.kidded_on))) {
-    const litter = kids.filter((k) => k.kidding_id === kidding.id && k.outcome === 'alive').sort((a, b) => a.id.localeCompare(b.id))
+  for (const kidding of kiddings
+    .filter((k) => k.kidded_on.startsWith(`${season}-`))
+    .sort((a, b) => a.kidded_on.localeCompare(b.kidded_on))) {
+    const litter = kids
+      .filter((k) => k.kidding_id === kidding.id && k.outcome === 'alive')
+      .sort((a, b) => a.id.localeCompare(b.id))
     const dam = goats.get(kidding.doe_id)
     const damName = dam ? dam.barn_name || goatName(dam) : 'Unknown doe'
     for (const kid of litter) {
@@ -51,7 +65,11 @@ export function seasonKids(kiddings: Kidding[], kids: Kid[], goats: Map<string, 
       const sex = kid.sex === 'doe' ? 'doeling' : 'buckling'
       const sameSex = litter.filter((k) => k.sex === kid.sex)
       const n = sameSex.length > 1 ? ` ${sameSex.indexOf(kid) + 1}` : ''
-      out.push({ kid, kidding, label: own ? own.barn_name || goatName(own) : `${damName}'s ${sex}${n} (${formatDate(kidding.kidded_on)})` })
+      out.push({
+        kid,
+        kidding,
+        label: own ? own.barn_name || goatName(own) : `${damName}'s ${sex}${n} (${formatDate(kidding.kidded_on)})`,
+      })
     }
   }
   return out
@@ -65,5 +83,9 @@ export function inLine(reservations: Reservation[]): Reservation[] {
 /** A reservation is filled once it has as many kids sold as it asked for. */
 export function reservationProgress(r: Reservation, sales: Sale[]) {
   const mine = sales.filter((s) => s.reservation_id === r.id)
-  return { matched: mine.length, sold: mine.filter((s) => s.sold_on).length, open: Math.max(0, r.kid_count - mine.length) }
+  return {
+    matched: mine.length,
+    sold: mine.filter((s) => s.sold_on).length,
+    open: Math.max(0, r.kid_count - mine.length),
+  }
 }

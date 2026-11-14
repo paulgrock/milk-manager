@@ -34,7 +34,14 @@ function markFinished() {
   saveMake.mutate(
     {
       id: m.id,
-      values: { cheese_type_id: m.cheese_type_id, made_on: m.made_on, ready_on: m.ready_on, milk_gallons: m.milk_gallons, notes: m.notes, finished_on: today },
+      values: {
+        cheese_type_id: m.cheese_type_id,
+        made_on: m.made_on,
+        ready_on: m.ready_on,
+        milk_gallons: m.milk_gallons,
+        notes: m.notes,
+        finished_on: today,
+      },
     },
     { onError: (e) => toast.add({ color: 'error', title: 'Could not save', description: e.message }) },
   )
@@ -48,11 +55,23 @@ function markFinished() {
       <USkeleton class="h-48 w-full" />
     </div>
 
-    <UAlert v-else-if="!make" color="error" variant="subtle" title="Make not found" :actions="[{ label: 'Back to cheese', to: '/cheese' }]" />
+    <UAlert
+      v-else-if="!make"
+      color="error"
+      variant="subtle"
+      title="Make not found"
+      :actions="[{ label: 'Back to cheese', to: '/cheese' }]"
+    />
 
     <div v-else class="space-y-4">
       <div class="flex flex-wrap items-center gap-2">
-        <UButton :to="backTo" color="neutral" variant="ghost" icon="i-lucide-arrow-left" :aria-label="`Back to ${type?.name ?? 'cheese'}`" />
+        <UButton
+          :to="backTo"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-arrow-left"
+          :aria-label="`Back to ${type?.name ?? 'cheese'}`"
+        />
         <div class="flex-1">
           <h1 class="text-2xl font-semibold">{{ type?.name ?? 'Cheese' }}</h1>
           <p class="text-sm text-muted">Made {{ formatDate(make.made_on) }}</p>
@@ -69,7 +88,14 @@ function markFinished() {
           >
             {{ readyLabel(make, today) }}
           </UBadge>
-          <UButton v-if="status !== 'finished'" size="xs" variant="soft" class="ms-auto" :loading="saveMake.isPending.value" @click="markFinished">
+          <UButton
+            v-if="status !== 'finished'"
+            size="xs"
+            variant="soft"
+            class="ms-auto"
+            :loading="saveMake.isPending.value"
+            @click="markFinished"
+          >
             Mark finished
           </UButton>
         </div>
@@ -81,7 +107,10 @@ function markFinished() {
           <dt class="text-muted">Milk used</dt>
           <dd>
             <template v-if="milkLabel(make)">
-              {{ milkLabel(make) }} <span v-if="make.milk_gallons != null" class="text-muted">≈ {{ Math.round(Number(make.milk_gallons) * LB_PER_GALLON) }} lb</span>
+              {{ milkLabel(make) }}
+              <span v-if="make.milk_gallons != null" class="text-muted"
+                >≈ {{ Math.round(Number(make.milk_gallons) * LB_PER_GALLON) }} lb</span
+              >
             </template>
             <span v-else class="text-muted">Not recorded</span>
           </dd>

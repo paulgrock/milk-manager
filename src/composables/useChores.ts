@@ -2,7 +2,14 @@ import { computed } from 'vue'
 import { useMutation, useMutationState, useQuery } from '@tanstack/vue-query'
 import { refreshQueries } from '@/lib/queryClient'
 import { fetchAll, supabase, unwrap } from '@/lib/supabase'
-import { DELETE_DONE, MARK_DONE, choresKey, type ChoresData, type DeleteDoneVars, type MarkDoneVars } from '@/lib/choresSync'
+import {
+  DELETE_DONE,
+  MARK_DONE,
+  choresKey,
+  type ChoresData,
+  type DeleteDoneVars,
+  type MarkDoneVars,
+} from '@/lib/choresSync'
 import type { Chore, ChoreDone } from '@/lib/chores'
 import type { Database } from '@/lib/database.types'
 import { useHerd } from './useHerd'
@@ -18,8 +25,12 @@ export function useChoresData() {
     queryKey: computed(() => choresKey(herdId.value)),
     queryFn: async (): Promise<ChoresData> => {
       const [chores, done] = await Promise.all([
-        fetchAll<Chore>((from, to) => supabase.from('chores').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
-        fetchAll<ChoreDone>((from, to) => supabase.from('chores_done').select('*').eq('herd_id', herdId.value).order('id').range(from, to)),
+        fetchAll<Chore>((from, to) =>
+          supabase.from('chores').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
+        fetchAll<ChoreDone>((from, to) =>
+          supabase.from('chores_done').select('*').eq('herd_id', herdId.value).order('id').range(from, to),
+        ),
       ])
       chores.sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
       return { chores, done }
@@ -41,7 +52,10 @@ export function useChoreLog() {
   })
 
   /** Resolves with the new record's id once it's on the device, before it reaches the server. */
-  function markDone(input: { choreId: string; doneOn: string; notes?: string }): { id: string; saved: Promise<unknown> } {
+  function markDone(input: { choreId: string; doneOn: string; notes?: string }): {
+    id: string
+    saved: Promise<unknown>
+  } {
     const done: ChoreDone = {
       id: crypto.randomUUID(),
       herd_id: herdId.value,

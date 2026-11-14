@@ -69,9 +69,7 @@ queryClient.setMutationDefaults<unknown, Error, ClearVars>(CLEAR_MILKING, {
   retry,
   retryDelay,
   mutationFn: async (v: ClearVars) =>
-    unwrap(
-      await supabase.rpc('clear_milking', { p_goat_id: v.goatId, p_milked_on: v.milkedOn, p_milking: v.milking }),
-    ),
+    unwrap(await supabase.rpc('clear_milking', { p_goat_id: v.goatId, p_milked_on: v.milkedOn, p_milking: v.milking })),
   onMutate: async (v: ClearVars) => {
     await queryClient.cancelQueries({ queryKey: milkKeys.day(v.herdId, v.milkedOn) })
     setGoatDay(v.herdId, v.milkedOn, v.goatId, (rows) => rows.filter((r) => r.milking !== v.milking))

@@ -79,7 +79,17 @@ const csvCell = (value: string | number | null | undefined) => {
 
 /** One row per entry, for a spreadsheet or the tax preparer. Expenses are negative in the signed column. */
 export function toCsv(entries: FinanceEntry[], goatName: (id: string) => string | undefined): string {
-  const header = ['Date', 'Type', 'Category', 'Amount', 'Signed amount', 'Description', 'Paid to / from', 'Goat', 'Notes']
+  const header = [
+    'Date',
+    'Type',
+    'Category',
+    'Amount',
+    'Signed amount',
+    'Description',
+    'Paid to / from',
+    'Goat',
+    'Notes',
+  ]
   const rows = [...entries]
     .sort((a, b) => a.occurred_on.localeCompare(b.occurred_on))
     .map((e) => [
@@ -87,7 +97,7 @@ export function toCsv(entries: FinanceEntry[], goatName: (id: string) => string 
       e.kind === 'income' ? 'Income' : 'Expense',
       categoryLabel(e.kind, e.category),
       (e.amount_cents / 100).toFixed(2),
-      ((e.kind === 'income' ? 1 : -1) * e.amount_cents / 100).toFixed(2),
+      (((e.kind === 'income' ? 1 : -1) * e.amount_cents) / 100).toFixed(2),
       e.description,
       e.party,
       e.goat_id ? goatName(e.goat_id) : '',

@@ -15,5 +15,12 @@ const initials = computed(() =>
 
 <template>
   <!-- Rounded square with the same corner as the app icon (22% of its width), at any size. -->
-  <UAvatar :src="url" :alt="goatName(goat)" :text="initials" :size="size ?? 'lg'" class="shrink-0" :ui="{ root: 'rounded-[22%]' }" />
+  <UAvatar
+    :src="url"
+    :alt="goatName(goat)"
+    :text="initials"
+    :size="size ?? 'lg'"
+    class="shrink-0"
+    :ui="{ root: 'rounded-[22%]' }"
+  />
 </template>

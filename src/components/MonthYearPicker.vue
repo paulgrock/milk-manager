@@ -17,7 +17,9 @@ const month = computed({
   set: (m: number) => (model.value = `${model.value.slice(0, 4)}-${String(m).padStart(2, '0')}`),
 })
 
-const title = computed(() => new Date(year.value, month.value - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }))
+const title = computed(() =>
+  new Date(year.value, month.value - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+)
 const months = Array.from({ length: 12 }, (_, i) => ({
   label: new Date(2000, i, 1).toLocaleDateString(undefined, { month: 'long' }),
   value: i + 1,
@@ -32,7 +34,13 @@ const years = computed(() => {
 
 <template>
   <UPopover :content="{ align: 'center' }">
-    <UButton color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-down" class="w-full font-medium text-base justify-center whitespace-nowrap px-1 gap-1" aria-live="polite">
+    <UButton
+      color="neutral"
+      variant="ghost"
+      trailing-icon="i-lucide-chevron-down"
+      class="w-full font-medium text-base justify-center whitespace-nowrap px-1 gap-1"
+      aria-live="polite"
+    >
       {{ title }}
     </UButton>
     <template #content>

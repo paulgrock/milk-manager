@@ -62,7 +62,8 @@ function load(keepEdits = false) {
     const row = props.rows.find((r) => r.milking === slot)
     const next = { text: row ? formatWeightInput(row, props.entryUnit) : '', note: row?.note ?? '' }
     const field = fields[slot]
-    const edited = keepEdits && field && shown[slot] && (field.text !== shown[slot].text || field.note !== shown[slot].note)
+    const edited =
+      keepEdits && field && shown[slot] && (field.text !== shown[slot].text || field.note !== shown[slot].note)
     if (!edited) fields[slot] = { ...next, error: field?.error ?? '' }
     shown[slot] = next
   }
@@ -77,7 +78,11 @@ watch(
   },
   { immediate: true },
 )
-watch(() => props.rows, () => load(true), { deep: true })
+watch(
+  () => props.rows,
+  () => load(true),
+  { deep: true },
+)
 
 const rowFor = (slot: number) => props.rows.find((r) => r.milking === slot)
 
@@ -119,7 +124,8 @@ function save(slot: number) {
     return
   }
   record.mutate(vars, {
-    onError: (e) => toast.add({ color: 'error', title: `Could not save ${milkingLabel(slot)}`, description: e.message }),
+    onError: (e) =>
+      toast.add({ color: 'error', title: `Could not save ${milkingLabel(slot)}`, description: e.message }),
   })
 }
 
@@ -150,7 +156,14 @@ function saveSplit() {
     splitError.value = parsed.kind === 'invalid' ? parsed.message : 'Enter the AM weight'
     return
   }
-  const vars = { herdId: props.herdId, goatId: props.goat.id, milkedOn: props.date, milking: AM, grams: parsed.grams, portions: parsed.portions }
+  const vars = {
+    herdId: props.herdId,
+    goatId: props.goat.id,
+    milkedOn: props.date,
+    milking: AM,
+    grams: parsed.grams,
+    portions: parsed.portions,
+  }
   try {
     applyRecord(props.rows, vars)
   } catch (e) {
@@ -181,9 +194,26 @@ watch(open, () => (enteringDayTotal.value = false))
     <template #body>
       <div class="space-y-4">
         <template v-if="isDayTotal || enteringDayTotal">
-          <UFormField label="Day total" :error="fields[DAY_TOTAL]?.error || undefined" :hint="rowFor(DAY_TOTAL) && nameOf(rowFor(DAY_TOTAL)!.recorded_by) ? `by ${nameOf(rowFor(DAY_TOTAL)!.recorded_by)}` : undefined">
-            <UInput v-model="fields[DAY_TOTAL]!.text" inputmode="text" autocomplete="off" class="w-full" size="xl" @blur="save(DAY_TOTAL)">
-              <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
+          <UFormField
+            label="Day total"
+            :error="fields[DAY_TOTAL]?.error || undefined"
+            :hint="
+              rowFor(DAY_TOTAL) && nameOf(rowFor(DAY_TOTAL)!.recorded_by)
+                ? `by ${nameOf(rowFor(DAY_TOTAL)!.recorded_by)}`
+                : undefined
+            "
+          >
+            <UInput
+              v-model="fields[DAY_TOTAL]!.text"
+              inputmode="text"
+              autocomplete="off"
+              class="w-full"
+              size="xl"
+              @blur="save(DAY_TOTAL)"
+            >
+              <template #trailing
+                ><span class="text-xs text-muted">{{ entryUnit }}</span></template
+              >
             </UInput>
           </UFormField>
           <UFormField label="Note">
@@ -194,7 +224,14 @@ watch(open, () => (enteringDayTotal.value = false))
             <p class="text-sm">Know the AM weight now? Enter it and PM becomes the rest of the day total.</p>
             <div v-if="splitting" class="flex gap-2 items-start">
               <UFormField :error="splitError || undefined" class="flex-1">
-                <UInput v-model="splitText" inputmode="text" placeholder="AM weight" autofocus class="w-full" @keydown.enter.prevent="saveSplit" />
+                <UInput
+                  v-model="splitText"
+                  inputmode="text"
+                  placeholder="AM weight"
+                  autofocus
+                  class="w-full"
+                  @keydown.enter.prevent="saveSplit"
+                />
               </UFormField>
               <UButton @click="saveSplit">Split</UButton>
             </div>
@@ -223,7 +260,9 @@ watch(open, () => (enteringDayTotal.value = false))
                   :aria-label="`${milkingLabel(slot)} weight`"
                   @blur="save(slot)"
                 >
-                  <template #trailing><span class="text-xs text-muted">{{ entryUnit }}</span></template>
+                  <template #trailing
+                    ><span class="text-xs text-muted">{{ entryUnit }}</span></template
+                  >
                 </UInput>
               </UFormField>
               <UInput

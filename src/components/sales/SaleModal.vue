@@ -59,17 +59,21 @@ const deposit = computed(() => {
   return reservation.value?.deposit_status === 'held' ? (reservation.value.deposit_cents ?? 0) : 0
 })
 const price = computed(() => parseMoney(form.price))
-const balance = computed(() => (typeof price.value === 'number' ? Math.max(0, price.value - Math.min(deposit.value, price.value)) : null))
+const balance = computed(() =>
+  typeof price.value === 'number' ? Math.max(0, price.value - Math.min(deposit.value, price.value)) : null,
+)
 
 async function submit() {
   if (!form.buyer_id) return toast.add({ color: 'error', title: 'Pick an adopter' })
-  if (typeof price.value !== 'number') return toast.add({ color: 'error', title: 'Enter the adoption fee, like 450 or 450.00' })
+  if (typeof price.value !== 'number')
+    return toast.add({ color: 'error', title: 'Enter the adoption fee, like 450 or 450.00' })
   const kid = (props.kids ?? []).find((k) => k.kid.id === form.kid_id) ?? props.kid
   const values =
     form.what === 'kid' || props.sale?.kid_id
       ? { kid_id: form.kid_id, goat_id: kid?.kid.goat_id ?? props.sale?.goat_id ?? null }
       : { kid_id: null, goat_id: form.goat_id }
-  if (!values.kid_id && !values.goat_id) return toast.add({ color: 'error', title: form.what === 'kid' ? 'Pick the kid' : 'Pick the goat' })
+  if (!values.kid_id && !values.goat_id)
+    return toast.add({ color: 'error', title: form.what === 'kid' ? 'Pick the kid' : 'Pick the goat' })
   try {
     await saveSale.mutateAsync({
       id: props.sale?.id,
@@ -108,7 +112,9 @@ async function undo() {
       <form id="sale-form" class="space-y-3" @submit.prevent="submit">
         <UFormField label="Adopter" required>
           <BuyerPicker v-if="!buyerFixed" v-model="form.buyer_id" />
-          <p v-else class="text-sm">{{ data.buyers.find((b) => b.id === form.buyer_id)?.name }} (from their reservation)</p>
+          <p v-else class="text-sm">
+            {{ data.buyers.find((b) => b.id === form.buyer_id)?.name }} (from their reservation)
+          </p>
         </UFormField>
         <template v-if="!fixed">
           <UTabs v-model="form.what" :items="whatOptions" :content="false" size="sm" :ui="{ list: 'w-auto' }" />
@@ -133,7 +139,8 @@ async function undo() {
           </UFormField>
         </div>
         <p v-if="deposit && balance !== null" class="text-sm text-muted">
-          Less the {{ formatMoney(Math.min(deposit, price as number)) }} deposit: {{ formatMoney(balance) }} goes into Finances.
+          Less the {{ formatMoney(Math.min(deposit, price as number)) }} deposit: {{ formatMoney(balance) }} goes into
+          Finances.
         </p>
         <p v-else-if="balance !== null" class="text-sm text-muted">{{ formatMoney(balance) }} goes into Finances.</p>
         <UFormField label="Notes">
@@ -143,7 +150,9 @@ async function undo() {
     </template>
     <template #footer>
       <div class="flex gap-2 w-full">
-        <UButton v-if="sale?.sold_on" color="error" variant="ghost" @click="undo">{{ sale.reservation_id ? 'Not adopted' : 'Delete adoption' }}</UButton>
+        <UButton v-if="sale?.sold_on" color="error" variant="ghost" @click="undo">{{
+          sale.reservation_id ? 'Not adopted' : 'Delete adoption'
+        }}</UButton>
         <UButton class="ms-auto" color="neutral" variant="ghost" @click="open = false">Cancel</UButton>
         <UButton type="submit" form="sale-form" :loading="saveSale.isPending.value">Save adoption</UButton>
       </div>

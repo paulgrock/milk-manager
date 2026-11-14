@@ -37,7 +37,9 @@ base("an email that wasn't invited can't make an account", async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Email').fill(email)
   await page.getByRole('button', { name: 'Email me a code' }).click()
-  await expect(page.getByText("This email hasn't been invited. Ask a herd owner to invite you, then sign in with the same email.")).toBeVisible()
+  await expect(
+    page.getByText("This email hasn't been invited. Ask a herd owner to invite you, then sign in with the same email."),
+  ).toBeVisible()
   await expect(page.getByText('We sent a 6-digit code')).toHaveCount(0)
   const { data } = await admin.auth.admin.listUsers()
   expect(data.users.some((u) => u.email === email)).toBe(false)
@@ -67,7 +69,12 @@ test('an invited helper joins and gets a read-only view of herd settings', async
     await expect(helperPage.getByText('Only owners can change herd details.')).toBeVisible()
     await expect(helperPage.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0)
 
-    const role = await admin.from('herd_members').select('role').eq('herd_id', herd.id).eq('user_id', helper.id).single()
+    const role = await admin
+      .from('herd_members')
+      .select('role')
+      .eq('herd_id', herd.id)
+      .eq('user_id', helper.id)
+      .single()
     expect(role.data?.role).toBe('helper')
     await helperContext.close()
   } finally {
@@ -121,7 +128,9 @@ test('an owner sets a herd logo for the header, and can remove it', async ({ pag
     g.fillRect(0, 0, 600, 300)
     return c.toDataURL('image/png').split(',')[1]!
   })
-  await page.getByLabel('Logo file').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await page
+    .getByLabel('Logo file')
+    .setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await expect(page.getByText('Logo updated').first()).toBeVisible()
   const logo = page.getByRole('banner').getByRole('img', { name: `${herd.name} logo` })
   await expect(logo).toHaveAttribute('src', /^data:image\/png;base64,/)
@@ -130,7 +139,9 @@ test('an owner sets a herd logo for the header, and can remove it', async ({ pag
   // Helpers see it but can't change it.
   const helper = await createUser('helper')
   try {
-    await admin.from('herd_members').insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
     const ctx = await browser.newContext()
     await signInContext(ctx, helper)
     const helperPage = await ctx.newPage()
@@ -151,8 +162,11 @@ test('an SVG logo works too: empty margins trimmed, then fitted whole rather tha
   await page.goto('/settings')
   // Portrait, with a viewBox but no width or height and empty space around the
   // drawing (like most exported logos): purple at the top, green at the bottom.
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000"><rect x="100" y="100" width="600" height="400" fill="#7c3aed"/><rect x="100" y="500" width="600" height="400" fill="#16a34a"/></svg>'
-  await page.getByLabel('Logo file').setInputFiles({ name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) })
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000"><rect x="100" y="100" width="600" height="400" fill="#7c3aed"/><rect x="100" y="500" width="600" height="400" fill="#16a34a"/></svg>'
+  await page
+    .getByLabel('Logo file')
+    .setInputFiles({ name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) })
   await expect(page.getByText('Logo updated').first()).toBeVisible()
   const logo = page.getByRole('banner').getByRole('img', { name: `${herd.name} logo` })
   await expect(logo).toHaveAttribute('src', /^data:image\/png;base64,/)
@@ -207,7 +221,10 @@ test("an expired sign-in doesn't hold up opening the app: it's renewed in the ba
   await expect(page).toHaveURL(/\/$/)
 })
 
-test('if renewing finds the sign-in no longer valid, it goes to sign-in and clears the saved data', async ({ page, herd }) => {
+test('if renewing finds the sign-in no longer valid, it goes to sign-in and clears the saved data', async ({
+  page,
+  herd,
+}) => {
   void herd
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()

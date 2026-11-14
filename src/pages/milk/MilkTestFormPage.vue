@@ -34,10 +34,19 @@ watch(
   existing,
   (t) => {
     if (!t || loaded.value === t.id) return
-    Object.assign(form, { tested_on: t.tested_on, kind: t.kind, lab: t.lab ?? '', tester: t.tester ?? '', notes: t.notes ?? '' })
+    Object.assign(form, {
+      tested_on: t.tested_on,
+      kind: t.kind,
+      lab: t.lab ?? '',
+      tester: t.tester ?? '',
+      notes: t.notes ?? '',
+    })
     for (const r of data.value.results.filter((x) => x.test_id === t.id)) {
       rows[r.goat_id] = {
-        milk: r.milk_g === null ? '' : String(Math.round((r.milk_g / (unit.value === 'lb' ? 453.59237 : 1000)) * 100) / 100),
+        milk:
+          r.milk_g === null
+            ? ''
+            : String(Math.round((r.milk_g / (unit.value === 'lb' ? 453.59237 : 1000)) * 100) / 100),
         fat: r.butterfat_pct === null ? '' : String(Number(r.butterfat_pct)),
         protein: r.protein_pct === null ? '' : String(Number(r.protein_pct)),
         scc: r.scc === null ? '' : formatScc(r.scc),
@@ -52,7 +61,9 @@ watch(
 // Does on test: everyone in milk that day, plus anyone already with a result.
 const does = computed(() => {
   const ids = new Set(
-    (goats.data.value ?? []).filter((g) => lactationOn(lactations.data.value ?? [], g.id, form.tested_on)).map((g) => g.id),
+    (goats.data.value ?? [])
+      .filter((g) => lactationOn(lactations.data.value ?? [], g.id, form.tested_on))
+      .map((g) => g.id),
   )
   for (const id of Object.keys(rows)) if (rows[id] && Object.values(rows[id]).some((v) => v)) ids.add(id)
   return [...ids]
@@ -60,9 +71,13 @@ const does = computed(() => {
     .filter((g) => !!g)
     .sort((a, b) => (a!.barn_name || goatName(a!)).localeCompare(b!.barn_name || goatName(b!)))
 })
-watch(does, (list) => {
-  for (const g of list) rows[g!.id] ??= blankRow()
-}, { immediate: true })
+watch(
+  does,
+  (list) => {
+    for (const g of list) rows[g!.id] ??= blankRow()
+  },
+  { immediate: true },
+)
 
 // A new test starts with each doe's milk weights from that day, if there are any.
 const day = useMilkDay(() => form.tested_on)
@@ -98,7 +113,8 @@ async function submit() {
     const fat = parsePct(row.fat)
     const protein = parsePct(row.protein)
     const scc = parseScc(row.scc)
-    if (milk.kind === 'invalid' || (milk.kind === 'ok' && milk.portions)) row.error = 'Milk should be one weight for the whole test day'
+    if (milk.kind === 'invalid' || (milk.kind === 'ok' && milk.portions))
+      row.error = 'Milk should be one weight for the whole test day'
     else if (fat === 'invalid' || protein === 'invalid') row.error = 'Percentages should be between 0.5 and 15'
     else if (scc === 'invalid') row.error = 'SCC like 450, 450k or 1.2M'
     if (row.error) {
@@ -107,13 +123,25 @@ async function submit() {
     }
     const milkG = milk.kind === 'ok' ? milk.grams : null
     if (milkG === null && fat === null && protein === null && scc === null) continue
-    results.push({ goat_id: g!.id, milk_g: milkG, butterfat_pct: fat as number | null, protein_pct: protein as number | null, scc: scc as number | null })
+    results.push({
+      goat_id: g!.id,
+      milk_g: milkG,
+      butterfat_pct: fat as number | null,
+      protein_pct: protein as number | null,
+      scc: scc as number | null,
+    })
   }
   if (!ok) return toast.add({ color: 'error', title: 'Fix the highlighted does' })
   try {
     const test = await save.mutateAsync({
       id: testId.value,
-      test: { tested_on: form.tested_on, kind: form.kind, lab: form.lab.trim() || null, tester: form.tester.trim() || null, notes: form.notes.trim() || null },
+      test: {
+        tested_on: form.tested_on,
+        kind: form.kind,
+        lab: form.lab.trim() || null,
+        tester: form.tester.trim() || null,
+        notes: form.notes.trim() || null,
+      },
       results,
     })
     toast.add({ color: 'success', title: `Saved ${results.length} ${results.length === 1 ? 'result' : 'results'}` })
@@ -133,9 +161,17 @@ async function onDelete() {
 <template>
   <div class="space-y-4">
     <div class="flex items-center gap-2">
-      <UButton to="/milk/tests" color="neutral" variant="ghost" icon="i-lucide-arrow-left" aria-label="Back to milk tests" />
+      <UButton
+        to="/milk/tests"
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-arrow-left"
+        aria-label="Back to milk tests"
+      />
       <h1 class="text-2xl font-semibold flex-1">{{ testId ? 'Milk test' : 'Add test day' }}</h1>
-      <UButton v-if="testId" color="error" variant="ghost" icon="i-lucide-trash-2" @click="confirmDelete = true">Delete</UButton>
+      <UButton v-if="testId" color="error" variant="ghost" icon="i-lucide-trash-2" @click="confirmDelete = true"
+        >Delete</UButton
+      >
     </div>
 
     <form class="space-y-4" @submit.prevent="submit">
@@ -159,7 +195,10 @@ async function onDelete() {
       <UCard :ui="{ body: 'p-0 sm:p-0' }">
         <template #header>
           <h2 class="font-semibold">Results</h2>
-          <p class="text-sm text-muted">Milk is the whole test day for each doe. Leave a doe blank to skip her. SCC can be typed as 450, 450k or 1.2M.</p>
+          <p class="text-sm text-muted">
+            Milk is the whole test day for each doe. Leave a doe blank to skip her. SCC can be typed as 450, 450k or
+            1.2M.
+          </p>
         </template>
         <p v-if="!does.length" class="p-4 text-muted">No does in milk on this date.</p>
         <div v-else class="overflow-x-auto">
@@ -177,15 +216,44 @@ async function onDelete() {
               <template v-for="g in does" :key="g!.id">
                 <tr class="border-t border-default">
                   <td class="px-3 py-2 font-medium whitespace-nowrap">{{ g!.barn_name || goatName(g!) }}</td>
-                  <td class="px-2 py-1"><UInput v-model="rows[g!.id]!.milk" inputmode="decimal" class="w-24" :aria-label="`${g!.barn_name || goatName(g!)} milk`" /></td>
-                  <td class="px-2 py-1"><UInput v-model="rows[g!.id]!.fat" inputmode="decimal" class="w-20" :aria-label="`${g!.barn_name || goatName(g!)} butterfat`" /></td>
-                  <td class="px-2 py-1"><UInput v-model="rows[g!.id]!.protein" inputmode="decimal" class="w-20" :aria-label="`${g!.barn_name || goatName(g!)} protein`" /></td>
+                  <td class="px-2 py-1">
+                    <UInput
+                      v-model="rows[g!.id]!.milk"
+                      inputmode="decimal"
+                      class="w-24"
+                      :aria-label="`${g!.barn_name || goatName(g!)} milk`"
+                    />
+                  </td>
+                  <td class="px-2 py-1">
+                    <UInput
+                      v-model="rows[g!.id]!.fat"
+                      inputmode="decimal"
+                      class="w-20"
+                      :aria-label="`${g!.barn_name || goatName(g!)} butterfat`"
+                    />
+                  </td>
+                  <td class="px-2 py-1">
+                    <UInput
+                      v-model="rows[g!.id]!.protein"
+                      inputmode="decimal"
+                      class="w-20"
+                      :aria-label="`${g!.barn_name || goatName(g!)} protein`"
+                    />
+                  </td>
                   <td class="px-2 py-1">
                     <UInput
                       v-model="rows[g!.id]!.scc"
                       class="w-24"
-                      :color="typeof parseScc(rows[g!.id]!.scc) === 'number' && (parseScc(rows[g!.id]!.scc) as number) >= SCC_LIMIT ? 'warning' : undefined"
-                      :highlight="typeof parseScc(rows[g!.id]!.scc) === 'number' && (parseScc(rows[g!.id]!.scc) as number) >= SCC_LIMIT"
+                      :color="
+                        typeof parseScc(rows[g!.id]!.scc) === 'number' &&
+                        (parseScc(rows[g!.id]!.scc) as number) >= SCC_LIMIT
+                          ? 'warning'
+                          : undefined
+                      "
+                      :highlight="
+                        typeof parseScc(rows[g!.id]!.scc) === 'number' &&
+                        (parseScc(rows[g!.id]!.scc) as number) >= SCC_LIMIT
+                      "
                       :aria-label="`${g!.barn_name || goatName(g!)} SCC`"
                     />
                   </td>
@@ -199,7 +267,9 @@ async function onDelete() {
         </div>
       </UCard>
 
-      <UFormField label="Notes"><UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" /></UFormField>
+      <UFormField label="Notes"
+        ><UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full"
+      /></UFormField>
       <UAlert
         v-if="save.isPaused.value"
         color="warning"
@@ -211,7 +281,11 @@ async function onDelete() {
       <UButton type="submit" size="lg" :loading="save.isPending.value">Save test</UButton>
     </form>
 
-    <UModal v-model:open="confirmDelete" title="Delete this test?" description="Its results for every doe are deleted too.">
+    <UModal
+      v-model:open="confirmDelete"
+      title="Delete this test?"
+      description="Its results for every doe are deleted too."
+    >
       <template #footer>
         <div class="flex justify-end gap-2 w-full">
           <UButton color="neutral" variant="ghost" @click="confirmDelete = false">Cancel</UButton>
