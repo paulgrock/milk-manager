@@ -121,6 +121,15 @@ export interface SheetInput {
 }
 
 const nameOf = (g: Goat) => g.barn_name?.trim() || goatName(g)
+
+/** The lab's barn sheet order: DHIR sample number, then name for does without one. */
+export function byBarnSheetOrder(a: Goat, b: Goat): number {
+  return (
+    (a.dhir_sample_number ?? Number.MAX_SAFE_INTEGER) - (b.dhir_sample_number ?? Number.MAX_SAFE_INTEGER) ||
+    nameOf(a).localeCompare(nameOf(b))
+  )
+}
+
 const inHerd = (g: Goat) => g.status === 'active' || g.status === 'for_sale'
 
 function timesFor(rows: MilkRow[], corrected: MilkingTimes[ScheduleKey]): Pick<ScheduleRow, 'start' | 'stop'> {
@@ -180,11 +189,7 @@ export function buildTestSheet(input: SheetInput): TestSheet {
   const does = [...onTest]
     .map((id) => byId.get(id))
     .filter((g): g is Goat => !!g)
-    .sort(
-      (a, b) =>
-        (a.dhir_sample_number ?? Number.MAX_SAFE_INTEGER) - (b.dhir_sample_number ?? Number.MAX_SAFE_INTEGER) ||
-        nameOf(a).localeCompare(nameOf(b)),
-    )
+    .sort(byBarnSheetOrder)
 
   const barn: BarnRow[] = does.map((g) => {
     const rows = dayRows.filter((r) => r.goat_id === g.id)

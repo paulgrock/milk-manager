@@ -196,3 +196,22 @@ test("a DHI report's lactation-to-date and projected 305 figures are shown as pr
   // The Lactations list agrees.
   await expect(page.getByRole('button', { name: /#1.*423 lb/ })).toBeVisible()
 })
+
+test('a new test lists does in barn sheet order: sample number, then name', async ({ page, owner, herd }) => {
+  const ada = await doe(owner, herd.id, 'Ada')
+  const bea = await doe(owner, herd.id, 'Bea')
+  const cy = await doe(owner, herd.id, 'Cy')
+  await doe(owner, herd.id, 'Abby')
+  await admin.from('goats').update({ dhir_sample_number: 1 }).eq('id', cy.id)
+  await admin.from('goats').update({ dhir_sample_number: 2 }).eq('id', ada.id)
+  await admin.from('goats').update({ dhir_sample_number: 10 }).eq('id', bea.id)
+
+  await page.goto('/milk/tests/new')
+  const milk = page.getByRole('textbox', { name: / milk$/ })
+  await expect(milk).toHaveCount(4)
+  const order = await milk.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))
+  expect(order).toEqual(['Cy milk', 'Ada milk', 'Bea milk', 'Abby milk'])
+
+  await page.setViewportSize({ width: 375, height: 812 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
+})

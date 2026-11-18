@@ -10,6 +10,7 @@ import { todayISO } from '@/lib/dates'
 import { SCC_LIMIT, TEST_KIND_LABELS, formatScc, parseScc, type MilkTestKind } from '@/lib/dhia'
 import { goatName } from '@/lib/goats'
 import { formatWeight, lactationOn, parseWeightInput } from '@/lib/milk'
+import { byBarnSheetOrder } from '@/lib/testSheet'
 
 const route = useRoute()
 const router = useRouter()
@@ -69,7 +70,7 @@ const does = computed(() => {
   return [...ids]
     .map((id) => byId.value.get(id))
     .filter((g) => !!g)
-    .sort((a, b) => (a!.barn_name || goatName(a!)).localeCompare(b!.barn_name || goatName(b!)))
+    .sort((a, b) => byBarnSheetOrder(a!, b!))
 })
 watch(
   does,

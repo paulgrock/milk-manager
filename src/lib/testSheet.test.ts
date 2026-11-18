@@ -3,6 +3,7 @@ import type { Goat } from './goats'
 import type { Lactation, MilkRow } from './milk'
 import {
   buildTestSheet,
+  byBarnSheetOrder,
   dayBefore,
   formBirthDate,
   formDate,
@@ -219,6 +220,16 @@ describe('buildTestSheet', () => {
     ])
     expect(sheet.barn[2]!.dayTotalOnly).toBe(true)
     expect(sheet.hasThird).toBe(false)
+  })
+
+  it('orders does by sample number, then by name for does without one', () => {
+    const does = [
+      goat('Zed'),
+      goat('Bea', { dhir_sample_number: 10 }),
+      goat('Abe'),
+      goat('Cy', { dhir_sample_number: 2 }),
+    ]
+    expect(does.sort(byBarnSheetOrder).map((g) => g.barn_name)).toEqual(['Cy', 'Bea', 'Abe', 'Zed'])
   })
 
   it('adds extra milkings into the 3rd column', () => {
