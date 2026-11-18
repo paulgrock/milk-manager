@@ -87,3 +87,19 @@ export async function milkRows(goatId: string, milkedOn: string) {
   if (error) throw error
   return data
 }
+
+/** When each milking was entered on the phone and saved by the server. */
+export async function milkTimes(goatId: string, milkedOn: string) {
+  const { data, error } = await admin
+    .from('milk_weights')
+    .select('milking, entered_at, recorded_at')
+    .eq('goat_id', goatId)
+    .eq('milked_on', milkedOn)
+    .order('milking')
+  if (error) throw error
+  return data.map((r) => ({
+    milking: r.milking,
+    enteredAt: new Date(r.entered_at),
+    recordedAt: new Date(r.recorded_at),
+  }))
+}

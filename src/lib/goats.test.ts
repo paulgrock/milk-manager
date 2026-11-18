@@ -46,6 +46,7 @@ function goat(overrides: Partial<Goat>): Goat {
     left_herd_reason: null,
     notes: null,
     milking_position: null,
+    dhir_sample_number: null,
     created_by: null,
     created_at: '',
     updated_at: '',

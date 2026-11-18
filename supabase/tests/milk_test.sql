@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(25);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'owner@example.com'),
@@ -76,6 +76,34 @@ select is(pg_temp.day('10000000-0000-0000-0000-000000000001', '2026-10-21'), '1:
 select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-22', 0::smallint, 3000);
 select throws_ok($$ select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-22', 2::smallint, 3500) $$,
   '23514', 'That is more than the day total', 'a split cannot exceed the day total');
+
+-- When it was entered ---------------------------------------------------------------
+create function pg_temp.entered(d date, m smallint) returns timestamptz language sql as $$
+  select entered_at from public.milk_weights
+  where goat_id = '10000000-0000-0000-0000-000000000001' and milked_on = d and milking = m;
+$$;
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-24', 0::smallint, 3000, null, null, now() - interval '3 hours');
+select is(pg_temp.entered('2026-10-24', 0::smallint), now() - interval '3 hours', 'the phone''s entry time is kept');
+select ok(
+  (select recorded_at from milk_weights where goat_id = '10000000-0000-0000-0000-000000000001' and milked_on = '2026-10-24') = now(),
+  'recorded_at is still when the server saved it'
+);
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-24', 1::smallint, 1700, null, null, now() - interval '1 hour');
+select is(pg_temp.entered('2026-10-24', 2::smallint), now() - interval '1 hour', 'splitting a day total stamps the rest with the same entry time');
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-24', 1::smallint, 1700, null, null, now() - interval '1 hour');
+select is(pg_temp.entered('2026-10-24', 1::smallint), now() - interval '1 hour', 'replaying a queued save keeps its entry time');
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-25', 1::smallint, 1500, null, null, now() + interval '2 hours');
+select is(pg_temp.entered('2026-10-25', 1::smallint), now(), 'a time in the future becomes now');
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-25', 2::smallint, 1500, null, null, now() - interval '31 days');
+select is(pg_temp.entered('2026-10-25', 2::smallint), now(), 'a time over 30 days old becomes now');
+
+select public.record_milking('10000000-0000-0000-0000-000000000001', '2026-10-26', 1::smallint, 1500);
+select is(pg_temp.entered('2026-10-26', 1::smallint), now(), 'a save without an entry time uses now');
 
 select public.clear_milking('10000000-0000-0000-0000-000000000001', '2026-10-20', 3::smallint);
 select is(pg_temp.day('10000000-0000-0000-0000-000000000001', '2026-10-20'), '1:1600 2:1200', 'clear_milking removes one milking');

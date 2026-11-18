@@ -293,14 +293,14 @@ isOneToOne: false
                   ]
                 },"goats": {
                   Row: {
-                    "barn_name": string | null,"birth_date": string | null,"breed": string | null,"breed_category": string | null,"color_markings": string | null,"created_at": string,"created_by": string | null,"dam_id": string | null,"herd_id": string,"horn_status": Database["public"]['Enums']["horn_status"],"id": string,"left_herd_on": string | null,"left_herd_reason": string | null,"microchip": string | null,"milking_position": number | null,"notes": string | null,"pedigree_url": string | null,"registered_name": string | null,"registration_number": string | null,"registry": string | null,"scrapie_tag": string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id": string | null,"slug": string,"status": Database["public"]['Enums']["goat_status"],"tattoo_left": string | null,"tattoo_right": string | null,"title_prefix": string | null,"title_suffix": string | null,"updated_at": string
+                    "barn_name": string | null,"birth_date": string | null,"breed": string | null,"breed_category": string | null,"color_markings": string | null,"created_at": string,"created_by": string | null,"dam_id": string | null,"dhir_sample_number": number | null,"herd_id": string,"horn_status": Database["public"]['Enums']["horn_status"],"id": string,"left_herd_on": string | null,"left_herd_reason": string | null,"microchip": string | null,"milking_position": number | null,"notes": string | null,"pedigree_url": string | null,"registered_name": string | null,"registration_number": string | null,"registry": string | null,"scrapie_tag": string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id": string | null,"slug": string,"status": Database["public"]['Enums']["goat_status"],"tattoo_left": string | null,"tattoo_right": string | null,"title_prefix": string | null,"title_suffix": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"herd_id": string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"milking_position"?: number | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
+                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"dhir_sample_number"?: number | null,"herd_id": string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"milking_position"?: number | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex": Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"herd_id"?: string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"milking_position"?: number | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex"?: Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
+                    "barn_name"?: string | null,"birth_date"?: string | null,"breed"?: string | null,"breed_category"?: string | null,"color_markings"?: string | null,"created_at"?: string,"created_by"?: string | null,"dam_id"?: string | null,"dhir_sample_number"?: number | null,"herd_id"?: string,"horn_status"?: Database["public"]['Enums']["horn_status"],"id"?: string,"left_herd_on"?: string | null,"left_herd_reason"?: string | null,"microchip"?: string | null,"milking_position"?: number | null,"notes"?: string | null,"pedigree_url"?: string | null,"registered_name"?: string | null,"registration_number"?: string | null,"registry"?: string | null,"scrapie_tag"?: string | null,"sex"?: Database["public"]['Enums']["goat_sex"],"sire_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["goat_status"],"tattoo_left"?: string | null,"tattoo_right"?: string | null,"title_prefix"?: string | null,"title_suffix"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -537,14 +537,14 @@ isOneToOne: false
                   ]
                 },"milk_tests": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["milk_test_kind"],"lab": string | null,"notes": string | null,"tested_on": string,"tester": string | null
+                    "created_at": string,"created_by": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["milk_test_kind"],"lab": string | null,"milking_times": NonNullable<Json>,"notes": string | null,"tested_on": string,"tester": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on": string,"tester"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"milking_times"?: NonNullable<Json>,"notes"?: string | null,"tested_on": string,"tester"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on"?: string,"tester"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"milking_times"?: NonNullable<Json>,"notes"?: string | null,"tested_on"?: string,"tester"?: string | null
                   }
                   Relationships: [
                     {
@@ -557,14 +557,14 @@ isOneToOne: false
                   ]
                 },"milk_weights": {
                   Row: {
-                    "goat_id": string,"herd_id": string,"id": string,"milked_on": string,"milking": number,"note": string | null,"portions_g": (number)[] | null,"recorded_at": string,"recorded_by": string | null,"weight_g": number
+                    "entered_at": string,"goat_id": string,"herd_id": string,"id": string,"milked_on": string,"milking": number,"note": string | null,"portions_g": (number)[] | null,"recorded_at": string,"recorded_by": string | null,"weight_g": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "goat_id": string,"herd_id": string,"id"?: string,"milked_on": string,"milking": number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g": number
+                    "entered_at"?: string,"goat_id": string,"herd_id": string,"id"?: string,"milked_on": string,"milking": number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g": number
                   }
                   Update: {
-                    "goat_id"?: string,"herd_id"?: string,"id"?: string,"milked_on"?: string,"milking"?: number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g"?: number
+                    "entered_at"?: string,"goat_id"?: string,"herd_id"?: string,"id"?: string,"milked_on"?: string,"milking"?: number,"note"?: string | null,"portions_g"?: (number)[] | null,"recorded_at"?: string,"recorded_by"?: string | null,"weight_g"?: number
                   }
                   Relationships: [
                     {
@@ -783,8 +783,9 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "record_milking":
-{ Args: { "p_goat_id": string,"p_milked_on": string,"p_milking": number,"p_note"?: string,"p_portions_g"?: (number)[],"p_weight_g": number }; Returns: {
-              "goat_id": string,
+{ Args: { "p_entered_at"?: string,"p_goat_id": string,"p_milked_on": string,"p_milking": number,"p_note"?: string,"p_portions_g"?: (number)[],"p_weight_g": number }; Returns: {
+              "entered_at": string,
+"goat_id": string,
 "herd_id": string,
 "id": string,
 "milked_on": string,

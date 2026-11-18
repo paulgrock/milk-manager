@@ -35,6 +35,7 @@ export const router = createRouter({
         { path: 'milk/tests', component: () => import('@/pages/milk/MilkTestsPage.vue') },
         { path: 'milk/tests/new', component: () => import('@/pages/milk/MilkTestFormPage.vue') },
         { path: 'milk/tests/:id', component: () => import('@/pages/milk/MilkTestFormPage.vue') },
+        { path: 'milk/tests/:id/sheet', component: () => import('@/pages/milk/TestSheetPage.vue') },
         { path: 'breeding', component: () => import('@/pages/breeding/BreedingPage.vue') },
         { path: 'breeding/adoptions', component: () => import('@/pages/breeding/AdoptionsPage.vue') },
         { path: 'breeding/kidding', component: () => import('@/pages/breeding/KiddingPage.vue') },

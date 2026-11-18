@@ -43,6 +43,11 @@ async function usePasskey() {
   }
 }
 
+function useDifferentEmail() {
+  step.value = 'email'
+  code.value = []
+}
+
 async function submitCode() {
   error.value = ''
   busy.value = true
@@ -110,15 +115,7 @@ async function submitCode() {
         />
         <UPinInput v-model="code" :length="6" otp type="number" size="xl" autofocus @complete="submitCode" />
         <UButton type="submit" block size="xl" :loading="busy" :disabled="code.join('').length < 6">Sign in</UButton>
-        <UButton
-          variant="link"
-          color="neutral"
-          @click="
-            step = 'email'
-            code = []
-          "
-          >Use a different email</UButton
-        >
+        <UButton variant="link" color="neutral" @click="useDifferentEmail">Use a different email</UButton>
       </form>
 
       <UAlert v-if="error" class="mt-4" color="error" variant="subtle" :description="error" />
