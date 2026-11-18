@@ -1,5 +1,5 @@
 import type { Database } from './database.types'
-import { parseDate } from './dates'
+import { parseDate, toISODate } from './dates'
 
 type Tables = Database['public']['Tables']
 export type MilkRow = Tables['milk_weights']['Row']
@@ -108,6 +108,8 @@ export interface RecordInput {
   grams: number
   portions: number[] | null
   note?: string | null
+  /** When it was typed, by this phone's clock. Defaults to now. */
+  enteredAt?: string
 }
 
 /**
@@ -122,6 +124,7 @@ export function applyRecord(dayRows: MilkRow[], input: RecordInput, now = new Da
     milked_on: input.milkedOn,
     recorded_by: null,
     recorded_at: now,
+    entered_at: input.enteredAt ?? now,
     portions_g: null,
     note: null,
   }
@@ -153,9 +156,32 @@ export function applyRecord(dayRows: MilkRow[], input: RecordInput, now = new Da
     weight_g: input.grams,
     portions_g: input.portions,
     note: input.note?.trim() || null,
+    // Not the last person's name: until the server answers, who saved it isn't known here.
+    recorded_by: null,
     recorded_at: now,
+    entered_at: base.entered_at,
   }
   return [...rows.filter((r) => r.milking !== input.milking), updated].sort((a, b) => a.milking - b.milking)
+}
+
+/**
+ * Who entered a milking and when, like "by Sam · 6:42 AM". The date is added
+ * when it was entered on a different day than the milking.
+ */
+export function enteredLine(row: Pick<MilkRow, 'entered_at' | 'milked_on'>, name?: string | null): string {
+  const at = new Date(row.entered_at)
+  const time = Number.isNaN(at.getTime())
+    ? ''
+    : toISODate(at) === row.milked_on
+      ? at.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      : at.toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          ...(at.getFullYear() !== parseDate(row.milked_on).getFullYear() && { year: 'numeric' }),
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+  return [name && `by ${name}`, time].filter(Boolean).join(' · ')
 }
 
 export interface DayStatus {

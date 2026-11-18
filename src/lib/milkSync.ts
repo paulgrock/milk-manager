@@ -15,7 +15,8 @@ export const milkKeys = {
 export const RECORD_MILKING = ['milk', 'record'] as const
 export const CLEAR_MILKING = ['milk', 'clear'] as const
 
-export type RecordVars = RecordInput & { herdId: string }
+// enteredAt is required here so it's fixed when the save is made, not when it's sent.
+export type RecordVars = RecordInput & { herdId: string; enteredAt: string }
 export type ClearVars = { herdId: string; goatId: string; milkedOn: string; milking: number }
 
 function setGoatDay(herdId: string, date: string, goatId: string, update: (rows: MilkRow[]) => MilkRow[]) {
@@ -47,6 +48,7 @@ queryClient.setMutationDefaults<MilkRow[], Error, RecordVars>(RECORD_MILKING, {
         p_weight_g: v.grams,
         p_portions_g: v.portions ?? undefined,
         p_note: v.note ?? undefined,
+        p_entered_at: v.enteredAt,
       }),
     ),
   onMutate: async (v: RecordVars) => {

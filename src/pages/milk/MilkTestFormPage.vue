@@ -169,6 +169,13 @@ async function onDelete() {
         aria-label="Back to milk tests"
       />
       <h1 class="text-2xl font-semibold flex-1">{{ testId ? 'Milk test' : 'Add test day' }}</h1>
+      <UButton
+        v-if="testId && existing?.kind === 'dhir'"
+        :to="`/milk/tests/${testId}/sheet`"
+        variant="soft"
+        icon="i-lucide-clipboard-list"
+        >Copy to form</UButton
+      >
       <UButton v-if="testId" color="error" variant="ghost" icon="i-lucide-trash-2" @click="confirmDelete = true"
         >Delete</UButton
       >

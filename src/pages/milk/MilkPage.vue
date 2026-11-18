@@ -139,6 +139,7 @@ function save(goat: Goat, text: string) {
     grams: parsed.grams,
     portions: parsed.portions,
     note: rows.find((r) => r.milking === milking.value)?.note ?? null,
+    enteredAt: new Date().toISOString(),
   }
   try {
     applyRecord(rows, vars)

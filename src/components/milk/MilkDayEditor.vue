@@ -11,6 +11,7 @@ import {
   PM,
   applyRecord,
   dayStatus,
+  enteredLine,
   formatWeight,
   formatWeightInput,
   milkingLabel,
@@ -85,6 +86,10 @@ watch(
 )
 
 const rowFor = (slot: number) => props.rows.find((r) => r.milking === slot)
+const entered = (slot: number) => {
+  const row = rowFor(slot)
+  return row ? enteredLine(row, nameOf.value(row.recorded_by)) : ''
+}
 
 function save(slot: number) {
   const field = fields[slot]!
@@ -116,6 +121,7 @@ function save(slot: number) {
     grams: parsed.grams,
     portions: parsed.portions,
     note,
+    enteredAt: new Date().toISOString(),
   }
   try {
     applyRecord(props.rows, vars)
@@ -163,6 +169,7 @@ function saveSplit() {
     milking: AM,
     grams: parsed.grams,
     portions: parsed.portions,
+    enteredAt: new Date().toISOString(),
   }
   try {
     applyRecord(props.rows, vars)
@@ -197,11 +204,7 @@ watch(open, () => (enteringDayTotal.value = false))
           <UFormField
             label="Day total"
             :error="fields[DAY_TOTAL]?.error || undefined"
-            :hint="
-              rowFor(DAY_TOTAL) && nameOf(rowFor(DAY_TOTAL)!.recorded_by)
-                ? `by ${nameOf(rowFor(DAY_TOTAL)!.recorded_by)}`
-                : undefined
-            "
+            :hint="entered(DAY_TOTAL) || undefined"
           >
             <UInput
               v-model="fields[DAY_TOTAL]!.text"
@@ -244,9 +247,7 @@ watch(open, () => (enteringDayTotal.value = false))
           <div v-for="slot in slots" :key="slot" class="grid grid-cols-[5rem_1fr] gap-2 items-start">
             <div class="pt-2">
               <p class="font-medium">{{ milkingLabel(slot) }}</p>
-              <p v-if="rowFor(slot) && nameOf(rowFor(slot)!.recorded_by)" class="text-xs text-muted">
-                by {{ nameOf(rowFor(slot)!.recorded_by) }}
-              </p>
+              <p v-if="entered(slot)" class="text-xs text-muted" data-testid="milking-entered">{{ entered(slot) }}</p>
             </div>
             <div class="space-y-1">
               <UFormField :error="fields[slot]?.error || undefined">

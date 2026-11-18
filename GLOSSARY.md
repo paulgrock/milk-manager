@@ -89,3 +89,29 @@ _Avoid_: Sale, purchase, order
 **Adoption fee**:
 What an adopter pays for a kid or goat, before any deposit comes off.
 _Avoid_: Price, sale price
+
+### Milk tests
+
+**Test sheet**:
+What gets written by hand on the lab's two DHIR forms for one test day (the Owner's Options form and the barn sheet), shown in the app in the forms' order so it can be copied across. Only the handwritten parts: the lab prints everything else.
+_Avoid_: Test form, printout, report
+
+**Barn sheet**:
+The lab's form with one row per doe, printed with her last test's results. On test day the owner writes each doe's 1st (AM) and 2nd (PM) milk weights on it, in pounds to one decimal.
+_Avoid_: Weigh sheet, test sheet
+
+**DHIR sample number**:
+A doe's row number on the lab's barn sheet, set once and kept from test to test, so the test sheet lists does in the same order as the lab's paper.
+_Avoid_: Cow number, row, position
+
+**Previous milking**:
+The milking before the test day's first one: the evening (PM) milking the day before. The form asks for its start and stop times so the lab can work out the 24-hour period.
+_Avoid_: Last milking, prior milking
+
+**Milking start/stop**:
+When a milking began and ended, as written on the Owner's Options form. Taken from the first and last time a weight was entered for that milking, and corrected on the test when that's wrong.
+_Avoid_: Milking window, milking time
+
+**New to test**:
+A doe in milk on a test day that has no result on any earlier DHIR test, so she isn't on the lab's barn sheet yet and goes under New Cow Enrollment.
+_Avoid_: New cow, new enrollment, fresh doe

@@ -1,5 +1,5 @@
 import { admin, expect, test } from './fixtures.ts'
-import { addDoeInMilk, addGoat, isoDate, lbToGrams, milkRows, ozToGrams } from './seed.ts'
+import { addDoeInMilk, addGoat, isoDate, lbToGrams, milkRows, milkTimes, ozToGrams } from './seed.ts'
 
 const today = isoDate()
 
@@ -94,6 +94,28 @@ test('a day total splits into AM and PM when AM is entered later', async ({ page
       { milking: 1, weight_g: ozToGrams(59), portions_g: null },
       { milking: 2, weight_g: ozToGrams(104) - ozToGrams(59), portions_g: null },
     ])
+})
+
+test('the day editor shows who entered each milking and when', async ({ page, owner, herd }) => {
+  const { goat } = await addDoeInMilk(owner, herd.id, 'Ina')
+  await admin.from('herd_members').update({ display_name: 'Sam' }).eq('herd_id', herd.id).eq('user_id', owner.id)
+  await page.goto('/milk')
+  await page.getByRole('button', { name: 'More' }).click()
+  await page.getByRole('menuitem', { name: 'Edit this day' }).click()
+
+  const dialog = page.getByRole('dialog')
+  const before = new Date()
+  await dialog.getByLabel('AM weight').fill('59')
+  await dialog.getByLabel('AM note').click()
+  await expect.poll(() => milkRows(goat.id, today)).toHaveLength(1)
+  const [{ enteredAt }] = await milkTimes(goat.id, today)
+  expect(enteredAt.getTime()).toBeGreaterThanOrEqual(before.getTime() - 1000)
+
+  const time = await page.evaluate(
+    (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+    enteredAt.toISOString(),
+  )
+  await expect(dialog.getByTestId('milking-entered')).toHaveText(`by Sam · ${time}`)
 })
 
 test('the day editor adds an extra milking weighed in parts', async ({ page, owner, herd }) => {

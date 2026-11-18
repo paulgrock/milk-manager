@@ -6,6 +6,7 @@ import {
   applyRecord,
   dayStatus,
   daysInMilk,
+  enteredLine,
   defaultMilking,
   formatWeight,
   formatWeightInput,
@@ -30,6 +31,7 @@ function row(milking: number, weight_g: number, extra: Partial<MilkRow> = {}): M
     note: null,
     recorded_by: null,
     recorded_at: '',
+    entered_at: '',
     ...extra,
   }
 }
@@ -140,6 +142,49 @@ describe('applyRecord (mirrors record_milking)', () => {
     expect(() => applyRecord([row(AM, 1500)], input(DAY_TOTAL, 3000))).toThrow('already has separate milkings')
     expect(() => applyRecord([row(DAY_TOTAL, 3000)], input(3, 500))).toThrow('Split the day total')
     expect(() => applyRecord([row(DAY_TOTAL, 3000)], input(AM, 3500))).toThrow('more than the day total')
+  })
+
+  it('stamps the entry time on the saved milking and on the split-off one', () => {
+    const enteredAt = '2026-10-21T11:42:00.000Z'
+    const sentAt = '2026-10-21T18:00:00.000Z'
+    const rows = applyRecord([row(DAY_TOTAL, 3000)], { ...input(PM, 1300), enteredAt }, sentAt)
+    expect(rows.map((r) => r.entered_at)).toEqual([enteredAt, enteredAt])
+    expect(rows.map((r) => r.recorded_at)).toEqual([sentAt, sentAt])
+  })
+
+  it("doesn't show the last person's name on an edit the server hasn't confirmed", () => {
+    const [edited] = applyRecord([row(AM, 1500, { recorded_by: 'u1' })], input(AM, 1600))
+    expect(edited!.recorded_by).toBeNull()
+  })
+})
+
+describe('enteredLine', () => {
+  const at = (d: Date) => ({ entered_at: d.toISOString(), milked_on: '2026-10-21' })
+  const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
+  it('shows who and what time on the milking day', () => {
+    const d = new Date(2026, 9, 21, 6, 42)
+    expect(enteredLine(at(d), 'Sam')).toBe(`by Sam · ${time(d)}`)
+  })
+
+  it('adds the date when entered on a later day', () => {
+    const d = new Date(2026, 9, 22, 7, 5)
+    const line = enteredLine(at(d), 'Sam')
+    expect(line).toBe(
+      `by Sam · ${d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`,
+    )
+    expect(line).not.toContain('2026')
+  })
+
+  it('adds the year when entered in a later year', () => {
+    const line = enteredLine({ entered_at: new Date(2027, 0, 2, 7, 5).toISOString(), milked_on: '2026-12-31' })
+    expect(line).toContain('2027')
+  })
+
+  it('leaves out an unknown name or time', () => {
+    const d = new Date(2026, 9, 21, 6, 42)
+    expect(enteredLine(at(d))).toBe(time(d))
+    expect(enteredLine({ entered_at: '', milked_on: '2026-10-21' }, 'Sam')).toBe('by Sam')
   })
 })
 

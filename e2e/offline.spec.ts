@@ -1,7 +1,7 @@
 // The barn case: milk entered with bad or no signal must never be lost.
 import { env } from './env.ts'
 import { expect, test } from './fixtures.ts'
-import { addDoeInMilk, isoDate, milkRows, ozToGrams } from './seed.ts'
+import { addDoeInMilk, isoDate, milkRows, milkTimes, ozToGrams } from './seed.ts'
 
 const today = isoDate()
 const apiRoutes = `${env.apiUrl}/**`
@@ -53,11 +53,17 @@ test('weak signal: a save that keeps failing survives a reload and uploads later
   expect(await milkRows(goat.id, today)).toEqual([])
 
   // Signal comes back.
+  const signalBack = new Date()
   await context.unroute(apiRoutes)
   await expect
     .poll(() => milkRows(goat.id, today), { timeout: 40_000 })
     .toEqual([{ milking: 2, weight_g: ozToGrams(46), portions_g: null }])
   await expect(page.getByText('saved on this phone')).toBeHidden({ timeout: 10_000 })
+
+  // It keeps the time it was typed in the barn, not when it reached the server.
+  const [times] = await milkTimes(goat.id, today)
+  expect(times!.enteredAt.getTime()).toBeLessThan(signalBack.getTime())
+  expect(times!.recordedAt.getTime()).toBeGreaterThanOrEqual(signalBack.getTime() - 1000)
 })
 
 test('no signal at all: the app opens from the device, queues the weight, and sends it on reconnect', async ({

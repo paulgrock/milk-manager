@@ -73,6 +73,7 @@ type FormState = {
   tattoo_right: string
   scrapie_tag: string
   microchip: string
+  dhir_sample_number: string
   sire_id: string | null
   dam_id: string | null
   status: GoatStatus
@@ -100,6 +101,7 @@ function fromGoat(g?: Goat): FormState {
     tattoo_right: g?.tattoo_right ?? '',
     scrapie_tag: g?.scrapie_tag ?? '',
     microchip: g?.microchip ?? '',
+    dhir_sample_number: g?.dhir_sample_number?.toString() ?? '',
     sire_id: g?.sire_id ?? null,
     dam_id: g?.dam_id ?? null,
     status: g?.status ?? 'active',
@@ -141,6 +143,14 @@ const hasName = computed(() => !!form.registered_name.trim() || !!form.barn_name
 
 const blank = (s: string) => s.trim() || null
 
+// Her row on the lab's DHIR barn sheet.
+const sampleNumber = computed<number | null | 'invalid'>(() => {
+  const text = form.dhir_sample_number.trim()
+  if (!text) return null
+  const n = Number(text)
+  return Number.isInteger(n) && n >= 1 && n <= 999 ? n : 'invalid'
+})
+
 function toValues(): Omit<GoatInsert, 'herd_id'> {
   return {
     registered_name: blank(form.registered_name),
@@ -160,6 +170,7 @@ function toValues(): Omit<GoatInsert, 'herd_id'> {
     tattoo_right: blank(form.tattoo_right),
     scrapie_tag: blank(form.scrapie_tag),
     microchip: blank(form.microchip),
+    dhir_sample_number: form.sex === 'doe' && sampleNumber.value !== 'invalid' ? sampleNumber.value : null,
     sire_id: form.sire_id,
     dam_id: form.dam_id,
     status: form.status,
@@ -172,6 +183,10 @@ function toValues(): Omit<GoatInsert, 'herd_id'> {
 async function submit() {
   if (!hasName.value) {
     toast.add({ color: 'error', title: 'Give the goat a registered name or a barn name' })
+    return
+  }
+  if (form.sex === 'doe' && sampleNumber.value === 'invalid') {
+    toast.add({ color: 'error', title: 'The DHIR sample number should be a whole number from 1 to 999' })
     return
   }
   try {
@@ -305,6 +320,14 @@ async function remove() {
           </UFormField>
           <UFormField label="Microchip">
             <UInput v-model="form.microchip" class="w-full" maxlength="50" />
+          </UFormField>
+          <UFormField
+            v-if="form.sex === 'doe'"
+            label="DHIR sample number"
+            hint="Her row on the lab's barn sheet"
+            :error="sampleNumber === 'invalid' ? 'A whole number from 1 to 999' : undefined"
+          >
+            <UInput v-model="form.dhir_sample_number" inputmode="numeric" class="w-full" maxlength="3" />
           </UFormField>
         </div>
       </UCard>
