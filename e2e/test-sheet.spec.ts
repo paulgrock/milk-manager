@@ -46,16 +46,14 @@ test('shows what to write on the Owner’s Options form and the barn sheet', asy
     ])
   if (error) throw error
 
-  const { data: dhir, error: testError } = await admin
-    .from('milk_tests')
-    .insert({ herd_id: herd.id, tested_on: testDay, kind: 'dhir' })
-    .select()
-    .single()
-  if (testError) throw testError
-
-  await page.goto(`/milk/tests/${dhir.id}`)
+  // No test recorded yet: the sheet is filled in before the lab's results come back.
+  await page.goto('/milk/tests')
   await page.getByRole('link', { name: 'Copy to form' }).click()
-  await expect(page).toHaveURL(`/milk/tests/${dhir.id}/sheet`)
+  await expect(page).toHaveURL('/milk/tests/sheet')
+  await expect(page.getByText(/No milk weights entered on/)).toBeVisible()
+  await page.getByRole('button', { name: 'Previous day' }).click()
+  await expect(page).toHaveURL(`/milk/tests/sheet?date=${testDay}`)
+  await expect(page.getByText(/No milk weights entered on/)).toHaveCount(0)
 
   await expect(page.getByText(formDate(testDay)).first()).toBeVisible()
   const schedule = page.getByTestId('milking-schedule')
@@ -75,14 +73,18 @@ test('shows what to write on the Owner’s Options form and the barn sheet', asy
   await expect(rows.nth(1)).toContainText('2Ina1.2—')
   await expect(rows.nth(2)).toContainText('No PM weight')
 
-  // Correct a time; it's saved on the test.
+  // Correct a time; it's saved for the day.
   await page.getByRole('button', { name: 'Correct times' }).click()
   await page.getByLabel('Milking 1 Start').fill('9:00')
   await page.getByRole('button', { name: 'Save times' }).click()
   await expect(schedule).toContainText('Milking 1 Start9:00Corrected')
   await expect
-    .poll(async () => (await admin.from('milk_tests').select('milking_times').eq('id', dhir.id).single()).data)
-    .toEqual({ milking_times: { '1': { start: '9:00' } } })
+    .poll(
+      async () =>
+        (await admin.from('milking_times').select('times').eq('herd_id', herd.id).eq('milked_on', testDay).single())
+          .data,
+    )
+    .toEqual({ times: { '1': { start: '9:00' } } })
 
   // Ticks are remembered on this phone.
   await page.getByRole('checkbox', { name: 'Clover copied' }).check()
@@ -99,14 +101,27 @@ test('shows what to write on the Owner’s Options form and the barn sheet', asy
   await page.screenshot({ path: test.info().outputPath('test-sheet-375-editing.png'), fullPage: true })
 })
 
-test('only DHIR tests have a form to copy to', async ({ page, owner, herd }) => {
+test('a DHIR test recorded for the day links to its results, and test pages have no sheet button', async ({
+  page,
+  owner,
+  herd,
+}) => {
   await addDoeInMilk(owner, herd.id, 'Ina')
   const { data } = await admin
     .from('milk_tests')
-    .insert({ herd_id: herd.id, tested_on: testDay, kind: 'owner' })
+    .insert({ herd_id: herd.id, tested_on: testDay, kind: 'dhir' })
     .select()
     .single()
-  await page.goto(`/milk/tests/${data!.id}`)
+  await page.goto(`/milk/tests/sheet?date=${testDay}`)
+  await page.getByRole('link', { name: "See this day's test results" }).click()
+  await expect(page).toHaveURL(`/milk/tests/${data!.id}`)
   await expect(page.getByRole('heading', { name: 'Milk test' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Copy to form' })).toHaveCount(0)
+
+  // The tests page's buttons fit a phone.
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/milk/tests')
+  await expect(page.getByRole('link', { name: 'Copy to form' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
+  await page.screenshot({ path: test.info().outputPath('milk-tests-375.png') })
 })

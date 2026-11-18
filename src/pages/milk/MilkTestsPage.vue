@@ -37,6 +37,7 @@ const rows = computed(() =>
     <div class="flex flex-wrap items-center gap-2">
       <UButton to="/milk" color="neutral" variant="ghost" icon="i-lucide-arrow-left" aria-label="Back to milk entry" />
       <h1 class="text-2xl font-semibold flex-1">Milk tests</h1>
+      <UButton to="/milk/tests/sheet" variant="soft" icon="i-lucide-clipboard-list">Copy to form</UButton>
       <UButton to="/milk/tests/new" icon="i-lucide-plus">Add test day</UButton>
     </div>
     <p class="text-sm text-muted">

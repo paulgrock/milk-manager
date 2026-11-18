@@ -93,7 +93,7 @@ _Avoid_: Price, sale price
 ### Milk tests
 
 **Test sheet**:
-What gets written by hand on the lab's two DHIR forms for one test day (the Owner's Options form and the barn sheet), shown in the app in the forms' order so it can be copied across. Only the handwritten parts: the lab prints everything else.
+What gets written by hand on the lab's two DHIR forms for one test day (the Owner's Options form and the barn sheet), shown in the app in the forms' order so it can be copied across. Opened from Milk tests for any milking day, whether or not the test has been recorded yet. Only the handwritten parts: the lab prints everything else.
 _Avoid_: Test form, printout, report
 
 **Barn sheet**:
@@ -109,7 +109,7 @@ The milking before the test day's first one: the evening (PM) milking the day be
 _Avoid_: Last milking, prior milking
 
 **Milking start/stop**:
-When a milking began and ended, as written on the Owner's Options form. Taken from the first and last time a weight was entered for that milking, and corrected on the test when that's wrong.
+When a milking began and ended, as written on the Owner's Options form. Taken from the first and last time a weight was entered for that milking, and corrected by hand for that day when that's wrong.
 _Avoid_: Milking window, milking time
 
 **New to test**:
