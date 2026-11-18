@@ -1,5 +1,6 @@
 // The test sheet: what gets written by hand on the lab's DHIR forms for one
-// test day, worked out from the app's records. See GLOSSARY.md (Milk tests)
+// test day, worked out from the app's records. Any milking day works, whether
+// or not a test has been recorded for it yet. See GLOSSARY.md (Milk tests)
 // and docs/adr/0001-milking-times-from-entry-times.md.
 
 import type { Json } from './database.types'
@@ -104,7 +105,10 @@ export interface TestSheet {
 }
 
 export interface SheetInput {
-  test: Pick<MilkTest, 'id' | 'tested_on' | 'milking_times'>
+  /** The test day, 'YYYY-MM-DD'. */
+  date: string
+  /** Times corrected by hand for that day (milking_times.times), if any. */
+  milkingTimes: Json
   /** Every test for the herd, to tell which does were on an earlier DHIR test. */
   tests: Pick<MilkTest, 'id' | 'tested_on' | 'kind'>[]
   results: Pick<MilkTestResult, 'test_id' | 'goat_id'>[]
@@ -132,10 +136,9 @@ function timesFor(rows: MilkRow[], corrected: MilkingTimes[ScheduleKey]): Pick<S
 }
 
 export function buildTestSheet(input: SheetInput): TestSheet {
-  const { test, goats, lactations, dayRows, previousDayRows } = input
-  const date = test.tested_on
+  const { date, goats, lactations, dayRows, previousDayRows } = input
   const byId = new Map(goats.map((g) => [g.id, g]))
-  const corrected = readMilkingTimes(test.milking_times)
+  const corrected = readMilkingTimes(input.milkingTimes)
 
   // The previous milking is the last one the evening before.
   const lastPrevious = Math.max(0, ...previousDayRows.map((r) => r.milking))

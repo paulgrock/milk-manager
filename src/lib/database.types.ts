@@ -537,14 +537,14 @@ isOneToOne: false
                   ]
                 },"milk_tests": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["milk_test_kind"],"lab": string | null,"milking_times": NonNullable<Json>,"notes": string | null,"tested_on": string,"tester": string | null
+                    "created_at": string,"created_by": string | null,"herd_id": string,"id": string,"kind": Database["public"]['Enums']["milk_test_kind"],"lab": string | null,"notes": string | null,"tested_on": string,"tester": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"milking_times"?: NonNullable<Json>,"notes"?: string | null,"tested_on": string,"tester"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"herd_id": string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on": string,"tester"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"milking_times"?: NonNullable<Json>,"notes"?: string | null,"tested_on"?: string,"tester"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"herd_id"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["milk_test_kind"],"lab"?: string | null,"notes"?: string | null,"tested_on"?: string,"tester"?: string | null
                   }
                   Relationships: [
                     {
@@ -573,6 +573,26 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "goats"
       referencedColumns: ["id","herd_id"]
+    }
+                  ]
+                },"milking_times": {
+                  Row: {
+                    "herd_id": string,"milked_on": string,"times": NonNullable<Json>,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "herd_id": string,"milked_on": string,"times"?: NonNullable<Json>,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "herd_id"?: string,"milked_on"?: string,"times"?: NonNullable<Json>,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "milking_times_herd_id_fkey"
+      columns: ["herd_id"]
+isOneToOne: false
+      referencedRelation: "herds"
+      referencedColumns: ["id"]
     }
                   ]
                 },"pregnancy_checks": {

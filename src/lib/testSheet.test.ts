@@ -102,7 +102,8 @@ const PREV = '2026-11-14'
 
 function input(overrides: Partial<SheetInput> = {}): SheetInput {
   return {
-    test: { id: 't', tested_on: DAY, milking_times: {} },
+    date: DAY,
+    milkingTimes: {},
     tests: [{ id: 't', tested_on: DAY, kind: 'dhir' }],
     results: [],
     goats: [],
@@ -165,7 +166,7 @@ describe('buildTestSheet', () => {
   it('prefers times corrected on the test, and leaves a milking with no weights blank', () => {
     const sheet = buildTestSheet(
       input({
-        test: { id: 't', tested_on: DAY, milking_times: { '1': { start: '9:00' } } },
+        milkingTimes: { '1': { start: '9:00' } },
         dayRows: [weight('a', DAY, 1, 1.3, '9:05'), weight('a', DAY, 1, 1.3, '9:05')],
       }),
     )

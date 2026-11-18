@@ -1,17 +1,19 @@
 <script setup lang="ts">
 // What to write by hand on the lab's two DHIR forms for one test day, in the
-// forms' own order and words. See GLOSSARY.md (Milk tests).
+// forms' own order and words. Opens on any milking day (?date=YYYY-MM-DD),
+// whether or not the test has been recorded yet. See GLOSSARY.md (Milk tests).
 import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@nuxt/ui/composables'
-import { useMutation } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { useHerd } from '@/composables/useHerd'
 import { useHerdGoats } from '@/composables/useGoats'
-import { useLactations, useMilkDay } from '@/composables/useMilk'
-import { milkTestsKey, useMilkTests } from '@/composables/useMilkTests'
+import { shiftDate, useLactations, useMilkDay } from '@/composables/useMilk'
+import { useMilkTests } from '@/composables/useMilkTests'
 import { refreshQueries } from '@/lib/queryClient'
 import { supabase, unwrap } from '@/lib/supabase'
-import { formatDate } from '@/lib/dates'
+import { formatDate, todayISO } from '@/lib/dates'
+import type { Json } from '@/lib/database.types'
 import {
   buildTestSheet,
   dayBefore,
@@ -23,16 +25,44 @@ import {
 } from '@/lib/testSheet'
 
 const route = useRoute()
+const router = useRouter()
 const toast = useToast()
 const { herdId } = useHerd()
 const { goats } = useHerdGoats()
 const lactations = useLactations()
 const { query, data } = useMilkTests()
 
-const testId = computed(() => route.params.id as string)
-const test = computed(() => data.value.tests.find((t) => t.id === testId.value))
-const day = useMilkDay(() => test.value?.tested_on ?? '')
-const previousDay = useMilkDay(() => (test.value ? dayBefore(test.value.tested_on) : ''))
+const today = todayISO()
+const date = computed(() => {
+  const q = route.query.date
+  return typeof q === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q) && q <= today ? q : today
+})
+function goTo(d: string) {
+  void router.replace({ query: d === today ? {} : { date: d } })
+}
+
+const day = useMilkDay(date)
+const previousDay = useMilkDay(() => dayBefore(date.value))
+
+/** A DHIR test already recorded for this day, if any. */
+const testThatDay = computed(() => data.value.tests.find((t) => t.tested_on === date.value && t.kind === 'dhir'))
+
+// Times corrected by hand for this day.
+const timesKey = computed(() => ['milkingTimes', herdId.value, date.value] as const)
+const savedTimes = useQuery({
+  queryKey: timesKey,
+  queryFn: async (): Promise<MilkingTimes> => {
+    const { data, error } = await supabase
+      .from('milking_times')
+      .select('times')
+      .eq('herd_id', herdId.value)
+      .eq('milked_on', date.value)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    return readMilkingTimes(data?.times ?? {})
+  },
+  enabled: computed(() => !!herdId.value),
+})
 
 const loading = computed(
   () =>
@@ -40,27 +70,29 @@ const loading = computed(
     goats.isPending.value ||
     lactations.isPending.value ||
     day.isPending.value ||
-    previousDay.isPending.value,
+    previousDay.isPending.value ||
+    savedTimes.isPending.value,
 )
 
 const sheet = computed(() =>
-  test.value && !loading.value
-    ? buildTestSheet({
-        test: test.value,
+  loading.value
+    ? null
+    : buildTestSheet({
+        date: date.value,
+        milkingTimes: (savedTimes.data.value ?? {}) as Json,
         tests: data.value.tests,
         results: data.value.results,
         goats: goats.data.value ?? [],
         lactations: lactations.data.value ?? [],
         dayRows: day.data.value ?? [],
         previousDayRows: previousDay.data.value ?? [],
-      })
-    : null,
+      }),
 )
 
-// --- Ticks: what's been copied, kept on this phone for this test ------------
+// --- Ticks: what's been copied, kept on this phone for this day -------------
 
 const ticks = ref<Record<string, boolean>>({})
-const ticksKey = computed(() => `test-sheet-ticks:${testId.value}`)
+const ticksKey = computed(() => `test-sheet-ticks:${herdId.value}:${date.value}`)
 watch(
   ticksKey,
   (key) => {
@@ -84,6 +116,7 @@ function toggle(key: string, value: boolean | 'indeterminate') {
 // --- Correcting milking times ----------------------------------------------
 
 const editingTimes = ref(false)
+watch(date, () => (editingTimes.value = false))
 const timeFields = reactive<Record<ScheduleKey, { start: string; stop: string }>>({
   previous: { start: '', stop: '' },
   '1': { start: '', stop: '' },
@@ -101,9 +134,15 @@ function startEditing() {
 
 const saveTimes = useMutation({
   mutationFn: async (times: MilkingTimes) =>
-    unwrap(await supabase.from('milk_tests').update({ milking_times: times }).eq('id', testId.value)),
+    Object.keys(times).length
+      ? unwrap(
+          await supabase
+            .from('milking_times')
+            .upsert({ herd_id: herdId.value, milked_on: date.value, times, updated_at: new Date().toISOString() }),
+        )
+      : unwrap(await supabase.from('milking_times').delete().eq('herd_id', herdId.value).eq('milked_on', date.value)),
   onSuccess: async () => {
-    await refreshQueries(milkTestsKey(herdId.value))
+    await refreshQueries(timesKey.value)
     editingTimes.value = false
   },
   onError: (e: Error) => toast.add({ color: 'error', title: 'Could not save times', description: e.message }),
@@ -133,7 +172,8 @@ function resetTimes() {
   saveTimes.mutate({})
 }
 
-const hasCorrections = computed(() => Object.keys(readMilkingTimes(test.value?.milking_times ?? {})).length > 0)
+const hasCorrections = computed(() => Object.keys(savedTimes.data.value ?? {}).length > 0)
+const noWeights = computed(() => !day.data.value?.length)
 
 const scheduleLines = computed(() =>
   (sheet.value?.schedule ?? []).flatMap((row) => {
@@ -151,27 +191,61 @@ const anyMissingTime = computed(() => scheduleLines.value.some((l) => l.time.sou
   <div class="space-y-4">
     <div class="flex items-center gap-2">
       <UButton
-        :to="`/milk/tests/${testId}`"
+        to="/milk/tests"
         color="neutral"
         variant="ghost"
         icon="i-lucide-arrow-left"
-        aria-label="Back to the test"
+        aria-label="Back to milk tests"
       />
       <div class="flex-1 min-w-0">
         <h1 class="text-2xl font-semibold">Copy to form</h1>
-        <p v-if="test" class="text-sm text-muted">DHIR test day {{ formatDate(test.tested_on) }}</p>
+        <p class="text-sm text-muted">DHIR test day {{ formatDate(date) }}</p>
       </div>
     </div>
 
-    <div v-if="loading" class="space-y-2"><USkeleton v-for="i in 4" :key="i" class="h-16 w-full" /></div>
-    <UCard v-else-if="!test || test.kind !== 'dhir'" class="text-center">
-      <p class="text-muted">This isn't a DHIR test, so there's no form to copy to.</p>
-    </UCard>
+    <div class="flex flex-wrap items-center gap-1">
+      <UButton
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-chevron-left"
+        aria-label="Previous day"
+        @click="goTo(shiftDate(date, -1))"
+      />
+      <UInput
+        :model-value="date"
+        type="date"
+        :max="today"
+        class="w-40"
+        aria-label="Test day"
+        @update:model-value="(v: unknown) => v && goTo(String(v))"
+      />
+      <UButton
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-chevron-right"
+        aria-label="Next day"
+        :disabled="date >= today"
+        @click="goTo(shiftDate(date, 1))"
+      />
+      <UButton v-if="date !== today" variant="link" @click="goTo(today)">Today</UButton>
+    </div>
 
+    <div v-if="loading" class="space-y-2"><USkeleton v-for="i in 4" :key="i" class="h-16 w-full" /></div>
     <template v-else-if="sheet">
       <p class="text-sm text-muted">
         Only what you write by hand. The lab prints everything else. Tick each part once it's on the paper.
+        <template v-if="testThatDay">
+          <RouterLink :to="`/milk/tests/${testThatDay.id}`" class="underline">See this day's test results</RouterLink>.
+        </template>
       </p>
+      <UAlert
+        v-if="noWeights"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        :title="`No milk weights entered on ${formatDate(date)}`"
+        description="Pick the test day above, or enter the weights on the milk page first."
+      />
 
       <div class="grid gap-4 lg:grid-cols-2 lg:items-start">
         <!-- Owner's Options -------------------------------------------------- -->
