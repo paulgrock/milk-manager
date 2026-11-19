@@ -105,6 +105,9 @@ test('the tab bar keeps the daily sections a tap away and the rest under More', 
   for (const name of ['Today', 'Milk', 'Goats', 'Chores']) await expect(tabs.getByRole('link', { name })).toBeVisible()
   await expect(tabs.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
   await expect(tabs.getByRole('link', { name: 'Health' })).toHaveCount(0)
+  // Tinted so it stands apart from the page.
+  const bg = (el: Element) => getComputedStyle(el).backgroundColor
+  expect(await tabs.evaluate(bg)).not.toBe(await page.locator('body').evaluate(bg))
 
   const z = (el: Element) => Number(getComputedStyle(el).zIndex) || 0
   const tabsZ = await tabs.evaluate(z)

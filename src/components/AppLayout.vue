@@ -51,10 +51,16 @@ const herdOptions = computed(() =>
 </script>
 
 <template>
-  <!-- --app-nav-h is the height of the phone tab bar (64px of tabs plus its 1px top border), so other bars pinned to the bottom can sit above it. -->
-  <div class="min-h-dvh flex flex-col [--app-nav-h:calc(4rem+1px+env(safe-area-inset-bottom))] lg:[--app-nav-h:0px]">
+  <!--
+    Bars pinned to the bottom of the page use these to stay clear of the navigation:
+    --app-nav-h is the phone tab bar's height (64px of tabs plus its 1px top border),
+    --app-sidebar-w the desktop sidebar's width (14rem, border included).
+  -->
+  <div
+    class="min-h-dvh flex flex-col [--app-nav-h:calc(4rem+1px+env(safe-area-inset-bottom))] [--app-sidebar-w:0px] lg:[--app-nav-h:0px] lg:[--app-sidebar-w:14rem]"
+  >
     <header class="sticky top-0 z-10 border-b border-default bg-default/90 backdrop-blur">
-      <div class="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
+      <div class="px-4 h-14 flex items-center gap-3">
         <img
           :src="herd?.logo ?? '/favicon.svg'"
           :alt="herd?.logo ? `${herd.name} logo` : ''"
@@ -75,19 +81,27 @@ const herdOptions = computed(() =>
       </div>
     </header>
 
-    <div class="flex-1 mx-auto w-full max-w-6xl lg:flex lg:gap-6 lg:px-4">
-      <aside class="hidden lg:block w-52 shrink-0 sticky top-14 self-start py-4">
-        <UNavigationMenu :items="sidebar" orientation="vertical" aria-label="Main" :ui="{ separator: 'my-2' }" />
+    <div class="flex-1 lg:flex">
+      <!-- Tinted, and runs the full height of the window, so it reads as separate from the page. -->
+      <aside
+        class="hidden lg:block w-56 shrink-0 sticky top-[calc(3.5rem+1px)] h-[calc(100dvh-3.5rem-1px)] overflow-y-auto border-r border-default bg-muted px-3 py-4"
+      >
+        <UNavigationMenu
+          :items="sidebar"
+          orientation="vertical"
+          aria-label="Main"
+          :ui="{ separator: 'my-2', link: 'data-active:before:bg-accented hover:before:bg-accented/50' }"
+        />
       </aside>
 
-      <main class="flex-1 min-w-0 p-4 pb-[calc(var(--app-nav-h)+1rem)] lg:px-0">
+      <main class="flex-1 min-w-0 mx-auto w-full max-w-5xl p-4 pb-[calc(var(--app-nav-h)+1rem)]">
         <RouterView />
       </main>
     </div>
 
     <nav
       aria-label="Main"
-      class="lg:hidden fixed bottom-0 inset-x-0 z-20 border-t border-default bg-default/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
+      class="lg:hidden fixed bottom-0 inset-x-0 z-20 border-t border-default bg-muted pb-[env(safe-area-inset-bottom)]"
     >
       <ul class="grid grid-cols-5 h-16">
         <li v-for="tab in tabs" :key="tab.to">

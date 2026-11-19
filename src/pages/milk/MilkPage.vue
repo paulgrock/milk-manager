@@ -306,7 +306,7 @@ const dryOff = (lactation: Lactation) => (lactationModal.value = { open: true, m
 
     <div
       v-if="line.length"
-      class="fixed bottom-(--app-nav-h) inset-x-0 z-10 border-t border-default bg-default/95 backdrop-blur lg:pb-[env(safe-area-inset-bottom)]"
+      class="fixed bottom-(--app-nav-h) left-(--app-sidebar-w) right-0 z-10 border-t border-default bg-default/95 backdrop-blur lg:pb-[env(safe-area-inset-bottom)]"
     >
       <div class="mx-auto max-w-5xl px-4 py-3 flex items-center gap-4">
         <div>
