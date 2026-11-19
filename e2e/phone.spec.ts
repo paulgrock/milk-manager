@@ -1,5 +1,5 @@
 // Runs in the "phone" project (Pixel 7): pages fit the screen with no sideways scrolling.
-import { admin, expect, test } from './fixtures.ts'
+import { admin, createUser, deleteUser, expect, signInContext, test } from './fixtures.ts'
 import { addDoeInMilk, addGoat, addMilkCurve, isoDate } from './seed.ts'
 
 test('main pages fit a phone screen', async ({ page, owner, herd }) => {
@@ -96,4 +96,65 @@ test('the calendar shows a compact month with a dot per event, and a tap jumps t
   const section = page.locator('section[data-selected]')
   await expect(section).toContainText(/Hoof trim: Ina/)
   await expect(section).toBeInViewport()
+})
+
+test('the tab bar keeps the daily sections a tap away and the rest under More', async ({ page, herd }) => {
+  await page.goto('/')
+  await expect(page.getByRole('banner')).toContainText(herd.name)
+  const tabs = page.getByRole('navigation', { name: 'Main' })
+  for (const name of ['Today', 'Milk', 'Goats', 'Chores']) await expect(tabs.getByRole('link', { name })).toBeVisible()
+  await expect(tabs.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
+  await expect(tabs.getByRole('link', { name: 'Health' })).toHaveCount(0)
+
+  const z = (el: Element) => Number(getComputedStyle(el).zIndex) || 0
+  const tabsZ = await tabs.evaluate(z)
+
+  await tabs.getByRole('button', { name: 'More' }).click()
+  const more = page.getByRole('navigation', { name: 'More' })
+  for (const name of ['Cheese', 'Breeding', 'Health', 'Calendar', 'Finances', 'Settings'])
+    await expect(more.getByRole('link', { name })).toBeVisible()
+  // The sheet is drawn over the tab bar, so its last item (Settings) isn't hidden behind it.
+  const sheetZ = await page.getByRole('dialog').evaluate(z)
+  expect(sheetZ).toBeGreaterThan(tabsZ)
+
+  await more.getByRole('link', { name: 'Health' }).click()
+  await expect(page).toHaveURL(/\/health$/)
+  await expect(more).toBeHidden()
+  await expect(tabs.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
+
+  // The tab bar stays put while the page scrolls under it.
+  await expect(tabs).toBeInViewport()
+  const box = (await tabs.boundingBox())!
+  expect(box.y + box.height).toBeCloseTo(page.viewportSize()!.height, 0)
+})
+
+test('helpers don’t see Finances under More', async ({ browser, herd }) => {
+  const helper = await createUser('helper')
+  try {
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    const ctx = await browser.newContext({ ...test.info().project.use })
+    await signInContext(ctx, helper)
+    const page = await ctx.newPage()
+    await page.goto('/')
+    await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'More' }).click()
+    const more = page.getByRole('navigation', { name: 'More' })
+    await expect(more.getByRole('link', { name: 'Calendar' })).toBeVisible()
+    await expect(more.getByRole('link', { name: 'Finances' })).toHaveCount(0)
+    await ctx.close()
+  } finally {
+    await deleteUser(helper)
+  }
+})
+
+test('the milk totals sit just above the tab bar', async ({ page, owner, herd }) => {
+  await addDoeInMilk(owner, herd.id, 'Clover')
+  await page.goto('/milk')
+  const totals = page.getByText('Day total').locator('xpath=ancestor::div[contains(@class,"fixed")]')
+  const tabs = page.getByRole('navigation', { name: 'Main' })
+  await expect(totals).toBeVisible()
+  const t = (await totals.boundingBox())!
+  const n = (await tabs.boundingBox())!
+  expect(t.y + t.height).toBeCloseTo(n.y, 0)
 })
