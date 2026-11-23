@@ -4,36 +4,32 @@ import { useRoute } from 'vue-router'
 import { useOnline } from '@vueuse/core'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useHerd } from '@/composables/useHerd'
+import { usePreferences } from '@/composables/usePreferences'
+import { SETTINGS, sectionsFor, tabPaths } from '@/lib/nav'
 
 const { herd, herdId, memberships, selectHerd, isOwner } = useHerd()
+const { preferences } = usePreferences()
 const online = useOnline()
 const route = useRoute()
 
-type NavItem = NavigationMenuItem & { to: string; label: string; icon: string }
+// Helpers don't get the owners-only sections (Finances).
+const sections = computed(() => sectionsFor(isOwner.value))
+const settings = SETTINGS
 
-// The sections used every day, kept one tap away in the phone's tab bar.
-const tabs: NavItem[] = [
-  { label: 'Today', icon: 'i-lucide-sun', to: '/', exact: true },
-  { label: 'Milk', icon: 'i-lucide-milk', to: '/milk' },
-  { label: 'Goats', icon: 'i-lucide-list', to: '/goats' },
-  { label: 'Chores', icon: 'i-lucide-list-checks', to: '/chores' },
-]
+// The sections this person picked in Settings (or the daily ones), one tap away in the phone's tab bar.
+const tabs = computed(() => {
+  const paths = tabPaths(preferences.data.value?.nav_tabs, sections.value)
+  return paths.map((to) => sections.value.find((s) => s.to === to)!)
+})
 
 // Everything else sits under More on a phone.
-const allMore: NavItem[] = [
-  { label: 'Cheese', icon: 'i-lucide-cylinder', to: '/cheese' },
-  { label: 'Breeding', icon: 'i-lucide-heart', to: '/breeding' },
-  { label: 'Health', icon: 'i-lucide-stethoscope', to: '/health' },
-  { label: 'Calendar', icon: 'i-lucide-calendar', to: '/calendar' },
-  { label: 'Finances', icon: 'i-lucide-wallet', to: '/finances' },
-]
-const settings: NavItem = { label: 'Settings', icon: 'i-lucide-settings', to: '/settings' }
+const more = computed(() => sections.value.filter((s) => !tabs.value.includes(s)))
 
-// Finances are owners-only, so helpers don't get the menu item.
-const more = computed(() => allMore.filter((item) => item.to !== '/finances' || isOwner.value))
-
-// The desktop sidebar lists everything, with Settings set apart at the bottom.
-const sidebar = computed<NavigationMenuItem[][]>(() => [[...tabs, ...more.value], [settings]])
+// The desktop sidebar lists everything in one fixed order, with Settings set apart at the bottom.
+const sidebar = computed<NavigationMenuItem[][]>(() => [
+  sections.value.map((s) => ({ label: s.label, icon: s.icon, to: s.to, exact: s.to === '/' })),
+  [settings],
+])
 
 const isActive = (to: string) =>
   to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`)

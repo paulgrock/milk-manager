@@ -9,6 +9,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useHerd, type HerdRole } from '@/composables/useHerd'
 import { useHerdMembers } from '@/composables/useHerdMembers'
 import PasskeysCard from '@/components/PasskeysCard.vue'
+import TabBarCard from '@/components/TabBarCard.vue'
 import { squareLogoDataUrl } from '@/lib/images'
 
 const router = useRouter()
@@ -262,6 +263,8 @@ async function onSignOut() {
         </li>
       </ul>
     </UCard>
+
+    <TabBarCard />
 
     <PasskeysCard />
 

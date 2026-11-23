@@ -711,6 +711,20 @@ isOneToOne: false
       referencedColumns: ["id","herd_id"]
     }
                   ]
+                },"user_preferences": {
+                  Row: {
+                    "nav_tabs": (string)[] | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "nav_tabs"?: (string)[] | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "nav_tabs"?: (string)[] | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {

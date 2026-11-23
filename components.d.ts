@@ -49,6 +49,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SaleModal: typeof import('./src/components/sales/SaleModal.vue')['default']
+    TabBarCard: typeof import('./src/components/TabBarCard.vue')['default']
     TreatmentModal: typeof import('./src/components/health/TreatmentModal.vue')['default']
     TypeSettings: typeof import('./src/components/cheese/TypeSettings.vue')['default']
     UAlert: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Alert.vue')['default']

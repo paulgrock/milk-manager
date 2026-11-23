@@ -151,6 +151,79 @@ test('helpers don’t see Finances under More', async ({ browser, herd }) => {
   }
 })
 
+test('people pick their own tabs in Settings, and keep them on another device', async ({
+  page,
+  browser,
+  owner,
+  herd,
+}) => {
+  await page.goto('/settings')
+  await expect(page.getByRole('banner')).toContainText(herd.name)
+  const tabs = page.getByRole('navigation', { name: 'Main' })
+  const card = page.getByRole('region', { name: 'Tab bar' })
+
+  // Health in the second slot, where Milk was.
+  await card.getByRole('combobox', { name: 'Tab 2' }).click()
+  await page.getByRole('option', { name: 'Health' }).click()
+  await expect(tabs.getByRole('link', { name: 'Health' })).toBeVisible()
+  await expect(tabs.getByRole('link', { name: 'Milk' })).toHaveCount(0)
+
+  // Picking one that's already a tab swaps the two.
+  await card.getByRole('combobox', { name: 'Tab 1' }).click()
+  await page.getByRole('option', { name: 'Chores' }).click()
+  await expect(tabs.getByRole('link')).toHaveText(['Chores', 'Health', 'Goats', 'Today'])
+
+  // Milk moved under More.
+  await tabs.getByRole('button', { name: 'More' }).click()
+  await expect(page.getByRole('navigation', { name: 'More' }).getByRole('link', { name: 'Milk' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  // Saved to their account, so it's the same after a reload and on another phone.
+  await expect
+    .poll(async () => (await admin.from('user_preferences').select('nav_tabs').eq('user_id', owner.id).single()).data)
+    .toEqual({ nav_tabs: ['/chores', '/health', '/goats', '/'] })
+  const ctx = await browser.newContext({ ...test.info().project.use })
+  await signInContext(ctx, owner)
+  const other = await ctx.newPage()
+  await other.goto('/')
+  await expect(other.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
+    'Chores',
+    'Health',
+    'Goats',
+    'Today',
+  ])
+  await ctx.close()
+
+  await card.getByRole('button', { name: 'Back to the usual tabs' }).click()
+  await expect(tabs.getByRole('link')).toHaveText(['Today', 'Milk', 'Goats', 'Chores'])
+  await expect(card.getByRole('button', { name: 'Back to the usual tabs' })).toHaveCount(0)
+})
+
+test('a helper who picked Finances in another herd gets a usual tab in its place', async ({ browser, herd }) => {
+  const helper = await createUser('helper')
+  try {
+    await admin
+      .from('herd_members')
+      .insert({ herd_id: herd.id, user_id: helper.id, role: 'helper', display_name: 'helper', email: helper.email })
+    await admin
+      .from('user_preferences')
+      .insert({ user_id: helper.id, nav_tabs: ['/finances', '/health', '/', '/milk'] })
+    const ctx = await browser.newContext({ ...test.info().project.use })
+    await signInContext(ctx, helper)
+    const page = await ctx.newPage()
+    await page.goto('/')
+    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText([
+      'Health',
+      'Today',
+      'Milk',
+      'Goats',
+    ])
+    await ctx.close()
+  } finally {
+    await deleteUser(helper)
+  }
+})
+
 test('the milk totals sit just above the tab bar', async ({ page, owner, herd }) => {
   await addDoeInMilk(owner, herd.id, 'Clover')
   await page.goto('/milk')
