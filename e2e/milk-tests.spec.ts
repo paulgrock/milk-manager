@@ -112,9 +112,9 @@ test('DHIR star progress uses her age at kidding and her test-day butterfat', as
   await expect(page.getByRole('heading', { name: 'DHIR star (ADGA)' })).toBeVisible()
   const star = page.getByRole('main')
   await expect(star.getByText(/miniature breed · any one of these in 305 days or less/)).toBeVisible()
-  // A Nigerian Dwarf kidding before 2 needs 600 lb milk, 21 lb butterfat or 18 lb protein.
+  // A Nigerian Dwarf kidding before 2 needs 600 lb milk, 31 lb butterfat or 18 lb protein.
   await expect(star.getByRole('row', { name: /Milk 600 lb/ })).toBeVisible()
-  await expect(star.getByRole('row', { name: /Butterfat 21 lb/ })).toBeVisible()
+  await expect(star.getByRole('row', { name: /Butterfat 31 lb/ })).toBeVisible()
   await expect(star.getByRole('row', { name: /Protein 18 lb needs a test/ })).toBeVisible()
   await expect(star.getByText('Star earned')).toBeVisible()
   await expect(star.getByText('and 1 test day')).toBeVisible()

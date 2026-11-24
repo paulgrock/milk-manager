@@ -8,8 +8,7 @@
 // miniature breed is the Nigerian Dwarf.
 
 import type { Database } from './database.types'
-import { addMonths, monthsAndDaysBetween } from './dates'
-import { daysBetween } from './breeding'
+import { monthsAndDaysBetween } from './dates'
 import { daysInMilk, type Lactation } from './milk'
 import type { OfficialFigures } from './lactation'
 
@@ -86,10 +85,12 @@ export function parseScc(text: string): number | null | 'invalid' {
 // ---------------------------------------------------------------------------
 // DHIR stars (ADGA Guidebook 2024, Article IX rule 19a). A doe earns her star
 // with 305 consecutive days or less of production meeting ANY ONE of milk,
-// butterfat or protein, set by her age when she kidded:
-//   standard: 1500 lb milk / 52.5 lb fat / 45 lb protein at 2 years or younger,
-//             + 0.2 / 0.007 / 0.006 lb per day older, up to 5 years
-//   miniature (Nigerian Dwarf): 600 / 21 / 18, + 0.08 / 0.0028 / 0.0024 per day
+// butterfat or protein, set by her age when she kidded. Per the ADGA chart, the
+// requirement steps up once for each full month past 2-00, until 5-00:
+//   standard:  1500 lb milk / 52.5 lb fat / 45 lb protein at 2-00 or younger,
+//              + 6 / 0.21 / 0.18 lb per month
+//   miniature: 600 / 31 / 18, + 2.5 / 0.0875 / 0.075 lb per month
+// Milk rounds to whole pounds, butterfat and protein to hundredths, as printed.
 // ---------------------------------------------------------------------------
 
 export interface DhirRequirement {
@@ -108,16 +109,16 @@ export function dhirRequirement(input: {
 }): DhirRequirement | null {
   if (!input.birthDate || input.birthDate >= input.freshenedOn) return null
   const miniature = isMiniature(input.breed)
-  const twoYears = addMonths(input.birthDate, 24)
-  const fiveYears = addMonths(input.birthDate, 60)
-  const extraDays = Math.min(Math.max(daysBetween(twoYears, input.freshenedOn), 0), daysBetween(twoYears, fiveYears))
-  const base = miniature ? { milk: 600, fat: 21, protein: 18 } : { milk: 1500, fat: 52.5, protein: 45 }
-  const perDay = miniature ? { milk: 0.08, fat: 0.0028, protein: 0.0024 } : { milk: 0.2, fat: 0.007, protein: 0.006 }
   const { months } = monthsAndDaysBetween(input.birthDate, input.freshenedOn)
+  const steps = Math.min(Math.max(months - 24, 0), 36)
+  const base = miniature ? { milk: 600, fat: 31, protein: 18 } : { milk: 1500, fat: 52.5, protein: 45 }
+  const perMonth = miniature ? { milk: 2.5, fat: 0.0875, protein: 0.075 } : { milk: 6, fat: 0.21, protein: 0.18 }
+  // Round half up, nudged past float error (e.g. 31.175 must print as 31.18).
+  const round = (n: number, places: number) => Math.round(n * 10 ** places + 1e-6) / 10 ** places
   return {
-    milkLb: Math.round((base.milk + perDay.milk * extraDays) * 10) / 10,
-    butterfatLb: Math.round((base.fat + perDay.fat * extraDays) * 10) / 10,
-    proteinLb: Math.round((base.protein + perDay.protein * extraDays) * 10) / 10,
+    milkLb: round(base.milk + perMonth.milk * steps, 0),
+    butterfatLb: round(base.fat + perMonth.fat * steps, 2),
+    proteinLb: round(base.protein + perMonth.protein * steps, 2),
     miniature,
     ageAtKidding: { years: Math.floor(months / 12), months: months % 12 },
   }

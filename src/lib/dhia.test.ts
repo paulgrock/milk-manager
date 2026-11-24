@@ -78,22 +78,57 @@ describe('DHIR star requirements (ADGA rule 19a)', () => {
       dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-01', freshenedOn: '2026-03-01' }),
     ).toMatchObject({
       milkLb: 600,
-      butterfatLb: 21,
+      butterfatLb: 31,
       proteinLb: 18,
       miniature: true,
     })
   })
 
-  it('goes up for every day past two, until five', () => {
-    // Kidding at exactly 3: 365 days past 2 (2025 isn't a leap year... 2026-03-01 to 2027-03-01 is 365 days).
-    const three = dhirRequirement({ breed: 'Alpine', birthDate: '2024-03-01', freshenedOn: '2027-03-01' })!
-    expect(three.milkLb).toBe(1573)
-    expect(three.butterfatLb).toBe(55.1) // 52.5 + 2.555
-    expect(three.proteinLb).toBe(47.2) // 45 + 2.19
-    expect(three.ageAtKidding).toEqual({ years: 3, months: 0 })
-    // Capped at five years (1096 days from 2026-03-01 to 2029-03-01, with a leap day).
-    const old = dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-01', freshenedOn: '2033-03-01' })!
-    expect(old.milkLb).toBe(Math.round((600 + 0.08 * 1096) * 10) / 10)
+  // Rows straight off ADGA's printed DHIR chart, with the age at freshening as Y-MM.
+  it.each([
+    ['2-01', false, 1506, 52.71, 45.18],
+    ['3-00', false, 1572, 55.02, 47.16],
+    ['3-05', false, 1602, 56.07, 48.06],
+    ['4-11', false, 1710, 59.85, 51.3],
+    ['5-00', false, 1716, 60.06, 51.48],
+    ['2-01', true, 603, 31.09, 18.08],
+    ['2-02', true, 605, 31.18, 18.15],
+    ['2-03', true, 608, 31.26, 18.23],
+    ['3-03', true, 638, 32.31, 19.13],
+    ['3-05', true, 643, 32.49, 19.28],
+    ['3-11', true, 658, 33.01, 19.73],
+    ['4-00', true, 660, 33.1, 19.8],
+    ['4-11', true, 688, 34.06, 20.63],
+    ['5-00', true, 690, 34.15, 20.7],
+  ])('matches the ADGA chart at %s (miniature: %s)', (age, miniature, milkLb, butterfatLb, proteinLb) => {
+    const [y, m] = age.split('-').map(Number)
+    const freshenedOn = `${2020 + y}-${String(3 + m).padStart(2, '0')}-10`
+    const req = dhirRequirement({
+      breed: miniature ? 'Nigerian Dwarf' : 'Alpine',
+      birthDate: '2020-03-01',
+      freshenedOn,
+    })!
+    expect(req).toMatchObject({ milkLb, butterfatLb, proteinLb, miniature, ageAtKidding: { years: y, months: m } })
+  })
+
+  it('only counts full months past two', () => {
+    // A day short of 2-01 is still the 2-00 requirement.
+    expect(
+      dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-15', freshenedOn: '2026-04-14' })!.milkLb,
+    ).toBe(600)
+    expect(
+      dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-15', freshenedOn: '2026-04-15' })!.milkLb,
+    ).toBe(603)
+  })
+
+  it('stops going up at five', () => {
+    expect(
+      dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2020-03-01', freshenedOn: '2029-06-01' }),
+    ).toMatchObject({
+      milkLb: 690,
+      butterfatLb: 34.15,
+      proteinLb: 20.7,
+    })
   })
 
   it('needs a birth date', () => {
@@ -113,12 +148,12 @@ describe('DHIR star requirements (ADGA rule 19a)', () => {
 
   it('totals milk and components, and says whether the star is earned or on track', () => {
     const req = dhirRequirement({ breed: 'Nigerian Dwarf', birthDate: '2024-03-01', freshenedOn: '2026-03-01' })!
-    // 100 days of 4 lb at 6.5% fat.
+    // 100 days of 4 lb at 8% fat.
     const days = Array.from({ length: 100 }, (_, i) => ({ dim: i + 1, grams: lb(4) }))
-    const prod = productionOver(days, [{ dim: 50, butterfatPct: 6.5, proteinPct: null }])
+    const prod = productionOver(days, [{ dim: 50, butterfatPct: 8, proteinPct: null }])
     // Weights are stored in whole grams, so 4 lb a day adds up to a hair under 400.
     expect(prod.milkLb).toBeCloseTo(400, 0)
-    expect(prod.butterfatLb).toBeCloseTo(26, 0) // 400 × 6.5% = 26 lb, over the 21 lb requirement
+    expect(prod.butterfatLb).toBeCloseTo(32, 0) // 400 × 8% = 32 lb, over the 31 lb requirement
     expect(prod.proteinLb).toBeNull()
     expect(starOutlook(req, prod, null)).toBe('earned')
 
