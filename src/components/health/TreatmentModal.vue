@@ -5,6 +5,7 @@ import { useHealthMutations } from '@/composables/useHealth'
 import { formatDate, todayISO } from '@/lib/dates'
 import { ROUTE_LABELS, withholdThrough, type Treatment, type TreatmentRoute } from '@/lib/health'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{ goatId?: string; treatment?: Treatment }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -123,9 +124,7 @@ async function remove() {
           icon="i-lucide-milk-off"
           :title="`Withhold milk through ${formatDate(through)}`"
         />
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-        </UFormField>
+        <NotesField v-model="form.notes" />
       </form>
     </template>
     <template #footer>

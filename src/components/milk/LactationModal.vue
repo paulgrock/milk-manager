@@ -6,6 +6,7 @@ import { useLactationMutations, useLactations } from '@/composables/useMilk'
 import { todayISO } from '@/lib/dates'
 import { CURRENT_STATUSES, goatFullName } from '@/lib/goats'
 import { lactationOn, nextLactationNumber, type Lactation } from '@/lib/milk'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{
   /** Edit this lactation; otherwise start a new one. */
@@ -142,9 +143,7 @@ async function onDelete() {
           <UFormField v-if="mode === 'edit'" label="Dried off" hint="Leave blank while in milk">
             <UInput v-model="form.dried_off_on" type="date" class="w-full" />
           </UFormField>
-          <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-          </UFormField>
+          <NotesField v-model="form.notes" />
         </template>
       </form>
     </template>

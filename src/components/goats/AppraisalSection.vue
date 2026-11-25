@@ -11,6 +11,7 @@ import {
   type Appraisal,
   type Goat,
 } from '@/lib/goats'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{ goat: Goat; appraisals: Appraisal[] }>()
 
@@ -156,9 +157,7 @@ function ageLabel(a: Appraisal) {
           <UFormField label="Appraiser">
             <UInput v-model="form.appraiser" class="w-full" maxlength="100" />
           </UFormField>
-          <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-          </UFormField>
+          <NotesField v-model="form.notes" />
         </form>
       </template>
       <template #footer>

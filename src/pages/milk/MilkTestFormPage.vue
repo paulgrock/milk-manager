@@ -11,6 +11,7 @@ import { SCC_LIMIT, TEST_KIND_LABELS, formatScc, parseScc, type MilkTestKind } f
 import { goatName } from '@/lib/goats'
 import { formatWeight, lactationOn, parseWeightInput } from '@/lib/milk'
 import { byBarnSheetOrder } from '@/lib/testSheet'
+import NotesField from '@/components/NotesField.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -268,9 +269,7 @@ async function onDelete() {
         </div>
       </UCard>
 
-      <UFormField label="Notes"
-        ><UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full"
-      /></UFormField>
+      <NotesField v-model="form.notes" />
       <UAlert
         v-if="save.isPaused.value"
         color="warning"

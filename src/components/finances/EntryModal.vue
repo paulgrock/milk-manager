@@ -5,6 +5,7 @@ import { useFinanceMutations } from '@/composables/useFinances'
 import { todayISO } from '@/lib/dates'
 import { CATEGORIES, parseMoney, type FinanceEntry, type FinanceKind } from '@/lib/finances'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 export interface EntryDraft {
   kind?: FinanceKind
@@ -146,9 +147,7 @@ async function onDelete() {
               <HerdGoatPicker v-model="form.goat_id" sex="any" include-former />
             </UFormField>
           </div>
-          <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-          </UFormField>
+          <NotesField v-model="form.notes" />
         </fieldset>
       </form>
     </template>

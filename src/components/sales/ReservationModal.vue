@@ -15,6 +15,7 @@ import {
 } from '@/lib/sales'
 import BuyerPicker from './BuyerPicker.vue'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{ reservation?: Reservation; season?: number; doeId?: string | null }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -160,9 +161,7 @@ async function remove() {
             <USelect v-model="form.deposit_status" :items="statusOptions" class="w-full" />
           </UFormField>
         </div>
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full" />
-        </UFormField>
+        <NotesField v-model="form.notes" />
         <UCheckbox v-if="reservation" v-model="form.cancelled" label="Cancelled" />
         <p v-if="progress?.matched" class="text-xs text-muted">
           {{ progress.matched }} {{ progress.matched === 1 ? 'kid' : 'kids' }} matched, {{ progress.sold }} adopted.
