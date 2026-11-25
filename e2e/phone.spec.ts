@@ -234,3 +234,91 @@ test('the milk totals sit just above the tab bar', async ({ page, owner, herd })
   const n = (await tabs.boundingBox())!
   expect(t.y + t.height).toBeCloseTo(n.y, 0)
 })
+
+test('a make’s notes open full screen, and come back to the form to be saved', async ({ page, herd }) => {
+  const { data: feta } = await admin
+    .from('cheese_types')
+    .select('id')
+    .eq('herd_id', herd.id)
+    .eq('name', 'Feta')
+    .single()
+  const long = Array.from({ length: 60 }, (_, i) => `Step ${i + 1}: warm the milk slowly and stir`).join('\n')
+  const { data: make } = await admin
+    .from('cheese_makes')
+    .insert({
+      herd_id: herd.id,
+      cheese_type_id: feta!.id,
+      made_on: isoDate(-2),
+      ready_on: isoDate(58),
+      notes: long,
+    })
+    .select('id')
+    .single()
+  const saved = async () => (await admin.from('cheese_makes').select('notes').eq('id', make!.id).single()).data?.notes
+
+  await page.setViewportSize({ width: 375, height: 667 })
+  await page.goto(`/cheese/makes/${make!.id}`)
+  await page.getByRole('button', { name: 'Edit' }).click()
+  const form = page.getByRole('dialog', { name: 'Edit make' })
+  await form.getByRole('button', { name: 'Full screen' }).click()
+
+  const editor = page.getByRole('dialog', { name: 'Notes' })
+  const box = editor.getByRole('textbox', { name: 'Notes' })
+  await expect(box).toHaveValue(long)
+  // The notes get nearly all of the screen, and scroll inside it with Done still showing.
+  await expect
+    .poll(async () => {
+      const b = (await box.boundingBox())!
+      return b.height > 667 * 0.85 && b.y + b.height <= 667 && b.width === 375
+    })
+    .toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
+  // Drawn over the app's header and tab bar.
+  const z = (el: Element) => Number(getComputedStyle(el).zIndex) || 0
+  const editorZ = await editor.evaluate(z)
+  for (const bar of [page.locator('header').first(), page.locator('nav.fixed')])
+    expect(editorZ).toBeGreaterThan(await bar.evaluate(z))
+  await box.evaluate((el) => (el.scrollTop = el.scrollHeight))
+  await expect(editor.getByRole('button', { name: 'Done' })).toBeInViewport()
+
+  await box.fill(`${long}\nSalt more next time`)
+  await editor.getByRole('button', { name: 'Done' }).click()
+  await expect(editor).toBeHidden()
+  // Back on the form: nothing saved until Save.
+  await expect(form.getByLabel('Notes')).toHaveValue(`${long}\nSalt more next time`)
+  expect(await saved()).toBe(long)
+  await form.getByRole('button', { name: 'Save' }).click()
+  await expect(form).toBeHidden()
+  expect(await saved()).toBe(`${long}\nSalt more next time`)
+
+  // Escape closes only the notes, keeping the form and what was typed.
+  await page.getByRole('button', { name: 'Edit' }).click()
+  await form.getByRole('button', { name: 'Full screen' }).click()
+  await box.fill('Short now')
+  await page.keyboard.press('Escape')
+  await expect(editor).toBeHidden()
+  await expect(form.getByLabel('Notes')).toHaveValue('Short now')
+})
+
+test('notes on other forms open full screen too, on a page or in a pop-up', async ({ page, owner, herd }) => {
+  const goat = await addGoat(owner, herd.id, { barn_name: 'Clover', sex: 'doe', notes: 'Kicks the bucket' })
+
+  // A form that's its own page.
+  await page.goto(`/goats/${goat.id}/edit`)
+  await page.getByRole('button', { name: 'Full screen' }).click()
+  let editor = page.getByRole('dialog', { name: 'Notes' })
+  await expect(editor.getByRole('textbox', { name: 'Notes' })).toHaveValue('Kicks the bucket')
+  await editor.getByRole('textbox', { name: 'Notes' }).fill('Kicks the bucket\nLoves raisins')
+  await editor.getByRole('button', { name: 'Done' }).click()
+  await expect(page.getByRole('main').getByLabel('Notes')).toHaveValue('Kicks the bucket\nLoves raisins')
+
+  // A form in a pop-up.
+  await page.goto('/finances')
+  await page.getByRole('button', { name: 'Income' }).click()
+  const form = page.getByRole('dialog', { name: 'Add income' })
+  await form.getByRole('button', { name: 'Full screen' }).click()
+  editor = page.getByRole('dialog', { name: 'Notes' })
+  await editor.getByRole('textbox', { name: 'Notes' }).fill('Paid in cash at the farm')
+  await editor.getByRole('button', { name: 'Done' }).click()
+  await expect(form.getByLabel('Notes')).toHaveValue('Paid in cash at the farm')
+})

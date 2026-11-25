@@ -10,6 +10,7 @@ import { breedingStatus, dueWindow, type Breeding } from '@/lib/breeding'
 import { goatFullName, goatName } from '@/lib/goats'
 import { parseWeightInput } from '@/lib/milk'
 import DoePicker from '@/components/HerdGoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -221,16 +222,7 @@ async function submit() {
       <UCard>
         <div class="space-y-3">
           <UCheckbox v-model="startLactation" label="Start her new lactation (adds her to the milk line)" />
-          <UFormField label="Notes">
-            <UTextarea
-              v-model="notes"
-              :rows="2"
-              autoresize
-              maxlength="10000"
-              class="w-full"
-              placeholder="Presentation, help needed, anything to remember"
-            />
-          </UFormField>
+          <NotesField v-model="notes" placeholder="Presentation, help needed, anything to remember" />
         </div>
       </UCard>
 

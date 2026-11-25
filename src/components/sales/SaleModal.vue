@@ -7,6 +7,7 @@ import { formatMoney, parseMoney } from '@/lib/finances'
 import type { Sale, SeasonKid } from '@/lib/sales'
 import BuyerPicker from './BuyerPicker.vue'
 import HerdGoatPicker from '@/components/HerdGoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 /** Records an adoption: a matched kid going home, an unmatched kid, or a goat from the herd. */
 const props = defineProps<{ sale?: Sale; kid?: SeasonKid; kids?: SeasonKid[] }>()
@@ -143,9 +144,7 @@ async function undo() {
           Finances.
         </p>
         <p v-else-if="balance !== null" class="text-sm text-muted">{{ formatMoney(balance) }} goes into Finances.</p>
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full" />
-        </UFormField>
+        <NotesField v-model="form.notes" />
       </form>
     </template>
     <template #footer>

@@ -40,6 +40,7 @@ declare module 'vue' {
     MilkOrderModal: typeof import('./src/components/milk/MilkOrderModal.vue')['default']
     MilkTestsCard: typeof import('./src/components/milk/MilkTestsCard.vue')['default']
     MonthYearPicker: typeof import('./src/components/MonthYearPicker.vue')['default']
+    NotesField: typeof import('./src/components/NotesField.vue')['default']
     PasskeysCard: typeof import('./src/components/PasskeysCard.vue')['default']
     PedigreeChart: typeof import('./src/components/goats/PedigreeChart.vue')['default']
     PendingInvites: typeof import('./src/components/PendingInvites.vue')['default']

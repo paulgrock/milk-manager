@@ -6,6 +6,7 @@ import { formatDate, todayISO } from '@/lib/dates'
 import { METHOD_LABELS, dueWindow, type Breeding, type BreedingMethod } from '@/lib/breeding'
 import DoePicker from '@/components/HerdGoatPicker.vue'
 import GoatPicker from '@/components/goats/GoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{ goatId?: string; breeding?: Breeding; date?: string }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -95,9 +96,7 @@ async function remove() {
             <UInput v-model="form.fee" inputmode="decimal" placeholder="0.00" class="w-full" />
           </UFormField>
         </div>
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-        </UFormField>
+        <NotesField v-model="form.notes" />
         <p v-if="due" class="text-sm text-muted">
           Due around <strong class="text-default">{{ formatDate(due.expected) }}</strong> ({{
             formatDate(due.earliest)

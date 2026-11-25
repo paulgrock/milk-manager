@@ -17,6 +17,7 @@ import {
   type HornStatus,
 } from '@/lib/goats'
 import GoatPicker from '@/components/goats/GoatPicker.vue'
+import NotesField from '@/components/NotesField.vue'
 
 const DAIRY_BREEDS = [
   'Alpine',
@@ -361,9 +362,7 @@ async function remove() {
               <UInput v-model="form.left_herd_reason" class="w-full" maxlength="500" />
             </UFormField>
           </div>
-          <UFormField label="Notes">
-            <UTextarea v-model="form.notes" :rows="4" autoresize maxlength="10000" class="w-full" />
-          </UFormField>
+          <NotesField v-model="form.notes" />
         </div>
       </UCard>
 

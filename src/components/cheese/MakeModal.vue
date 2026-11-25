@@ -12,6 +12,7 @@ import {
   type CheeseType,
   type MilkTreatment,
 } from '@/lib/cheese'
+import NotesField from '@/components/NotesField.vue'
 
 // typeId picks the cheese for a new make, as from a cheese type's page.
 const props = defineProps<{ make?: CheeseMake; typeId?: string }>()
@@ -173,9 +174,7 @@ async function onDelete() {
             <URadioGroup v-model="form.treatment" :items="treatmentItems" orientation="horizontal" class="pt-1.5" />
           </UFormField>
         </div>
-        <UFormField label="Notes">
-          <UTextarea v-model="form.notes" :rows="2" autoresize maxlength="10000" class="w-full" />
-        </UFormField>
+        <NotesField v-model="form.notes" />
         <UCheckbox
           v-if="make"
           v-model="form.finished"

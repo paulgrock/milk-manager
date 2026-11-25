@@ -3,6 +3,7 @@ import { reactive, watch } from 'vue'
 import { useToast } from '@nuxt/ui/composables'
 import { useSalesMutations } from '@/composables/useSales'
 import type { Buyer } from '@/lib/sales'
+import NotesField from '@/components/NotesField.vue'
 
 const props = defineProps<{ buyer?: Buyer }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -70,9 +71,7 @@ async function remove() {
           /></UFormField>
         </div>
         <UFormField label="Town"><UInput v-model="form.town" maxlength="100" class="w-full" /></UFormField>
-        <UFormField label="Notes"
-          ><UTextarea v-model="form.notes" :rows="2" maxlength="10000" class="w-full"
-        /></UFormField>
+        <NotesField v-model="form.notes" />
       </form>
     </template>
     <template #footer>
