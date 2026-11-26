@@ -122,6 +122,73 @@ test('DHIR star progress uses her age at kidding and her test-day butterfat', as
   await expect(page.getByText('test day', { exact: true })).toBeVisible()
 })
 
+test('saving a test updates her DHIR star totals', async ({ page, owner, herd }) => {
+  const ina = await doe(owner, herd.id, 'Ina', { ageYears: 1.5, daysAgo: 120 })
+  await addMilkCurve(herd.id, ina.id, 120)
+
+  // Load her page first, so the star is already cached when the test is saved.
+  await page.goto(`/goats/${ina.id}`)
+  const star = page.getByRole('main')
+  await expect(star.getByRole('row', { name: /Butterfat 31 lb needs a test/ })).toBeVisible()
+  await expect(star.getByText('Estimated from your weights.')).toBeVisible()
+
+  await page.goto('/milk/tests/new')
+  await page.getByLabel('Ina milk').fill('4')
+  await page.getByLabel('Ina butterfat').fill('6.5')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+
+  // Back to her page without reloading the app: the star has her butterfat now.
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Goats' }).first().click()
+  await page.getByRole('link', { name: /Ina/ }).first().click()
+  await expect(page).toHaveURL(new RegExp(`/goats/(${ina.id}|[a-z0-9-]+)$`))
+  await expect(star.getByRole('row', { name: /Butterfat 31 lb \d[\d,.]* lb/ })).toBeVisible()
+  await expect(star.getByText('and 1 test day')).toBeVisible()
+})
+
+test('a test day after the latest DHI report is added on to the report for her star', async ({ page, owner, herd }) => {
+  const elena = await doe(owner, herd.id, 'Elena', { ageYears: 2.5, daysAgo: 150 })
+  const report = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-40), kind: 'dhir' })
+    .select()
+    .single()
+  await admin.from('milk_test_results').insert({
+    herd_id: herd.id,
+    test_id: report.data!.id,
+    goat_id: elena.id,
+    milk_g: lbToGrams(3),
+    butterfat_pct: 6,
+    ltd_milk_g: lbToGrams(423),
+    ltd_fat_g: lbToGrams(26),
+    proj305_milk_g: lbToGrams(771),
+    proj305_fat_g: lbToGrams(48),
+  })
+  // Entered by hand before the lab's report comes back: no lactation-to-date figures.
+  const later = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-5), kind: 'dhir' })
+    .select()
+    .single()
+  await admin.from('milk_test_results').insert({
+    herd_id: herd.id,
+    test_id: later.data!.id,
+    goat_id: elena.id,
+    milk_g: lbToGrams(2.5),
+    butterfat_pct: 6,
+  })
+
+  await page.goto(`/goats/${elena.id}`)
+  const star = page.getByRole('main')
+  // 423 lb on the report at day 110, then days 111–145 sloping from 3 lb to 2.5 lb: 96 lb more.
+  await expect(star.getByRole('row', { name: /^Milk 615 lb 519 lb$/ })).toBeVisible()
+  // 26 lb on the report plus 6% of those 96 lb.
+  await expect(star.getByRole('row', { name: /^Butterfat 31\.\d+ lb 31\.8 lb$/ })).toBeVisible()
+  await expect(star.getByText(/plus an estimate from your weights and test days since that report/)).toBeVisible()
+  // DHI's projection is from before the newer test, so it isn't shown as current.
+  await expect(star.getByText('771 lb')).toHaveCount(0)
+})
+
 test('a doe without a birth date gets asked for one', async ({ page, owner, herd }) => {
   const ina = await addGoat(owner, herd.id, { barn_name: 'Ina', sex: 'doe' })
   await addLactation(owner, herd.id, ina.id, isoDate(-40))

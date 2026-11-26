@@ -166,6 +166,17 @@ export function productionOver(days: { dim: number; grams: number }[], tests: Te
   return { milkLb: r(milk), butterfatLb: hasFat ? r(fat) : null, proteinLb: hasProtein ? r(protein) : null }
 }
 
+/** Two stretches of production back to back. A component is only known when it's known for both. */
+export function addProduction(a: Production, b: Production): Production {
+  const r = (n: number) => Math.round(n * 10) / 10
+  const sum = (x: number | null, y: number | null) => (x === null || y === null ? null : r(x + y))
+  return {
+    milkLb: r(a.milkLb + b.milkLb),
+    butterfatLb: sum(a.butterfatLb, b.butterfatLb),
+    proteinLb: sum(a.proteinLb, b.proteinLb),
+  }
+}
+
 export type StarOutlook = 'earned' | 'on-track' | 'short' | 'unknown'
 
 /** Earned if any one measure meets its requirement. */

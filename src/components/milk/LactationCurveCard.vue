@@ -9,6 +9,7 @@ import { goatName, type Goat } from '@/lib/goats'
 import { CONFIDENCE_LABELS, STANDARD_DAYS, dailySeries, summarizeLactation, woodAt } from '@/lib/lactation'
 import { useMilkTests } from '@/composables/useMilkTests'
 import {
+  addProduction,
   dhirRequirement,
   officialFigures,
   officialProduction,
@@ -183,31 +184,50 @@ const star = computed(() => {
     freshenedOn: l.freshened_on,
   })
   if (!requirement) return { requirement: null }
-  // The report's own figures when there are any; otherwise estimate from her
-  // weights, filling the days between them the way DHI does.
-  const official = officialProduction(officialFor(l), !inMilk.value)
-  if (official) {
-    return {
-      requirement,
-      ...official,
-      source: 'official' as const,
-      outlook: starOutlook(requirement, official.toDate, official.projected),
-    }
-  }
+  // Her weights, filling the days between them the way DHI does.
   const days = dailySeries(s.points, Math.min(s.currentDim, STANDARD_DAYS), {
     lactationNumber: l.lactation_number,
     carryToEnd: !inMilk.value,
   })
-  const toDate = productionOver(days, testPoints.value)
-  let projected = null
-  if (inMilk.value && s.fit && s.currentDim < STANDARD_DAYS) {
-    const lastDim = days.at(-1)?.dim ?? 0
-    const rest = Array.from({ length: STANDARD_DAYS - lastDim }, (_, i) => ({
-      dim: lastDim + i + 1,
-      grams: woodAt(s.fit!, lastDim + i + 1),
-    }))
-    projected = productionOver([...days, ...rest], testPoints.value)
+  const lastDim = days.at(-1)?.dim ?? 0
+  // The fitted curve for the days still to come in her first 305.
+  const rest =
+    inMilk.value && s.fit && lastDim < STANDARD_DAYS
+      ? Array.from({ length: STANDARD_DAYS - lastDim }, (_, i) => ({
+          dim: lastDim + i + 1,
+          grams: woodAt(s.fit!, lastDim + i + 1),
+        }))
+      : null
+
+  // The report's own figures when there are any. Weights or test days after
+  // the report's test are added on, and DHI's projection gives way to her
+  // curve, the same as the lactation total above.
+  const figures = officialFor(l)
+  const official = officialProduction(figures, !inMilk.value)
+  if (official) {
+    const reportDim = !inMilk.value && figures.complete ? null : (figures.test?.dim ?? null)
+    const since = reportDim === null ? [] : days.filter((d) => d.dim > reportDim)
+    if (!since.length) {
+      return {
+        requirement,
+        ...official,
+        source: 'official' as const,
+        outlook: starOutlook(requirement, official.toDate, official.projected),
+      }
+    }
+    const toDate = addProduction(official.toDate, productionOver(since, testPoints.value))
+    const projected = rest ? addProduction(toDate, productionOver(rest, testPoints.value)) : null
+    return {
+      requirement,
+      toDate,
+      projected,
+      source: 'official-and-estimated' as const,
+      outlook: starOutlook(requirement, toDate, projected),
+    }
   }
+
+  const toDate = productionOver(days, testPoints.value)
+  const projected = rest ? productionOver([...days, ...rest], testPoints.value) : null
   return {
     requirement,
     toDate,
@@ -374,6 +394,10 @@ const confidenceColor = { low: 'warning', medium: 'neutral', high: 'success' } a
             <p class="text-xs text-muted">
               <template v-if="star.source === 'official'"
                 >From your DHI report's lactation-to-date and projected 305-day figures.</template
+              >
+              <template v-else-if="star.source === 'official-and-estimated'"
+                >From your DHI report's lactation-to-date figures, plus an estimate from your weights and test days
+                since that report. Your DHI processing center's lactation record is the official one.</template
               >
               <template v-else>
                 Estimated from your weights<template v-if="testPoints.length">
