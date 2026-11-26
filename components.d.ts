@@ -22,6 +22,7 @@ declare module 'vue' {
     ChoreDoneModal: typeof import('./src/components/chores/ChoreDoneModal.vue')['default']
     DeleteCareModal: typeof import('./src/components/health/DeleteCareModal.vue')['default']
     EntryModal: typeof import('./src/components/finances/EntryModal.vue')['default']
+    GestationCalculatorCard: typeof import('./src/components/breeding/GestationCalculatorCard.vue')['default']
     GoatAvatar: typeof import('./src/components/goats/GoatAvatar.vue')['default']
     GoatFinanceCard: typeof import('./src/components/finances/GoatFinanceCard.vue')['default']
     GoatPicker: typeof import('./src/components/goats/GoatPicker.vue')['default']

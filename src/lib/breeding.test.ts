@@ -4,6 +4,8 @@ import {
   doeBreedingState,
   dryOffBy,
   dueWindow,
+  GESTATION_CHOICES,
+  gestationPlan,
   kiddingFor,
   type Breeding,
   type BreedingData,
@@ -65,6 +67,33 @@ describe('due dates', () => {
 
   it('suggests drying off 60 days before the due date', () => {
     expect(dryOffBy(dueWindow(breeding()))).toBe('2026-05-30')
+  })
+})
+
+describe('gestationPlan', () => {
+  it('counts forward from the breeding date', () => {
+    expect(gestationPlan('bred', '2026-11-25')).toEqual({
+      bredOn: '2026-11-25',
+      dueOn: '2027-04-24',
+      dryOffBy: '2027-02-23',
+    })
+  })
+
+  it('counts back from the day you want kids', () => {
+    expect(gestationPlan('due', '2027-03-15')).toEqual({
+      bredOn: '2026-10-16',
+      dueOn: '2027-03-15',
+      dryOffBy: '2027-01-14',
+    })
+  })
+
+  it('uses the gestation length you pick', () => {
+    expect(gestationPlan('bred', '2026-11-25', 145).dueOn).toBe('2027-04-19')
+    expect(gestationPlan('due', '2027-03-15', 155).bredOn).toBe('2026-10-11')
+  })
+
+  it('offers every day from 145 to 155', () => {
+    expect(GESTATION_CHOICES).toEqual([145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155])
   })
 })
 
