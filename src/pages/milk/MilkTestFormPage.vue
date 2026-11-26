@@ -67,6 +67,20 @@ const gramsPerUnit = computed(() => (unit.value === 'lb' ? 453.59237 : 1000))
 /** Grams as the number typed in the form, in the herd's unit. */
 const toInput = (grams: number | null, places: number) =>
   grams === null ? '' : String(Math.round((grams / gramsPerUnit.value) * 10 ** places) / 10 ** places)
+// Report totals to a tenth of a pound, or a hundredth of a kilo (about the same).
+const totalPlaces = computed(() => (unit.value === 'kg' ? 2 : 1))
+// What each weight field showed when the test was opened, and the exact grams
+// behind it: a field nobody changed saves those grams, not its rounded text.
+const stored: Record<string, Record<string, { text: string; grams: number }>> = {}
+function remember(goatId: string, field: string, text: string, grams: number | null) {
+  if (grams === null) return
+  ;(stored[goatId] ??= {})[field] = { text, grams }
+}
+/** Grams for a weight field: what was stored if it still shows the same, otherwise what's typed. */
+function unchangedGrams(goatId: string, field: string, text: string, typed: number | null): number | null {
+  const s = stored[goatId]?.[field]
+  return s && s.text === text ? s.grams : typed
+}
 const pctInput = (pct: number | null) => (pct === null ? '' : String(Number(pct)))
 /** SCC as typed, without rounding: 2,442,000 is "2442k", not "2.44M" (which would save as 2,440,000). */
 const sccInput = (scc: number | null) => {
@@ -96,7 +110,11 @@ watch(
         snf: pctInput(r.snf_pct),
         scc: sccInput(r.scc),
       }
-      for (const f of TOTALS) row[f.key] = toInput(r[f.column], 1)
+      remember(r.goat_id, 'milk', row.milk, r.milk_g)
+      for (const f of TOTALS) {
+        row[f.key] = toInput(r[f.column], totalPlaces.value)
+        remember(r.goat_id, f.column, row[f.key], r[f.column])
+      }
       rows[r.goat_id] = row
     }
     loaded.value = t.id
@@ -181,7 +199,12 @@ async function submit() {
     const protein = parsePct(row.protein)
     const snf = parsePct(row.snf, 20)
     const scc = parseScc(row.scc)
-    const totals = Object.fromEntries(TOTALS.map((f) => [f.column, parseTotal(row[f.key])]))
+    const totals = Object.fromEntries(
+      TOTALS.map((f) => {
+        const typed = parseTotal(row[f.key])
+        return [f.column, typed === 'invalid' ? typed : unchangedGrams(g!.id, f.column, row[f.key], typed)]
+      }),
+    )
     if (milk.kind === 'invalid' || (milk.kind === 'ok' && milk.portions))
       row.error = 'Milk should be one weight for the whole test day'
     else if (fat === 'invalid' || protein === 'invalid') row.error = 'Percentages should be between 0.5 and 15'
@@ -195,7 +218,7 @@ async function submit() {
       ok = false
       continue
     }
-    const milkG = milk.kind === 'ok' ? milk.grams : null
+    const milkG = unchangedGrams(g!.id, 'milk', row.milk, milk.kind === 'ok' ? milk.grams : null)
     if (milkG === null && fat === null && protein === null && snf === null && scc === null) {
       if (Object.values(totals).some((v) => v !== null)) {
         row.error = 'Add her test-day numbers too'
@@ -246,7 +269,16 @@ async function fillFromReport(event: Event) {
     let report
     try {
       report = parseDhiReport(await readPdfText(await file.arrayBuffer()))
-    } catch {
+    } catch (e) {
+      // pdf.js names what was wrong with the file; anything else is the reader
+      // itself not loading, e.g. offline before it was ever downloaded.
+      const name = (e as Error | undefined)?.name
+      if (name !== 'InvalidPDFException' && name !== 'PasswordException' && name !== 'FormatError')
+        return toast.add({
+          color: 'error',
+          title: "Couldn't open the PDF reader",
+          description: 'It downloads the first time it is used. Try again with a signal.',
+        })
       report = null
     }
     if (!report?.does.length)
@@ -265,13 +297,24 @@ async function fillFromReport(event: Event) {
     const filled: string[] = []
     const notInHerd: string[] = []
     const noTest: string[] = []
+    const twice: string[] = []
     for (const d of report.does) {
+      // Her registration first. Failing that, her DHIR sample number (the
+      // report's DOE NO.) or barn name, but never a goat registered as someone else.
+      const unregisteredOrSame = (g: (typeof herdGoats)[number]) => {
+        const own = registrationDigits(g.registration_number)
+        return !own || !d.registration || own === d.registration
+      }
       const goat =
         herdGoats.find((g) => d.registration && registrationDigits(g.registration_number) === d.registration) ??
-        herdGoats.find((g) => d.doeNumber !== null && g.dhir_sample_number === d.doeNumber) ??
-        herdGoats.find((g) => (g.barn_name ?? '').toUpperCase() === d.name.toUpperCase())
+        herdGoats.find((g) => unregisteredOrSame(g) && d.doeNumber !== null && g.dhir_sample_number === d.doeNumber) ??
+        herdGoats.find((g) => unregisteredOrSame(g) && (g.barn_name ?? '').toUpperCase() === d.name.toUpperCase())
       if (!goat) {
         notInHerd.push(d.name)
+        continue
+      }
+      if (filled.includes(goat.id)) {
+        twice.push(`${d.name} (also matched ${goat.barn_name || goatName(goat)})`)
         continue
       }
       const t = d.tests.find((x) => x.date === form.tested_on)
@@ -279,10 +322,12 @@ async function fillFromReport(event: Event) {
         noTest.push(goat.barn_name || goatName(goat))
         continue
       }
-      const lb = (n: number | null) => (n === null ? '' : toInput(Math.round(n * 453.59237), 1))
+      // Pounds as printed, in the herd's unit: milk to the hundredth like a loaded test.
+      const lb = (n: number | null, places = totalPlaces.value) =>
+        n === null ? '' : toInput(Math.round(n * 453.59237), places)
       rows[goat.id] = {
         ...blankRow(),
-        milk: lb(t.milkLb),
+        milk: lb(t.milkLb, 2),
         fat: t.fatPct === null ? '' : String(t.fatPct),
         protein: t.proteinPct === null ? '' : String(t.proteinPct),
         snf: t.snfPct === null ? '' : String(t.snfPct),
@@ -307,9 +352,10 @@ async function fillFromReport(event: Event) {
     const notes = [
       notInHerd.length ? `Not found in your herd: ${notInHerd.join(', ')}.` : '',
       noTest.length ? `No test that day: ${noTest.join(', ')}.` : '',
+      twice.length ? `Skipped, matched a doe already filled: ${twice.join(', ')}.` : '',
     ]
     toast.add({
-      color: notInHerd.length ? 'warning' : 'success',
+      color: notInHerd.length || twice.length ? 'warning' : 'success',
       title: `Filled ${filled.length} ${filled.length === 1 ? 'doe' : 'does'} from the report`,
       description: [...notes, 'Check the numbers, then save.'].filter(Boolean).join(' '),
     })
@@ -377,7 +423,8 @@ async function onDelete() {
               type="file"
               accept="application/pdf,.pdf"
               class="sr-only"
-              aria-label="DHI report PDF"
+              tabindex="-1"
+              aria-hidden="true"
               @change="fillFromReport"
             />
           </div>
@@ -395,7 +442,7 @@ async function onDelete() {
             :data-doe="g!.barn_name || goatName(g!)"
           >
             <p class="font-medium">{{ g!.barn_name || goatName(g!) }}</p>
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-x-3 gap-y-2">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 sm:max-w-md">
               <label
                 v-for="f in [
                   { key: 'milk', label: `Milk (${unit})`, aria: 'milk' },
@@ -434,7 +481,10 @@ async function onDelete() {
               </label>
             </div>
 
-            <div v-if="form.kind === 'dhir'" class="rounded-md border border-default">
+            <div
+              v-if="form.kind === 'dhir' || totalsSummary(rows[g!.id]!)"
+              class="rounded-md border border-default sm:max-w-md"
+            >
               <button
                 type="button"
                 class="w-full flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2 text-sm text-start"

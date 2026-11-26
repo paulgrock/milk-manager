@@ -25,6 +25,50 @@ async function doe(
   return goat
 }
 
+/** Prints made-up report pages to a real PDF, the way a saved report arrives. */
+async function printReport(
+  page: import('@playwright/test').Page,
+  testInfo: import('@playwright/test').TestInfo,
+  pages: ReturnType<typeof layoutReport>,
+) {
+  const printer = await page.context().newPage()
+  await printer.setContent(reportHtml(pages))
+  const file = testInfo.outputPath('report.pdf')
+  writeFileSync(file, await printer.pdf({ width: '11in', height: '8.5in' }))
+  await printer.close()
+  return file
+}
+
+/** A doe's report page with one test line on `daysAgo`. */
+function reportDoe(name: string, identification: string, doeNumber: number, daysAgo = 10) {
+  const [y, m, d] = isoDate(-daysAgo).split('-')
+  return {
+    doeNumber,
+    name,
+    identification,
+    birthDate: '4/02/22',
+    tests: [
+      { date: '6/27/26', milk: '4.2', fat: '5.40', protein: '3.67', snf: '9.42', scc: '28', days: '81' },
+      {
+        date: `${Number(m)}/${d}/${y!.slice(2)}`,
+        milk: '2.8',
+        fat: '5.95',
+        protein: '4.28',
+        snf: '10.03',
+        scc: '2442',
+        ls: '7.6',
+        days: '170',
+        ltd: ['654', '39', '25', '63'] as [string, string, string, string],
+        proj: ['973', '58', '40', '96'] as [string, string, string, string],
+      },
+    ],
+  }
+}
+const printedDate = (daysAgo: number) => {
+  const [y, m, d] = isoDate(-daysAgo).split('-')
+  return `${Number(m)}/${d}/${y!.slice(2)}`
+}
+
 test("enters a DHIR test day: milk comes from the day's weights, SCC is read lab-style", async ({
   page,
   owner,
@@ -205,42 +249,24 @@ test('fills a test day from a DHI report PDF: matched by registration, in report
     birth_date: isoDate(-1000),
   })
   await addLactation(owner, herd.id, bram.id, isoDate(-180))
-  const [y, m, d] = isoDate(-10).split('-')
-  const printed = `${Number(m)}/${d}/${y!.slice(2)}`
-  const reportDoe = (name: string, identification: string, doeNumber: number) => ({
-    doeNumber,
-    name,
-    identification,
-    birthDate: '4/02/22',
-    tests: [
-      { date: '6/27/26', milk: '4.2', fat: '5.40', protein: '3.67', snf: '9.42', scc: '28', days: '81' },
-      {
-        date: printed,
-        milk: '2.8',
-        fat: '5.95',
-        protein: '4.28',
-        snf: '10.03',
-        scc: '2442',
-        ls: '7.6',
-        days: '170',
-        ltd: ['654', '39', '25', '63'] as [string, string, string, string],
-        proj: ['973', '58', '40', '96'] as [string, string, string, string],
-      },
-    ],
+  // Registered as someone else, so STRANGER's DOE NO. 2 mustn't match her.
+  await addGoat(owner, herd.id, {
+    barn_name: 'Decoy',
+    sex: 'doe',
+    registration_number: 'D009999998',
+    dhir_sample_number: 2,
   })
-  const pages = layoutReport('TEST FARM', printed, [
-    reportDoe('BRAMBLE', 'ND USA 1111111', 1),
-    reportDoe('STRANGER', 'ND USA 9999999', 2),
-  ])
-  // Print the made-up report to a real PDF, the way a saved report arrives.
-  const printer = await page.context().newPage()
-  await printer.setContent(reportHtml(pages))
-  const pdf = testInfo.outputPath('report.pdf')
-  writeFileSync(pdf, await printer.pdf({ width: '11in', height: '8.5in' }))
-  await printer.close()
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [
+      reportDoe('BRAMBLE', 'ND USA 1111111', 1),
+      reportDoe('STRANGER', 'ND USA 9999999', 2),
+    ]),
+  )
 
   await page.goto('/milk/tests/new')
-  await page.getByLabel('DHI report PDF').setInputFiles(pdf)
+  await page.locator('input[type=file]').setInputFiles(pdf)
   await expect(page.getByText('Filled 1 doe from the report').first()).toBeVisible()
   await expect(page.getByText(/Not found in your herd: STRANGER/).first()).toBeVisible()
   await expect(page.getByLabel('Test date')).toHaveValue(isoDate(-10))
@@ -330,6 +356,82 @@ test('report totals can be typed in by hand when editing a test', async ({ page,
     .eq('goat_id', ina.id)
     .single()
   expect(saved).toEqual({ ltd_milk_g: lbToGrams(412), proj305_milk_g: lbToGrams(880) })
+})
+
+test('a kg herd keeps report numbers exact, and untouched totals save as stored', async ({
+  page,
+  owner,
+  herd,
+}, testInfo) => {
+  await admin.from('herds').update({ weight_unit: 'kg' }).eq('id', herd.id)
+  const bram = await addGoat(owner, herd.id, {
+    barn_name: 'Bram',
+    sex: 'doe',
+    registration_number: 'D001111111',
+  })
+  await addLactation(owner, herd.id, bram.id, isoDate(-180))
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [reportDoe('BRAMBLE', 'ND USA 1111111', 1)]),
+  )
+  await page.goto('/milk/tests/new')
+  await page.locator('input[type=file]').setInputFiles(pdf)
+  // 2.8 lb is 1.27 kg, not 1.3.
+  await expect(page.getByLabel('Bram milk')).toHaveValue('1.27')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const first = await admin.from('milk_test_results').select('id, test_id, milk_g').eq('goat_id', bram.id).single()
+  expect(first.data!.milk_g).toBe(lbToGrams(2.8))
+
+  // Figures that don't land on a hundredth of a kilo, opened and saved untouched.
+  await admin
+    .from('milk_test_results')
+    .update({ milk_g: 1271, ltd_fat_g: 11793, proj305_milk_g: 441349 })
+    .eq('id', first.data!.id)
+  await page.goto(`/milk/tests/${first.data!.test_id}`)
+  await expect(page.getByLabel('Bram milk')).toHaveValue('1.27')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const again = await admin
+    .from('milk_test_results')
+    .select('milk_g, ltd_fat_g, proj305_milk_g')
+    .eq('goat_id', bram.id)
+    .single()
+  expect(again.data).toEqual({ milk_g: 1271, ltd_fat_g: 11793, proj305_milk_g: 441349 })
+})
+
+test("says the PDF reader didn't load, not that the report is wrong", async ({ page, owner, herd }, testInfo) => {
+  await doe(owner, herd.id, 'Ina')
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [reportDoe('INA', 'ND USA 1111111', 1)]),
+  )
+  // As if offline before pdf.js was ever downloaded.
+  await page.route(/\/assets\/pdf[^/]*$/, (route) => route.abort())
+  await page.goto('/milk/tests/new')
+  await page.locator('input[type=file]').setInputFiles(pdf)
+  await expect(page.getByText("Couldn't open the PDF reader").first()).toBeVisible()
+  await expect(page.getByText('No does found in that PDF')).toHaveCount(0)
+})
+
+test('report totals stay visible on a test that is not a DHIR test day', async ({ page, owner, herd }) => {
+  const ina = await doe(owner, herd.id, 'Ina', { daysAgo: 120 })
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-3), kind: 'owner' })
+    .select()
+    .single()
+  await admin.from('milk_test_results').insert({
+    herd_id: herd.id,
+    test_id: t!.id,
+    goat_id: ina.id,
+    milk_g: lbToGrams(3),
+    ltd_milk_g: lbToGrams(412),
+  })
+  await page.goto(`/milk/tests/${t!.id}`)
+  await expect(page.getByRole('button', { name: /Report totals 412 lb to date/ })).toBeVisible()
 })
 
 test('a doe without a birth date gets asked for one', async ({ page, owner, herd }) => {
