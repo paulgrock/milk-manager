@@ -53,6 +53,25 @@ export function dryOffBy(due: DueWindow): string {
   return addDays(due.expected, -DRY_OFF_DAYS_BEFORE)
 }
 
+/** Gestation lengths to plan with: the normal range, a day at a time. */
+export const GESTATION_CHOICES = Array.from(
+  { length: GESTATION_LATE - GESTATION_EARLY + 1 },
+  (_, i) => GESTATION_EARLY + i,
+)
+
+export interface GestationPlan {
+  bredOn: string
+  dueOn: string
+  dryOffBy: string
+}
+
+/** Plan a breeding from either end: the day she's bred, or the day you want kids. */
+export function gestationPlan(from: 'bred' | 'due', date: string, gestationDays = GESTATION_DAYS): GestationPlan {
+  const bredOn = from === 'bred' ? date : addDays(date, -gestationDays)
+  const dueOn = from === 'due' ? date : addDays(date, gestationDays)
+  return { bredOn, dueOn, dryOffBy: addDays(dueOn, -DRY_OFF_DAYS_BEFORE) }
+}
+
 export type BreedingStatus = 'bred' | 'confirmed' | 'open' | 'kidded' | 'overdue'
 
 export const STATUS_LABELS: Record<BreedingStatus, string> = {

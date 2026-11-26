@@ -199,3 +199,31 @@ test('the kidding form picks her breeding even when opened without one', async (
   }, ina.id)
   await expect(page.getByText('Sire: Rex Ridge Rocket')).toBeVisible()
 })
+
+test('the gestation calculator starts folded and plans from either end', async ({ page, herd: _herd }) => {
+  const long = (iso: string) => {
+    const [y, m, d] = iso.split('-').map(Number)
+    const date = new Date(y!, m! - 1, d!)
+    return `${date.toLocaleDateString('en-US', { weekday: 'short' })}, ${shown(iso)}`
+  }
+
+  await page.goto('/breeding')
+  const toggle = page.getByRole('button', { name: /Gestation calculator/ })
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByLabel('Breeding date')).toBeHidden()
+
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await page.getByLabel('Breeding date').fill('2026-11-25')
+  await expect(page.getByText(long('2027-04-24'))).toBeVisible() // due at 150 days
+  await expect(page.getByText(long('2027-02-23'))).toBeVisible() // dry off 60 days before
+
+  await page.getByRole('combobox', { name: 'Gestation' }).click()
+  await page.getByRole('option', { name: '145 days' }).click()
+  await expect(page.getByText(long('2027-04-19'))).toBeVisible()
+
+  await page.getByRole('radio', { name: 'Want kids by' }).click()
+  await page.getByLabel('Kidding date').fill('2027-03-15')
+  await expect(page.getByText(long('2026-10-21'))).toBeVisible() // bred 145 days before
+  await expect(page.getByText(long('2027-01-14'))).toBeVisible()
+})

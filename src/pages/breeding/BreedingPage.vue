@@ -11,6 +11,7 @@ import { CURRENT_STATUSES, goatFullName, goatName, type Goat } from '@/lib/goats
 import { formatWeight, lactationOn } from '@/lib/milk'
 import HeatModal from '@/components/breeding/HeatModal.vue'
 import BreedingModal from '@/components/breeding/BreedingModal.vue'
+import GestationCalculatorCard from '@/components/breeding/GestationCalculatorCard.vue'
 
 const DUE_WITHIN_DAYS = 60
 const HEAT_WITHIN_DAYS = 7
@@ -133,6 +134,8 @@ const breedingOpen = ref(false)
           </li>
         </ul>
       </UCard>
+
+      <GestationCalculatorCard />
 
       <div class="grid md:grid-cols-2 gap-4 items-start">
         <UCard :ui="{ body: 'p-0 sm:p-0' }">
