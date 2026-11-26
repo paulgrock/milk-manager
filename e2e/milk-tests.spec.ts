@@ -215,3 +215,30 @@ test('a new test lists does in barn sheet order: sample number, then name', asyn
   await page.setViewportSize({ width: 375, height: 812 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
 })
+
+test("changing the test date swaps in that day's milk weights but keeps typed ones", async ({ page, owner, herd }) => {
+  const ina = await doe(owner, herd.id, 'Ina')
+  const clover = await doe(owner, herd.id, 'Clover')
+  const dot = await doe(owner, herd.id, 'Dot')
+  const weigh = (goatId: string, daysAgo: number, lb: number) =>
+    owner.client.rpc('record_milking', {
+      p_goat_id: goatId,
+      p_milked_on: isoDate(-daysAgo),
+      p_milking: 1,
+      p_weight_g: lbToGrams(lb),
+    })
+  await weigh(ina.id, 0, 3)
+  await weigh(ina.id, 1, 2)
+  await weigh(clover.id, 0, 1)
+  await weigh(dot.id, 0, 4)
+
+  await page.goto('/milk/tests/new')
+  await expect(page.getByLabel('Ina milk')).toHaveValue('3')
+  await expect(page.getByLabel('Dot milk')).toHaveValue('4')
+  await page.getByLabel('Clover milk').fill('5')
+
+  await page.getByLabel('Test date').fill(isoDate(-1))
+  await expect(page.getByLabel('Ina milk')).toHaveValue('2')
+  await expect(page.getByLabel('Clover milk')).toHaveValue('5')
+  await expect(page.getByLabel('Dot milk')).toHaveValue('')
+})

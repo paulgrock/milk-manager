@@ -83,15 +83,20 @@ watch(
 
 // A new test starts with each doe's milk weights from that day, if there are any.
 const day = useMilkDay(() => form.tested_on)
+// What was last filled in for each doe, so a new date can replace it without
+// touching a weight someone typed.
+const prefilled: Record<string, string> = {}
 // Runs when the day's weights or the does list loads, whichever is last.
 watch(
   [() => day.data.value, does],
   ([dayRows]) => {
     if (testId.value || !dayRows) return
     for (const g of does.value) {
-      const total = dayRows.filter((r) => r.goat_id === g!.id).reduce((s, r) => s + r.weight_g, 0)
       const row = rows[g!.id]
-      if (row && !row.milk && total) row.milk = formatWeight(total, unit.value).replace(/,/g, '')
+      if (!row || (row.milk && row.milk !== prefilled[g!.id])) continue
+      const total = dayRows.filter((r) => r.goat_id === g!.id).reduce((s, r) => s + r.weight_g, 0)
+      row.milk = total ? formatWeight(total, unit.value).replace(/,/g, '') : ''
+      prefilled[g!.id] = row.milk
     }
   },
   { immediate: true },
