@@ -32,3 +32,6 @@ dev-dist
 test-results
 playwright-report
 blob-report
+
+# Throwaway design mockups
+mockups/
