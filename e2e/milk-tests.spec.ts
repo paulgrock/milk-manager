@@ -1,4 +1,6 @@
 import { admin, expect, test } from './fixtures.ts'
+import { writeFileSync } from 'node:fs'
+import { layoutReport, reportHtml } from '../src/lib/dhiReportLayout.ts'
 import { addLactation, addGoat, addMilkCurve, isoDate, lbToGrams } from './seed.ts'
 
 /** A doe in milk, born `ageYears` before she freshened `daysAgo` days ago. */
@@ -21,6 +23,50 @@ async function doe(
   })
   await addLactation(owner, herdId, goat.id, isoDate(-daysAgo))
   return goat
+}
+
+/** Prints made-up report pages to a real PDF, the way a saved report arrives. */
+async function printReport(
+  page: import('@playwright/test').Page,
+  testInfo: import('@playwright/test').TestInfo,
+  pages: ReturnType<typeof layoutReport>,
+) {
+  const printer = await page.context().newPage()
+  await printer.setContent(reportHtml(pages))
+  const file = testInfo.outputPath('report.pdf')
+  writeFileSync(file, await printer.pdf({ width: '11in', height: '8.5in' }))
+  await printer.close()
+  return file
+}
+
+/** A doe's report page with one test line on `daysAgo`. */
+function reportDoe(name: string, identification: string, doeNumber: number, daysAgo = 10) {
+  const [y, m, d] = isoDate(-daysAgo).split('-')
+  return {
+    doeNumber,
+    name,
+    identification,
+    birthDate: '4/02/22',
+    tests: [
+      { date: '6/27/26', milk: '4.2', fat: '5.40', protein: '3.67', snf: '9.42', scc: '28', days: '81' },
+      {
+        date: `${Number(m)}/${d}/${y!.slice(2)}`,
+        milk: '2.8',
+        fat: '5.95',
+        protein: '4.28',
+        snf: '10.03',
+        scc: '2442',
+        ls: '7.6',
+        days: '170',
+        ltd: ['654', '39', '25', '63'] as [string, string, string, string],
+        proj: ['973', '58', '40', '96'] as [string, string, string, string],
+      },
+    ],
+  }
+}
+const printedDate = (daysAgo: number) => {
+  const [y, m, d] = isoDate(-daysAgo).split('-')
+  return `${Number(m)}/${d}/${y!.slice(2)}`
 }
 
 test("enters a DHIR test day: milk comes from the day's weights, SCC is read lab-style", async ({
@@ -187,6 +233,205 @@ test('a test day after the latest DHI report is added on to the report for her s
   await expect(star.getByText(/plus an estimate from your weights and test days since that report/)).toBeVisible()
   // DHI's projection is from before the newer test, so it isn't shown as current.
   await expect(star.getByText('771 lb')).toHaveCount(0)
+})
+
+test('fills a test day from a DHI report PDF: matched by registration, in report order', async ({
+  page,
+  owner,
+  herd,
+}, testInfo) => {
+  // Her barn name isn't the name on the report; her registration number is.
+  const bram = await addGoat(owner, herd.id, {
+    barn_name: 'Bram',
+    sex: 'doe',
+    breed: 'Nigerian Dwarf',
+    registration_number: 'D001111111',
+    birth_date: isoDate(-1000),
+  })
+  await addLactation(owner, herd.id, bram.id, isoDate(-180))
+  // Registered as someone else, so STRANGER's DOE NO. 2 mustn't match her.
+  await addGoat(owner, herd.id, {
+    barn_name: 'Decoy',
+    sex: 'doe',
+    registration_number: 'D009999998',
+    dhir_sample_number: 2,
+  })
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [
+      reportDoe('BRAMBLE', 'ND USA 1111111', 1),
+      reportDoe('STRANGER', 'ND USA 9999999', 2),
+    ]),
+  )
+
+  await page.goto('/milk/tests/new')
+  await page.locator('input[type=file]').setInputFiles(pdf)
+  await expect(page.getByText('Filled 1 doe from the report').first()).toBeVisible()
+  await expect(page.getByText(/Not found in your herd: STRANGER/).first()).toBeVisible()
+  await expect(page.getByLabel('Test date')).toHaveValue(isoDate(-10))
+  await expect(page.getByLabel('Bram milk')).toHaveValue('2.8')
+  await expect(page.getByLabel('Bram butterfat')).toHaveValue('5.95')
+  await expect(page.getByLabel('Bram protein')).toHaveValue('4.28')
+  await expect(page.getByLabel('Bram SNF')).toHaveValue('10.03')
+  await expect(page.getByLabel('Bram SCC')).toHaveValue('2442k')
+  await expect(page.getByRole('button', { name: /Report totals 654 lb to date · 973 lb projected/ })).toBeVisible()
+
+  // Tab goes through her numbers in the order they're printed on the report line.
+  await page.getByRole('button', { name: /Report totals/ }).click()
+  await page.getByLabel('Bram milk').focus()
+  const order = [await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))]
+  // One more press for the Report totals button between SCC and her totals.
+  for (let i = 0; i < 13; i++) {
+    await page.keyboard.press('Tab')
+    order.push(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? null))
+  }
+  expect(order.filter((l) => l?.startsWith('Bram'))).toEqual([
+    'Bram milk',
+    'Bram butterfat',
+    'Bram protein',
+    'Bram SNF',
+    'Bram SCC',
+    'Bram to date milk',
+    'Bram to date butterfat',
+    'Bram to date protein',
+    'Bram to date snf',
+    'Bram projected 305 milk',
+    'Bram projected 305 butterfat',
+    'Bram projected 305 protein',
+    'Bram projected 305 snf',
+  ])
+
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const { data: saved } = await admin
+    .from('milk_test_results')
+    .select(
+      'milk_g, butterfat_pct, protein_pct, snf_pct, scc, ltd_milk_g, ltd_fat_g, ltd_snf_g, proj305_milk_g, proj305_snf_g',
+    )
+    .eq('goat_id', bram.id)
+    .single()
+  expect(saved).toEqual({
+    milk_g: lbToGrams(2.8),
+    butterfat_pct: 5.95,
+    protein_pct: 4.28,
+    snf_pct: 10.03,
+    scc: 2_442_000,
+    ltd_milk_g: lbToGrams(654),
+    ltd_fat_g: lbToGrams(39),
+    ltd_snf_g: lbToGrams(63),
+    proj305_milk_g: lbToGrams(973),
+    proj305_snf_g: lbToGrams(96),
+  })
+
+  // Her star now uses the report's own figures.
+  await page.goto(`/goats/${bram.id}`)
+  await expect(page.getByText("From your DHI report's lactation-to-date and projected 305-day figures.")).toBeVisible()
+})
+
+test('report totals can be typed in by hand when editing a test', async ({ page, owner, herd }) => {
+  const ina = await doe(owner, herd.id, 'Ina', { daysAgo: 120 })
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-3), kind: 'dhir' })
+    .select()
+    .single()
+  await admin
+    .from('milk_test_results')
+    .insert({ herd_id: herd.id, test_id: t!.id, goat_id: ina.id, milk_g: lbToGrams(3), butterfat_pct: 6.5 })
+
+  await page.goto(`/milk/tests/${t!.id}`)
+  await expect(page.getByRole('button', { name: /Report totals not entered/ })).toBeVisible()
+  await page.getByRole('button', { name: /Report totals/ }).click()
+  await page.getByLabel('Ina to date milk').fill('412')
+  await page.getByLabel('Ina projected 305 milk').fill('nope')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Report totals should be lb, like 519 or 31.8')).toBeVisible()
+  await page.getByLabel('Ina projected 305 milk').fill('880')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const { data: saved } = await admin
+    .from('milk_test_results')
+    .select('ltd_milk_g, proj305_milk_g')
+    .eq('goat_id', ina.id)
+    .single()
+  expect(saved).toEqual({ ltd_milk_g: lbToGrams(412), proj305_milk_g: lbToGrams(880) })
+})
+
+test('a kg herd keeps report numbers exact, and untouched totals save as stored', async ({
+  page,
+  owner,
+  herd,
+}, testInfo) => {
+  await admin.from('herds').update({ weight_unit: 'kg' }).eq('id', herd.id)
+  const bram = await addGoat(owner, herd.id, {
+    barn_name: 'Bram',
+    sex: 'doe',
+    registration_number: 'D001111111',
+  })
+  await addLactation(owner, herd.id, bram.id, isoDate(-180))
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [reportDoe('BRAMBLE', 'ND USA 1111111', 1)]),
+  )
+  await page.goto('/milk/tests/new')
+  await page.locator('input[type=file]').setInputFiles(pdf)
+  // 2.8 lb is 1.27 kg, not 1.3.
+  await expect(page.getByLabel('Bram milk')).toHaveValue('1.27')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const first = await admin.from('milk_test_results').select('id, test_id, milk_g').eq('goat_id', bram.id).single()
+  expect(first.data!.milk_g).toBe(lbToGrams(2.8))
+
+  // Figures that don't land on a hundredth of a kilo, opened and saved untouched.
+  await admin
+    .from('milk_test_results')
+    .update({ milk_g: 1271, ltd_fat_g: 11793, proj305_milk_g: 441349 })
+    .eq('id', first.data!.id)
+  await page.goto(`/milk/tests/${first.data!.test_id}`)
+  await expect(page.getByLabel('Bram milk')).toHaveValue('1.27')
+  await page.getByRole('button', { name: 'Save test' }).click()
+  await expect(page.getByText('Saved 1 result').first()).toBeVisible()
+  const again = await admin
+    .from('milk_test_results')
+    .select('milk_g, ltd_fat_g, proj305_milk_g')
+    .eq('goat_id', bram.id)
+    .single()
+  expect(again.data).toEqual({ milk_g: 1271, ltd_fat_g: 11793, proj305_milk_g: 441349 })
+})
+
+test("says the PDF reader didn't load, not that the report is wrong", async ({ page, owner, herd }, testInfo) => {
+  await doe(owner, herd.id, 'Ina')
+  const pdf = await printReport(
+    page,
+    testInfo,
+    layoutReport('TEST FARM', printedDate(10), [reportDoe('INA', 'ND USA 1111111', 1)]),
+  )
+  // As if offline before pdf.js was ever downloaded.
+  await page.route(/\/assets\/pdf[^/]*$/, (route) => route.abort())
+  await page.goto('/milk/tests/new')
+  await page.locator('input[type=file]').setInputFiles(pdf)
+  await expect(page.getByText("Couldn't open the PDF reader").first()).toBeVisible()
+  await expect(page.getByText('No does found in that PDF')).toHaveCount(0)
+})
+
+test('report totals stay visible on a test that is not a DHIR test day', async ({ page, owner, herd }) => {
+  const ina = await doe(owner, herd.id, 'Ina', { daysAgo: 120 })
+  const { data: t } = await admin
+    .from('milk_tests')
+    .insert({ herd_id: herd.id, tested_on: isoDate(-3), kind: 'owner' })
+    .select()
+    .single()
+  await admin.from('milk_test_results').insert({
+    herd_id: herd.id,
+    test_id: t!.id,
+    goat_id: ina.id,
+    milk_g: lbToGrams(3),
+    ltd_milk_g: lbToGrams(412),
+  })
+  await page.goto(`/milk/tests/${t!.id}`)
+  await expect(page.getByRole('button', { name: /Report totals 412 lb to date/ })).toBeVisible()
 })
 
 test('a doe without a birth date gets asked for one', async ({ page, owner, herd }) => {
