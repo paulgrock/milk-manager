@@ -511,14 +511,14 @@ isOneToOne: false
                   ]
                 },"milk_test_results": {
                   Row: {
-                    "butterfat_pct": number | null,"dim": number | null,"goat_id": string,"herd_id": string,"id": string,"ltd_fat_g": number | null,"ltd_milk_g": number | null,"ltd_protein_g": number | null,"milk_g": number | null,"notes": string | null,"proj305_fat_g": number | null,"proj305_milk_g": number | null,"proj305_protein_g": number | null,"protein_pct": number | null,"scc": number | null,"test_id": string
+                    "butterfat_pct": number | null,"dim": number | null,"goat_id": string,"herd_id": string,"id": string,"ltd_fat_g": number | null,"ltd_milk_g": number | null,"ltd_protein_g": number | null,"ltd_snf_g": number | null,"milk_g": number | null,"notes": string | null,"proj305_fat_g": number | null,"proj305_milk_g": number | null,"proj305_protein_g": number | null,"proj305_snf_g": number | null,"protein_pct": number | null,"scc": number | null,"snf_pct": number | null,"test_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id": string
+                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id": string,"herd_id": string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"ltd_snf_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"proj305_snf_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"snf_pct"?: number | null,"test_id": string
                   }
                   Update: {
-                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"test_id"?: string
+                    "butterfat_pct"?: number | null,"dim"?: number | null,"goat_id"?: string,"herd_id"?: string,"id"?: string,"ltd_fat_g"?: number | null,"ltd_milk_g"?: number | null,"ltd_protein_g"?: number | null,"ltd_snf_g"?: number | null,"milk_g"?: number | null,"notes"?: string | null,"proj305_fat_g"?: number | null,"proj305_milk_g"?: number | null,"proj305_protein_g"?: number | null,"proj305_snf_g"?: number | null,"protein_pct"?: number | null,"scc"?: number | null,"snf_pct"?: number | null,"test_id"?: string
                   }
                   Relationships: [
                     {

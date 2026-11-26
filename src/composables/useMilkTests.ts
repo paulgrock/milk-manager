@@ -33,7 +33,23 @@ export function useMilkTests() {
   return { query, data: computed(() => query.data.value ?? { tests: [], results: [] }) }
 }
 
-export type ResultInput = Pick<MilkTestResult, 'goat_id' | 'milk_g' | 'butterfat_pct' | 'protein_pct' | 'scc'>
+export type ResultInput = Pick<
+  MilkTestResult,
+  | 'goat_id'
+  | 'milk_g'
+  | 'butterfat_pct'
+  | 'protein_pct'
+  | 'snf_pct'
+  | 'scc'
+  | 'ltd_milk_g'
+  | 'ltd_fat_g'
+  | 'ltd_protein_g'
+  | 'ltd_snf_g'
+  | 'proj305_milk_g'
+  | 'proj305_fat_g'
+  | 'proj305_protein_g'
+  | 'proj305_snf_g'
+>
 
 export function useMilkTestMutations() {
   const { herdId } = useHerd()
