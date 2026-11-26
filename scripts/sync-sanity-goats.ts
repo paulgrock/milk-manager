@@ -18,8 +18,10 @@
 // wether, birth date, ADGA pedigree link, sire and dam with their parents,
 // photos, and the herd records in the studio's "Herd records" group (breed,
 // registry and number, colour, horns, tattoos, scrapie tag, microchip).
-// Note the website's goats page lists only goats marked "doe", so filling in
-// doe on a goat Sanity had left blank puts it on that page.
+// The type decides which website page a goat is listed on once the site
+// splits does and bucks. "wether" and the herd records need the matching
+// schema in the website repo (sanity/schemas/goat.ts) deployed with
+// `npx sanity deploy`, or the studio shows them as unknown fields.
 // Left out:
 //  - notes (private; the website's description is written separately)
 //  - status and leaving details, milking order, DHIR numbers: day-to-day
@@ -111,7 +113,8 @@ const regOf = (url?: string | null) => url?.match(/RegNumber=([A-Z0-9]+)/i)?.[1]
 
 let herdId = arg('herd')
 if (!herdId) {
-  const { data: herds } = await db.from('herds').select('id, name')
+  const { data: herds, error } = await db.from('herds').select('id, name')
+  if (error) throw error
   if (herds?.length !== 1) {
     console.error(`Pick a herd with --herd:\n${(herds ?? []).map((h) => `  ${h.id}  ${h.name}`).join('\n')}`)
     process.exit(1)
@@ -119,27 +122,53 @@ if (!herdId) {
   herdId = herds[0]!.id
 }
 
-const { data: goats, error: goatsError } = await db
-  .from('goats')
-  .select(
-    'id, registered_name, barn_name, title_prefix, title_suffix, sex, birth_date, registry, registration_number, pedigree_url, sire_id, dam_id, status, breed, breed_category, color_markings, horn_status, tattoo_left, tattoo_right, scrapie_tag, microchip',
-  )
-  .eq('herd_id', herdId)
-if (goatsError) throw goatsError
-const { data: appraisals } = await db
-  .from('linear_appraisals')
-  .select('goat_id, appraised_on, general_appearance, dairy_strength, body_capacity, mammary_system, final_score')
-  .eq('herd_id', herdId)
-  .order('appraised_on')
-const { data: photos } = await db
-  .from('goat_photos')
-  .select('id, goat_id, storage_path, thumb_path, kind, is_primary, created_at')
-  .eq('herd_id', herdId)
-  .order('created_at')
+/** Every row, a page at a time (a single select stops at 1000). */
+async function all<T>(
+  table: string,
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+) {
+  const rows: T[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await page(from, from + 999)
+    if (error) throw new Error(`${table}: ${error.message}`)
+    rows.push(...data!)
+    if (data!.length < 1000) return rows
+  }
+}
 
-type Goat = NonNullable<typeof goats>[number]
-const byId = new Map(goats!.map((g) => [g.id, g]))
-const latestAppraisal = new Map((appraisals ?? []).map((a) => [a.goat_id, a])) // ordered, so the last wins
+const goats = await all('goats', (from, to) =>
+  db
+    .from('goats')
+    .select(
+      'id, registered_name, barn_name, title_prefix, title_suffix, sex, birth_date, registry, registration_number, pedigree_url, sire_id, dam_id, status, breed, breed_category, color_markings, horn_status, tattoo_left, tattoo_right, scrapie_tag, microchip',
+    )
+    .eq('herd_id', herdId!)
+    .order('id')
+    .range(from, to),
+)
+const appraisals = await all('linear_appraisals', (from, to) =>
+  db
+    .from('linear_appraisals')
+    .select('goat_id, appraised_on, general_appearance, dairy_strength, body_capacity, mammary_system, final_score')
+    .eq('herd_id', herdId!)
+    .order('appraised_on')
+    .order('id')
+    .range(from, to),
+)
+const photos = await all('goat_photos', (from, to) =>
+  db
+    .from('goat_photos')
+    .select('id, goat_id, storage_path, thumb_path, kind, is_primary, created_at')
+    .eq('herd_id', herdId!)
+    .order('created_at')
+    .order('id')
+    .range(from, to),
+)
+
+type Goat = (typeof goats)[number]
+type Photo = (typeof photos)[number]
+const byId = new Map(goats.map((g) => [g.id, g]))
+const latestAppraisal = new Map(appraisals.map((a) => [a.goat_id, a])) // ordered, so the last wins
 
 /** As the website writes it: "GCH Bird's Eye Farm Ina May 5*M VVEV 88". */
 function fullName(g: Goat) {
@@ -165,14 +194,27 @@ for (const [base, { doc }] of sanityGoats) {
   if (reg) sanityByReg.set(reg, base)
   if (doc.name) sanityByName.set(nameKey(doc.name), base)
 }
-const matchOf = new Map<string, string>()
-for (const g of goats!) {
-  const reg = g.registration_number?.toUpperCase() ?? regOf(g.pedigree_url)
-  const base = (reg && sanityByReg.get(reg)) || (g.registered_name && sanityByName.get(nameKey(g.registered_name)))
-  if (base) matchOf.set(g.id, base)
-}
+const isCurrent = (g: Goat) => ['active', 'for_sale'].includes(g.status)
+const current = goats.filter(isCurrent)
 
-const current = goats!.filter((g) => ['active', 'for_sale'].includes(g.status))
+// A goat with no registered name is matched (and created) by its barn name.
+const claims = new Map<string, Goat[]>()
+for (const g of goats) {
+  const reg = g.registration_number?.trim().toUpperCase() || regOf(g.pedigree_url)
+  const name = g.registered_name?.trim() || g.barn_name?.trim()
+  const base = (reg && sanityByReg.get(reg)) || (name && sanityByName.get(nameKey(name)))
+  if (base) claims.set(base, [...(claims.get(base) ?? []), g])
+}
+// Two goats on one Sanity document: the current one gets it. If that doesn't
+// settle it, the current ones are skipped (not created anew) and listed.
+const matchOf = new Map<string, string>()
+const conflicted = new Map<string, Goat[]>()
+for (const [base, gs] of claims) {
+  const winners = gs.length === 1 ? gs : gs.filter(isCurrent)
+  if (winners.length === 1) matchOf.set(winners[0]!.id, base)
+  else conflicted.set(base, gs)
+}
+const skipped = new Set([...conflicted.values()].flat().map((g) => g.id))
 
 /**
  * Whether two spellings of a name say the same thing, ignoring curly
@@ -205,7 +247,7 @@ function slugify(text: string) {
 }
 const usedSlugs = new Set([...sanityGoats.values()].map((s) => s.doc.slug).filter(Boolean))
 const newSlugs = new Map<string, string>()
-for (const g of current.filter((g) => !matchOf.has(g.id))) {
+for (const g of current.filter((g) => !matchOf.has(g.id) && !skipped.has(g.id))) {
   const base = slugify(g.registered_name || g.barn_name || 'goat')
   let slug = base
   for (let n = 2; usedSlugs.has(slug); n++) slug = `${base}-${n}`
@@ -213,10 +255,14 @@ for (const g of current.filter((g) => !matchOf.has(g.id))) {
   newSlugs.set(g.id, slug)
 }
 
-/** A parent or grandparent's link: their page on the website if they have one, else their pedigree. */
+/**
+ * A parent or grandparent's link: their page on the website if it's published
+ * (a draft has no page yet), else their pedigree.
+ */
 function linkOf(g: Goat) {
   const base = matchOf.get(g.id)
-  const slug = base ? sanityGoats.get(base)!.doc.slug : newSlugs.get(g.id)
+  const entry = base ? sanityGoats.get(base) : undefined
+  const slug = entry?.published ? entry.doc.slug : undefined
   return slug ? `${SITE}/goats/${slug}` : (pedigreeUrl(g) ?? undefined)
 }
 function ancestor(id: string | null): Ancestor | undefined {
@@ -246,15 +292,17 @@ function fillParent(
   notes: string[],
 ) {
   if (!want?.name) return
-  if (!have?.name?.trim()) {
+  if (!have || typeof have !== 'object') {
     out[path] = want
     return
   }
-  if (nameKey(have.name) !== nameKey(want.name)) {
+  // Something is there: fill only its empty parts, so a link or grandparents
+  // entered without a name are kept.
+  if (!have.name?.trim()) out[`${path}.name`] = want.name
+  else if (nameKey(have.name) !== nameKey(want.name)) {
     notes.push(`${path}: Sanity has "${have.name}", Milk Manager has "${want.name}"`)
     return
-  }
-  if (!sameName(have.name, want.name))
+  } else if (!sameName(have.name, want.name))
     notes.push(`${path} name: Sanity "${have.name.trim()}", Milk Manager "${want.name}"`)
   if (!have.link?.trim() && want.link) out[`${path}.link`] = want.link
   for (const side of ['sire', 'dam'] as const) {
@@ -309,13 +357,20 @@ const sanityHashes = new Map<string, string>()
 async function sanityHash(img: SanityImage) {
   if (!img.url) return undefined
   if (!sanityHashes.has(img.url)) {
-    const res = await fetch(`${img.url}?w=256`)
-    sanityHashes.set(img.url, dhash(grid(new Uint8Array(await res.arrayBuffer()))))
+    try {
+      const res = await fetch(`${img.url}?w=256`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      sanityHashes.set(img.url, dhash(grid(new Uint8Array(await res.arrayBuffer()))))
+    } catch (e) {
+      // Not comparable, so a matching photo may be offered again; better than stopping.
+      console.warn(`Couldn't read Sanity image ${img.url}: ${(e as Error).message}`)
+      return undefined
+    }
   }
   return sanityHashes.get(img.url)
 }
 /** The photo's fingerprint turned all four ways, since a file's rotation flag may or may not have been applied. */
-async function photoHashes(photo: NonNullable<typeof photos>[number]) {
+async function photoHashes(photo: Photo) {
   const { data, error } = await db.storage.from(BUCKET).download(photo.thumb_path ?? photo.storage_path)
   if (error) throw new Error(`${photo.storage_path}: ${error.message}`)
   let g = grid(new Uint8Array(await data.arrayBuffer()))
@@ -331,12 +386,13 @@ type Plan = {
   goat: Goat
   base?: string
   set: Record<string, unknown>
-  newPhotos: NonNullable<typeof photos>
+  newPhotos: Photo[]
   notes: string[]
 }
 const plans: Plan[] = []
 
 for (const g of current) {
+  if (skipped.has(g.id)) continue
   const base = matchOf.get(g.id)
   if (!base && !createNew) continue
   const doc = base ? sanityGoats.get(base)!.doc : undefined
@@ -375,9 +431,7 @@ for (const g of current) {
   fillParent('dam', doc?.dam, parent(g.dam_id), set, notes)
 
   // Photos Sanity doesn't have: not added by an earlier run, and not looking like one of its images.
-  const mine = (photos ?? [])
-    .filter((p) => p.goat_id === g.id)
-    .sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
+  const mine = photos.filter((p) => p.goat_id === g.id).sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
   const keys = new Set((doc?.images ?? []).map((i) => i._key))
   const theirs = (await Promise.all((doc?.images ?? []).map(sanityHash))).filter(Boolean) as string[]
   const newPhotos: typeof mine = []
@@ -405,9 +459,16 @@ for (const p of plans) {
   for (const n of p.notes) console.log(`    ≠ ${n} (left alone)`)
 }
 if (!plans.length) console.log('Sanity already has everything.')
-const unmatched = [...sanityGoats.entries()].filter(([base]) => ![...matchOf.values()].includes(base))
+const matchedBases = new Set([...matchOf.values(), ...conflicted.keys()])
+const unmatched = [...sanityGoats.entries()].filter(([base]) => !matchedBases.has(base))
 if (unmatched.length)
   console.log(`\nIn Sanity only (left alone): ${unmatched.map(([, s]) => s.doc.aka || s.doc.name).join(', ')}`)
+for (const [base, gs] of conflicted) {
+  const s = sanityGoats.get(base)!.doc
+  console.log(
+    `\nSkipped: ${gs.map(shortName).join(' and ')} all match Sanity's "${s.aka || s.name}" (${base}). Fix the duplicate in Milk Manager.`,
+  )
+}
 
 if (!apply) {
   rmSync(work, { recursive: true, force: true })
@@ -417,7 +478,7 @@ if (!apply) {
 
 // --- Write --------------------------------------------------------------------------------
 
-async function upload(photo: NonNullable<typeof photos>[number], g: Goat) {
+async function upload(photo: Photo, g: Goat) {
   const { data, error } = await db.storage.from(BUCKET).download(photo.storage_path)
   if (error) throw new Error(`${photo.storage_path}: ${error.message}`)
   const filename = `${slugify(shortName(g))}-${photo.id.slice(0, 8)}.jpg`
@@ -432,42 +493,57 @@ async function upload(photo: NonNullable<typeof photos>[number], g: Goat) {
 let created = 0
 let updated = 0
 let added = 0
-for (const p of plans) {
-  if (!Object.keys(p.set).length && !p.newPhotos.length) continue
-  const images = []
-  for (const photo of p.newPhotos) images.push(await upload(photo, p.goat))
-  added += images.length
-  let mutation: unknown
-  if (!p.base) {
-    mutation = {
-      create: {
-        _id: `drafts.${crypto.randomUUID()}`,
-        _type: 'goat',
-        slug: { _type: 'slug', current: newSlugs.get(p.goat.id) },
-        ...p.set,
-        ...(images.length ? { images } : {}),
-      },
+const failed: string[] = []
+try {
+  for (const p of plans) {
+    if (!Object.keys(p.set).length && !p.newPhotos.length) continue
+    // One goat failing (say, edited in the studio mid-run) doesn't stop the rest;
+    // running again picks it up.
+    try {
+      const images = []
+      for (const photo of p.newPhotos) images.push(await upload(photo, p.goat))
+      let mutation: unknown
+      if (!p.base) {
+        mutation = {
+          create: {
+            _id: `drafts.${crypto.randomUUID()}`,
+            _type: 'goat',
+            slug: { _type: 'slug', current: newSlugs.get(p.goat.id) },
+            ...p.set,
+            ...(images.length ? { images } : {}),
+          },
+        }
+      } else {
+        const { doc } = sanityGoats.get(p.base)!
+        const set = { ...p.set, ...(images.length && !doc.images?.length ? { images } : {}) }
+        mutation = {
+          patch: {
+            id: doc._id,
+            ifRevisionID: doc._rev, // stops if someone edited it in the studio since it was read
+            ...(Object.keys(set).length ? { set } : {}),
+            ...(images.length && doc.images?.length ? { insert: { after: 'images[-1]', items: images } } : {}),
+          },
+        }
+      }
+      await sanity(`/data/mutate/${DATASET}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mutations: [mutation] }),
+      })
+      if (p.base) updated += 1
+      else created += 1
+      added += images.length
+      console.log(`Saved ${fullName(p.goat)}`)
+    } catch (e) {
+      failed.push(fullName(p.goat))
+      console.error(`Not saved: ${fullName(p.goat)}: ${(e as Error).message}`)
     }
-    created += 1
-  } else {
-    const { doc } = sanityGoats.get(p.base)!
-    const set = { ...p.set, ...(images.length && !doc.images?.length ? { images } : {}) }
-    mutation = {
-      patch: {
-        id: doc._id,
-        ifRevisionID: doc._rev, // stops if someone edited it in the studio since it was read
-        ...(Object.keys(set).length ? { set } : {}),
-        ...(images.length && doc.images?.length ? { insert: { after: 'images[-1]', items: images } } : {}),
-      },
-    }
-    updated += 1
   }
-  await sanity(`/data/mutate/${DATASET}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mutations: [mutation] }),
-  })
-  console.log(`Saved ${fullName(p.goat)}`)
+} finally {
+  rmSync(work, { recursive: true, force: true })
 }
-rmSync(work, { recursive: true, force: true })
 console.log(`\nSanity: ${created} drafts created, ${updated} goats filled in, ${added} photos added.`)
+if (failed.length) {
+  console.error(`${failed.length} not saved (run again to retry): ${failed.join(', ')}`)
+  process.exitCode = 1
+}
