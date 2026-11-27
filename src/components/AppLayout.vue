@@ -51,9 +51,11 @@ const herdOptions = computed(() =>
     Bars pinned to the bottom of the page use these to stay clear of the navigation:
     --app-nav-h is the phone tab bar's height (64px of tabs plus its 1px top border),
     --app-sidebar-w the desktop sidebar's width (14rem, border included).
+    isolate keeps the header's and tab bar's z-index inside the app, so pop-ups (drawn at the end
+    of <body>) always sit over them, instead of the bars hiding a pop-up's title and Save button.
   -->
   <div
-    class="min-h-dvh flex flex-col [--app-nav-h:calc(4rem+1px+env(safe-area-inset-bottom))] [--app-sidebar-w:0px] lg:[--app-nav-h:0px] lg:[--app-sidebar-w:14rem]"
+    class="isolate min-h-dvh flex flex-col [--app-nav-h:calc(4rem+1px+env(safe-area-inset-bottom))] [--app-sidebar-w:0px] lg:[--app-nav-h:0px] lg:[--app-sidebar-w:14rem]"
   >
     <header class="sticky top-0 z-10 border-b border-default bg-default/90 backdrop-blur">
       <div class="px-4 h-14 flex items-center gap-3">

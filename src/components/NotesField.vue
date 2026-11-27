@@ -33,7 +33,7 @@ function openFull() {
     <UTextarea v-model="notes" :placeholder="placeholder" :rows="4" autoresize maxlength="10000" class="w-full" />
   </UFormField>
 
-  <!-- Over the app header and tab bar, which sit above ordinary modals. -->
+  <!-- Over the app header and tab bar, and over the form it was opened from. -->
   <UModal v-model:open="full" title="Notes" fullscreen :ui="{ content: 'z-50' }">
     <template #content>
       <div

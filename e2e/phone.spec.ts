@@ -322,3 +322,39 @@ test('notes on other forms open full screen too, on a page or in a pop-up', asyn
   await editor.getByRole('button', { name: 'Done' }).click()
   await expect(form.getByLabel('Notes')).toHaveValue('Paid in cash at the farm')
 })
+
+test('a pop-up form is drawn over the header and tab bar, so its title and Save show', async ({ page, herd }) => {
+  const { data: feta } = await admin
+    .from('cheese_types')
+    .select('id')
+    .eq('herd_id', herd.id)
+    .eq('name', 'Feta')
+    .single()
+  // Long enough notes that the form fills the screen, top to bottom.
+  const notes = Array.from({ length: 20 }, (_, i) => `Step ${i + 1}: warm the milk slowly and stir`).join('\n')
+  const { data: make } = await admin
+    .from('cheese_makes')
+    .insert({ herd_id: herd.id, cheese_type_id: feta!.id, made_on: isoDate(-2), ready_on: isoDate(58), notes })
+    .select('id')
+    .single()
+
+  await page.setViewportSize({ width: 375, height: 667 })
+  await page.goto(`/cheese/makes/${make!.id}`)
+  await page.getByRole('button', { name: 'Edit' }).click()
+  const form = page.getByRole('dialog', { name: 'Edit make' })
+  const save = form.getByRole('button', { name: 'Save' })
+  await expect(save).toBeInViewport()
+
+  // An open pop-up makes the page behind it ignore taps, so a plain hit test looks through the bars.
+  // Let the bars take taps again, then check what's drawn on top where the title and Save are.
+  const onTop = (el: Element) => {
+    for (const bar of document.querySelectorAll<HTMLElement>('header, nav')) bar.style.pointerEvents = 'auto'
+    const r = el.getBoundingClientRect()
+    return !!document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest('[role=dialog]')
+  }
+  expect(await save.evaluate(onTop), 'Save is hidden behind the tab bar').toBe(true)
+  expect(
+    await form.getByRole('heading', { name: 'Edit make' }).evaluate(onTop),
+    'title is hidden behind the header',
+  ).toBe(true)
+})
